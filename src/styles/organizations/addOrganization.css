@@ -1,0 +1,64 @@
+.all-form-items-container-at-add-organization {
+  display: flex;
+  flex-direction: column;
+}
+
+.single-rows-for-form-items-container {
+  display: flex;
+  gap: 24px;
+}
+
+.each-one-for-item-itself-at-org {
+  flex: 1;
+  max-width: calc(50% - 12px);
+}
+
+.add-org-form-input-box {
+  background-color: #f9f9fc;
+  color: #4d5464;
+  border: 1px solid #ddd;
+  margin-top: -5px;
+}
+
+.add-org-number-input {
+  width: 100%;
+}
+
+.parent-btn-container-at-add-org {
+  width: calc(100% - 48px);
+  position: absolute;
+  bottom: 0;
+}
+
+.cancel-and-add-btn-container-at-add-org {
+  padding-top: 16px;
+  gap: 16px;
+  border-top: 1px solid #ddd;
+  justify-content: flex-end;
+}
+
+.org-mgt-add-btn-for-cancel {
+  border: 1px solid #f04438;
+  color: #f04438;
+  font-weight: 600;
+  font-size: 14px !important;
+  letter-spacing: 0.5px;
+}
+
+.org-mgt-add-btn-for-cancel:hover {
+  color: #f04438 !important;
+  border: 1px solid #f04438 !important;
+}
+
+.org-mgt-add-btn-for-creating-org {
+  background: #34657f;
+  color: #fff;
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.org-mgt-add-btn-for-creating-org:hover {
+  border: 1px solid #34657f !important;
+  color: #fff !important;
+}

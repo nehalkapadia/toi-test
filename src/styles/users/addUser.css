@@ -1,0 +1,87 @@
+.all-form-items-container-at-add-user {
+  display: flex;
+  flex-direction: column;
+  /* gap: 16px; */
+}
+
+.organization-row-at-add-user {
+  margin-bottom: 16px;
+}
+
+.single-rows-for-form-items-container-at-user {
+  display: flex;
+  gap: 24px;
+}
+
+.each-one-for-item-itself-at-user {
+  flex: 1;
+  max-width: calc(50% - 12px);
+}
+
+.organization-label-at-add-user {
+  color:#4d5464;
+}
+
+.organization-value-at-add-user {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+  margin-top: -2px;
+  text-transform: capitalize;
+}
+
+.add-user-form-input-box {
+  background-color: #f9f9fc;
+  color: #4d5464;
+  border: 1px solid #ddd;
+  margin-top: -5px;
+}
+
+.add-user-form-select-box {
+  margin-top: -5px;
+}
+
+.radio-group-for-edit-in-user-mgt {
+  margin-top: -10px;
+  display: flex;
+  gap: 10%;
+}
+
+.parent-btn-container-at-add-user {
+  width: calc(100% - 48px);
+  position: absolute;
+  bottom: 0;
+}
+
+.cancel-and-add-btn-container-at-add-user {
+  padding-top: 16px;
+  gap: 16px;
+  border-top: 1px solid #ddd;
+  justify-content: flex-end;
+}
+
+.user-mgt-add-btn-for-cancel {
+  border: 1px solid #f04438;
+  color: #f04438;
+  font-weight: 600;
+  font-size: 14px !important;
+  letter-spacing: 0.5px;
+}
+
+.user-mgt-add-btn-for-cancel:hover {
+  color: #f04438 !important;
+  border: 1px solid #f04438 !important;
+}
+
+.user-mgt-add-btn-for-creating-user {
+  background: #34657f;
+  color: #fff;
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.user-mgt-add-btn-for-creating-user:hover {
+  border: 1px solid #34657f !important;
+  color: #fff !important;
+}

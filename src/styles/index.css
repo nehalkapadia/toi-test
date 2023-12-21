@@ -1,0 +1,181 @@
+html body {
+  padding: 0;
+  margin: 0;
+  width: calc(100% - 8px) !important;
+}
+
+/* Sidebar Component CSS Style */
+.universal-sidebar {
+  max-width: 264px !important;
+  max-height: 100vh !important;
+  background-color: white !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.collapsed {
+  flex: 0 0 85px !important;
+}
+
+.expanded {
+  flex: 0 0 264px !important;
+}
+
+.oncology-univsersal-logo {
+  display: flex;
+  justify-content: center;
+  padding: 11px;
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+}
+
+.handle-sidebar-menu-container {
+  padding: 21px 0;
+}
+
+/* Customizing Antd Css For Sidebar */
+.ant-menu-item > .ant-menu-item-icon {
+  color: #667085 !important;
+}
+
+.ant-menu-item > .ant-menu-title-content {
+  color: #667085 !important ;
+  font-weight: 600;
+  letter-spacing: 0.5px !important;
+}
+
+.ant-menu-light .ant-menu-item-selected {
+  color: #fff;
+  background: #34657f;
+}
+
+.ant-menu-light .ant-menu-item-selected > span,
+.ant-menu-title-content {
+  color: #fff !important;
+}
+
+.ant-menu-light .ant-menu-item-selected > svg,
+.ant-menu-item-icon {
+  color: #fff !important;
+}
+
+/* Header Component CSS Style */
+.universal-layout-header {
+  background-color: white !important;
+  padding: 0;
+}
+
+.layout-header-left-side-container {
+  display: flex;
+  align-items: center;
+  padding: 0px 10px;
+}
+
+.btn-for-collapsed-or-shrink {
+  min-height: 54px;
+  min-width: 54px;
+}
+
+.icon-at-header-bar {
+  color: #667085;
+  font-size: 21px;
+  text-align: center;
+}
+
+.layout-header-right-side-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.layout-header-notification-icon {
+  font-size: 21px;
+  cursor: pointer;
+}
+
+.divider-at-header-bar {
+  height: 100%;
+}
+
+.user-profile-icon-at-header {
+  font-size: 18px;
+  margin-top: -7px;
+  background-color: #34657f;
+  font-weight: 500;
+}
+
+.logout-btn {
+  min-width: 170px;
+  font-size: 14px;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+  padding: 7px 14px !important;
+}
+
+.dropdown-for-profile-view-details {
+  line-height: 21px;
+  margin-right: 20px;
+}
+
+.profile-details-at-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.profile-details-container-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.customized-zero-margin-for-p-tag {
+  margin: 0;
+}
+
+.universal-layout-content-container {
+  padding: 32px 24px;
+  background: #f9f9fc;
+  min-height: 88vh !important;
+  max-height: 89vh !important;
+  white-space: nowrap;
+  overflow-y: auto;
+}
+
+.customized-user-name-at-header {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.customized-user-role-at-header {
+  color: #667085;
+}
+
+.spin-indicator-at-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #396571;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #495057;
+}
+
+@media only screen and (min-width: 300px) and (max-width: 649px) {
+  .layout-header-left-side-container {
+    padding: 0;
+  }
+}

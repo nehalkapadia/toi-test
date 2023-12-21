@@ -1,0 +1,129 @@
+.create-order-medical-history-tab-2-container {
+  width: 100%;
+  background-color: #fff;
+  /* max-height: 50vh;
+  overflow-y: scroll; */
+  /* padding: 27px 24px 0px; */
+}
+
+.tab-2-child-component-container {
+  padding: 27px 24px;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab-2-child-component-container-second {
+  display: flex;
+  flex-direction: column;
+  padding: 27px 24px 0 24px;
+  gap: 24px;
+}
+
+.co-tab-2-medical-history-number-input {
+  width: 100%;
+}
+
+.co-tab-2-ordering-btn {
+  color: #fff;
+  background-color: #396571;
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin: -16px 0 24px -12px;
+}
+
+.co-tab-2-ordering-btn:hover {
+  border: 1px solid #396571 !important;
+  color: #fff !important;
+}
+
+.co-tab-2-upload-btn {
+  background: #34657f26;
+  color: #34657f;
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.co-tab-2-upload-btn:hover {
+  border: 1px solid #34657f26 !important;
+  color: #34657f !important;
+}
+
+.medical-history-modal-customized {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.tab2-ordering-provider-lable-conatiner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.info-icon-for-displaying-info {
+  font-size: 18px;
+  font-weight: 500;
+  color: #396571;
+  cursor: pointer;
+}
+
+.modal-title-container-with-close-icon {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.tab-2-modal-title-heading-text {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.co-tab-2-modal-validate-btn{
+  color: #fff;
+  background-color: #396571;
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.co-tab-2-modal-validate-btn:hover {
+  border: 1px solid #396571 !important;
+  color: #fff !important;
+}
+
+.close-icon-for-modal {
+  cursor: pointer;
+}
+
+/* Antd CSS Styles Override */
+.ant-select-selector {
+  background-color: #f9f9fc !important;
+}
+
+.ant-input {
+  background-color: #f9f9fc !important;
+}
+
+.ant-input-number {
+  background-color: #f9f9fc !important;
+}
+
+.ant-picker {
+  background-color: #f9f9fc !important;
+}
+
+.ant-modal-footer {
+  display: flex;
+  justify-content: space-between !important;
+  border-top: 1px solid #ddd;
+  padding-top: 16px;
+}
+
+/* media query class */
+/* co-tab-2-ordering-container */
+/* co-tab-2-referring-container */
+/* co-tab-2-pcp-number-container */

@@ -1,0 +1,18 @@
+.order-detail-display-modal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.order-detail-display-modal-label {
+  font-size: 14px;
+  color: #858d9d;
+  margin: 0;
+}
+
+.order-detail-display-modal-heading {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  margin: 0;
+}

@@ -1,0 +1,42 @@
+.all-user-filter-element-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.each-filter-form-elem-single-at-user-mgt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-filter-btn-container {
+  position: absolute;
+  width: calc(100% - 48px);
+  bottom: 0;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.close-filter-btn-drawer-at-user {
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.close-filter-btn-drawer-at-user:hover {
+  color: #344054 !important;
+}
+
+.apply-filter-btn-at-user {
+  background-color: #34657f;
+  color: #fff;
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.apply-filter-btn-at-user:hover {
+  color: #fff !important;
+  border: 1px solid #34657f !important;
+}

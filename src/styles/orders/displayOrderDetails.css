@@ -1,0 +1,35 @@
+.display-order-details-parent-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.upload-documents-container-at-tab-2 {
+  padding: 14px 0;
+}
+
+.dod-tabs-for-each-row-gap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.dod-tabs-label-text {
+  font-size: 14px;
+  color: #4d5464;
+  letter-spacing: 0.5px;
+}
+
+.dod-tabs-inner-heading-for-titles {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.dod-tabs-inner-email-field {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}

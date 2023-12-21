@@ -1,0 +1,87 @@
+.create-order-patient-demographics-container {
+  width: 100%;
+  padding: 27px 24px 0px;
+  background-color: #fff;
+}
+
+.co-tab1-form-item-width-manually {
+  width: 100%;
+}
+
+.patient-search-btn {
+  display: flex;
+  background-color: #396571;
+  color: #fff;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-top: 24px;
+}
+
+.patient-search-btn:hover {
+  border: 1px solid #396571 !important;
+  color: #fff !important;
+}
+
+.patient-search-icon {
+  font-size: 24px;
+}
+
+.co-tab-1-common-cell-customization {
+  color: #667085;
+  text-transform: capitalize;
+}
+
+.co-modal-add-btn-container {
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.co-modal-add-btn {
+  background-color: #396571;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: 1px;
+}
+
+.co-modal-add-btn:hover {
+  color: #fff !important;
+  border: 1px solid #396571 !important;
+}
+
+/* Antd CSS Styles Override */
+.ant-select-selector {
+  background-color: #f9f9fc !important;
+}
+
+.ant-input {
+  background-color: #f9f9fc !important;
+}
+
+.ant-input-number {
+  background-color: #f9f9fc !important;
+}
+
+.ant-picker {
+  background-color: #f9f9fc !important;
+}
+
+@media only screen and (min-width: 200px) and (max-width: 675px) {
+  .co-tab1-btn-container {
+    justify-content: center;
+    align-items: center;
+  }
+
+  .co-tab1-cancel-btn {
+    min-width: 180px;
+  }
+  .co-tab1-save-draft-btn {
+    min-width: 180px;
+  }
+  .co-tab1-next-btn {
+    min-width: 180px;
+  }
+}

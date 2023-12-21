@@ -1,0 +1,101 @@
+.create-order-parent-component {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.create-order-heading-container {
+  align-items: center;
+}
+
+.create-order-heading {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.all-tabs-parent-container-at-co {
+  padding-bottom: 24px;
+}
+
+.all-tabs-form-container-at-create-order {
+  max-height: 55vh;
+  overflow-y: scroll;
+}
+
+.co-all-tabs-btn-container {
+  position: fixed;
+  width: calc(100% - 272px);
+  bottom: 0;
+  right: 0;
+  display: inline-flex;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  margin-right: 8px;
+  background-color: #fff;
+  border-top: 1px solid #ddd;
+  padding: 18px;
+  gap: 16px;
+}
+
+.co-all-tabs-cancel-btn {
+  min-width: 140px;
+  font-size: 14px;
+  color: #f04438;
+  border-color: #f04438;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.co-all-tabs-cancel-btn:hover {
+  border: 1px solid #f04438 !important;
+  color: #f04438 !important;
+}
+
+.co-all-tabs-save-as-draft-btn {
+  min-width: 140px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background-color: #396571;
+}
+
+.co-all-tabs-save-as-draft-btn:hover {
+  border: 1px solid #396571 !important;
+  color: #fff !important;
+}
+
+.co-all-tabs-next-btn {
+  min-width: 140px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background-color: #396571;
+}
+
+.co-all-tabs-next-btn:hover {
+  border: 1px solid #396571 !important;
+  color: #fff !important;
+}
+
+
+/* Antd CSS Override */
+.ant-segmented-item-label {
+  font-size: 14px !important;
+  padding: 0 16px !important;
+}
+.ant-form-item-label {
+  padding: 0 0 3px !important;
+}
+
+
+
+/* Media Queries Start from here */
+@media only screen and (max-width: 768px) and (min-width: 250px) {
+  .co-all-tabs-btn-container {
+    width: calc(100% - 92px);
+  }
+}

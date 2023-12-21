@@ -1,0 +1,50 @@
+.order-mgt-filter-element-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.each-filter-form-elem-single-at-order-mgt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.order-mgt-filter-primary-number {
+  width: 100%;
+}
+
+.order-filter-btn-container {
+  position: absolute;
+  width: calc(100% - 48px);
+  bottom: 0;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.close-filter-btn-drawer-at-order-mgt {
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.close-filter-btn-drawer-at-order-mgt:hover {
+  color: #344054 !important;
+}
+
+.apply-filter-btn-at-order-mgt {
+  background-color: #34657f;
+  color: #fff;
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.apply-filter-btn-at-order-mgt:hover {
+  color: #fff !important;
+  border: 1px solid #34657f !important;
+}
+
+.input-number-at-order-mgt-filter {
+  width: 100%;
+}

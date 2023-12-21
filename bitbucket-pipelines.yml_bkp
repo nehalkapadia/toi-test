@@ -1,0 +1,25 @@
+image: node:21.4
+
+pipelines:
+  default:
+    - parallel:
+        - step:
+            name: Code linting
+            script:
+              - npm install eslint
+              - npm run lint
+            caches:
+              - node
+
+  branches:
+    develop:
+      - step:
+          image: docker:24
+          script:
+            - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            - export DOCKER_BUILDKIT=0
+            - docker build -t theoncologyinstitute/toi-provider-portal:develop .
+            - docker push theoncologyinstitute/toi-provider-portal:develop
+          services:
+            - docker
+          trigger: automatic

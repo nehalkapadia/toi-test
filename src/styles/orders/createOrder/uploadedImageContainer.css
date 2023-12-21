@@ -1,0 +1,94 @@
+.common-uploaded-doc-child-container-with-size {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 300px;
+  max-width: 300px;
+}
+
+.common-uploaded-doc-row-with-icon {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.common-uploaded-doc-name-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  max-width: 85%;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.common-uploaded-doc-name-text {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  margin-top: -5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.common-uploaded-doc-size-text {
+  margin: 0;
+  margin-left: 6px;
+}
+
+.attachment-icons {
+  width: 40px;
+  height: 40px;
+}
+
+.display-single-doc-file-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 150px;
+  max-width: 220px;
+  border: 1px solid #ddd;
+  padding: 7px;
+  border-radius:8px;
+}
+
+.display-single-doc-file-child-container {
+  display: flex;
+  align-items: center;
+}
+
+.file-name-container-custmized {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.file-name-text-custmized {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+  max-width: 100px;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size-text-custmized {
+  font-size: 12px;
+  margin: 0;
+}
+
+.download-icon-container-for-docs {
+  display: flex;
+  align-items: center;
+}
+
+.download-icon-for-docs {
+  font-size: 20px;
+  cursor: pointer;
+  margin-right: 6px;
+}

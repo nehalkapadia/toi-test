@@ -1,0 +1,113 @@
+.user-management-parent-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.users-child-container-one {
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.user-heading-text-customization {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 32px;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.new-user-add-btn {
+  display: flex;
+  align-items: center;
+  background-color: #34657f;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  line-height: 20px;
+}
+
+.new-user-add-btn:hover {
+  color: #fff !important;
+}
+
+.users-child-container-second {
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.users-mormal-text-customization {
+  margin: 0;
+  color: #4d5464;
+}
+
+.user-mgt-select-for-organization {
+  min-width: 310px;
+  margin-top: 6px;
+}
+
+.user-mgt-filter-btn {
+  display: flex;
+  align-items: center;
+  color: #667085;
+  letter-spacing: 0.5px;
+  align-self: flex-end;
+}
+
+.user-mgt-filter-icon {
+  width: 15px;
+  height: 15px;
+  color: #667085;
+  margin-top: -4px;
+}
+
+.user-mgt-tag-for-status {
+  margin-left: 16px;
+  padding: 8px 12px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+/* Table Column CSS */
+.users-table-id-cell-text-color {
+  color: #34657f;
+  font-weight: 600;
+}
+
+.user-table-common-cell-customization {
+  color: #667085;
+  text-transform: capitalize;
+}
+
+.users-table-status-active {
+  background: #e7f4ee;
+  padding: 6px 14px;
+  border-radius: 50px;
+  color: #0d894f;
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+.users-table-status-inactive {
+  background: #b4332a1a;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-weight: 600;
+  color: #b4332a;
+  text-transform: capitalize;
+}
+
+.users-table-email-column {
+  color: #667085;
+}
+
+.ant-drawer-header-title {
+  flex-direction: row-reverse;
+}
+
+.ant-drawer-title {
+  font-size: 18px !important;
+  letter-spacing: 0.5px !important;
+}

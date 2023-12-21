@@ -1,0 +1,31 @@
+.co-insurance-info-tab-3-parent-container {
+  width: 100%;
+  background-color: #fff;
+  padding: 27px 24px 0px;
+}
+
+.co-insurance-info-tab-3-input-number {
+  width: 100%;
+}
+
+.co-tab-3-upload-btn {
+  background: #34657f26;
+  color: #34657f;
+  font-size: 14px !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.co-tab-3-upload-btn:hover {
+  border: 1px solid #34657f26 !important;
+  color: #34657f !important;
+}
+
+.co-insurance-info-tab-3-datepicker {
+  width: 100%;
+}
+
+.trash-icon-for-uploaded-img {
+  font-size: 24px;
+  color: red;
+}

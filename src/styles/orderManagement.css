@@ -1,0 +1,127 @@
+.order-management-parent-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.order-mgt-first-child-container {
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-mgt-heading {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.create-order-btn {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  background-color: #396571;
+  justify-content: center;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+
+.create-order-btn:hover {
+  border: 1px solid #34657f !important;
+  color: #fff !important;
+}
+
+.order-mgt-second-child-container {
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.order-mgt-user-select-tag {
+  min-width: 200px;
+}
+
+.order-mgt-filters-container {
+  gap: 8px;
+  align-items: center;
+}
+
+.order-mgt-filter-btn {
+  display: flex;
+  align-items: center;
+  color: #667085;
+  letter-spacing: 0.5px;
+}
+
+.order-mgt-drawer-close-btn {
+  border: 1px solid #f04438;
+  color: #f04438;
+  font-weight: 600;
+  font-size: 14px !important;
+  letter-spacing: 0.5px;
+}
+
+.order-mgt-drawer-close-btn {
+  color: #f04438 !important;
+  border: 1px solid #f04438 !important;
+}
+
+.order-mgt-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 0px;
+}
+
+/* Table CSS Start From Here */
+
+.order-table-id-cell-text-color {
+  color: #34657f;
+  font-weight: 600;
+}
+
+.order-table-common-cell-customization {
+  color: #667085;
+  text-transform: capitalize;
+}
+
+.order-mgt-table-status-draft {
+  color: #667085;
+  background: #f0f1f3;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+.order-mgt-table-status-complete {
+  color: #0d894f;
+  background: #e7f4ee;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+.order-mgt-table-status-submitted {
+  color: #e46a11;
+  background: #e46a111a;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
+/* Antd Internal CSS Overriding */
+.ant-drawer-header-title {
+  flex-direction: row-reverse;
+}
+
+.ant-drawer-title {
+  font-size: 18px !important;
+  letter-spacing: 0.5px !important;
+}
