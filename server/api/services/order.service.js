@@ -1,4 +1,5 @@
 const db = require('../models');
+const { Op } = require('sequelize');
 const constantsUtil = require('../utils/constants.util');
 const Order = db.Orders;
 const PatientDemo = db.PatientDemos;
@@ -90,7 +91,7 @@ const getOrderById = async (orderId) => {
       include: [
         {
           model: PatientDemo,
-          as: 'patient',
+          as: 'patientDemography',
           attributes: [
             'id',
             'firstName',
@@ -103,6 +104,7 @@ const getOrderById = async (orderId) => {
             'preferredLanguage',
             'race',
             'address',
+            'mrn'
           ],
         },
         {
@@ -179,22 +181,24 @@ const listOrders = async ({
       whereClause.createdBy = filters.userId;
     }
 
-    if (filters?.status) {
-      whereClause.currentStatus = filters.status;
+    if (filters?.status?.length > 0) {
+      whereClause.currentStatus = {
+        [Op.in]: filters.status,
+      };
     }
 
     // Check and add patient fields filters
     if (filters?.firstName) {
-      whereClause['$patient.firstName$'] = filters.firstName;
+      whereClause['$patientDemography.firstName$'] = filters.firstName;
     }
     if (filters?.lastName) {
-      whereClause['$patient.lastName$'] = filters.lastName;
+      whereClause['$patientDemography.lastName$'] = filters.lastName;
     }
     if (filters?.dob) {
-      whereClause['$patient.dob$'] = filters.dob;
+      whereClause['$patientDemography.dob$'] = filters.dob;
     }
     if (filters?.gender) {
-      whereClause['$patient.gender$'] = filters.gender;
+      whereClause['$patientDemography.gender$'] = filters.gender;
     }
   }
   const orders = await Order.findAndCountAll({
@@ -202,7 +206,7 @@ const listOrders = async ({
     include: [
       {
         model: PatientDemo,
-        as: 'patient',
+        as: 'patientDemography',
         attributes: [
           'id',
           'firstName',
@@ -215,6 +219,7 @@ const listOrders = async ({
           'preferredLanguage',
           'race',
           'address',
+          'mrn'
         ],
       },
       {
@@ -250,9 +255,14 @@ const listOrders = async ({
       { model: Organization, as: 'organization' },
       { model: db.Users, as: 'userData' },
     ],
-    order: [[sortBy, sortOrder]],
     offset,
     limit: pageSize,
+    order: [
+      [
+        sortBy ? sortBy : 'updatedAt',
+        sortOrder ? 'ASC' : 'DESC',
+      ],
+    ],
   });
   return orders;
 };
@@ -285,7 +295,18 @@ const updateOrderInfo = async (orderId, orderData) => {
  *
  */
 const uploadFiles = async (order, files) => {
-  const mapUploadedFiles = files.map((file) => {
+  const existingDocumentIds = await db.OrderPatDocuments.findAll({
+    attributes: ['patDocumentId'],
+    where: {
+      orderId: order.id,
+    },
+  });
+
+  const existingIdsSet = new Set(existingDocumentIds.map((doc) => doc.patDocumentId));
+
+  const newFiles = files.filter((file) => !existingIdsSet.has(file));
+
+  const mapUploadedFiles = newFiles.map((file) => {
     return {
       orderId: order.id,
       createdBy: order.createdBy,
@@ -366,6 +387,53 @@ const createOrderAuthDocuments = async (order, files) => {
   });
   return await db.OrderAuthDocuments.bulkCreate(mapUploadedFiles);
 }
+
+
+
+/**
+ * Save Order as Draft
+ *
+ * @param {Object} orderData - Data for the order to be saved.
+ * @returns {Object} - The saved order.
+ * @throws {Error} - Throws an error if there is an issue saving the order.
+ */
+const saveOrderAsDraft = async (orderData) => {
+  try {
+    // Check the existence of multiple related entities
+    const entitiesToCheck = [
+      { id: orderData.patientId, model: PatientDemo, name: 'Patient' },
+      {
+        id: orderData.historyId,
+        model: MedicalHistory,
+        name: 'MedicalHistory',
+      },
+      { id: orderData.recordId, model: MedicalRecord, name: 'MedicalRecord' },
+      {
+        id: orderData.insuranceId,
+        model: InsuranceInfo,
+        name: 'InsuranceInfo',
+      },
+      {
+        id: orderData.organizationId,
+        model: Organization,
+        name: 'Organization',
+      },
+    ];
+
+    await Promise.all(
+      entitiesToCheck.map(async (entity) => {
+        await checkEntityExistence(entity.id, entity.model, entity.name);
+      })
+    );
+
+    // If all checks pass, create the order
+    return Order.create(orderData);
+  } catch (error) {
+    throw error; // Propagate the error to be handled in the controller
+  }
+};
+
+
 module.exports = {
   createOrderInfo,
   getOrderById,
@@ -373,5 +441,6 @@ module.exports = {
   updateOrderInfo,
   uploadFiles,
   getOrderDocuments,
-  createOrderAuthDocuments
+  createOrderAuthDocuments,
+  saveOrderAsDraft,
 };

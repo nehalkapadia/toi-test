@@ -4,7 +4,6 @@ const constantsUtil = require('../utils/constants.util');
 exports.fileUploadSchema = [
     body('file')
         .custom((value, { req }) => {
-            console.log(req.file);
             if (!req.file) {
                 throw new Error(constantsUtil.NO_FILE_UPLOADED);
             }

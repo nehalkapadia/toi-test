@@ -2,6 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  text-align: left;
+  align-items: flex-start;
+  padding: 0 16px;
 }
 
 .order-detail-display-modal-label {

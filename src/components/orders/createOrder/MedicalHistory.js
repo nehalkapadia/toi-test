@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import "../../../styles/orders/createOrder/medicalHistory.css";
-import "../../../styles/orders/createOrder.css";
+import React, { useEffect, useState } from 'react';
+import '../../../styles/orders/createOrder/medicalHistory.css';
+import '../../../styles/orders/createOrder.css';
 import {
   Button,
   Checkbox,
@@ -15,44 +15,95 @@ import {
   Switch,
   Upload,
   message,
-} from "antd";
+} from 'antd';
 import {
+  ARE_YOU_SURE_WANT_DRAFT_ORDER,
+  ARE_YOU_SURE_WANT_TO_CANCEL_ORDER,
+  CASE_ID,
+  MEDICAL_AND_INSURANCE_FILE_UPLOAD_CATEGORIES,
   CREATE_ORDER_FORM_FIELD_RULES,
   CREATE_ORDER_FORM_KEY_NAMES,
+  DOCUMENTS_UPLOAD_IN_LAB_STATUS_CATEGORY,
+  DOCUMENTS_UPLOAD_IN_MEDICAL_RELEASE_CATEGORY,
+  DOCUMENTS_UPLOAD_IN_PATHOLOGY_CATEGORY,
+  DOCUMENTS_UPLOAD_IN_PREV_AUTH_CATEGORY,
+  DOCUMENTS_UPLOAD_IN_RADIOLOGY_CATEGORY,
+  ERROR_MESSAGE_FOR_MAX_UPLOAD_DOCS,
+  MAX_UPLOAD_DOCUMENTS_PER_CATEGORY,
   NPI_NUMBER_VALIDATION_ERROR_MESSAGE,
-} from "@/utils/constant.util";
-import { FiInfo, FiUpload } from "react-icons/fi";
-import { BiTrash } from "react-icons/bi";
-import { MEDICAL_HISTORY_DIAGNOSIS_OPTIONS } from "@/utils/options";
-import { useDispatch, useSelector } from "react-redux";
+  ORDER_MODAL_CANCEL_TEXT,
+  ORDER_MODAL_OK_TEXT,
+  ORDER_STATUS,
+  SMALL_SUCCESS,
+  MEDICAL_HISTORY_FIELDS_ONLY,
+  MEDICAL_RECORD__FIELDS_ONLY,
+  ALL_PROVIDERS_MAX_LENGTH_COUNT,
+  MEDICAL_HISTORY_AND_RECORD_CREATED_MESSAGE,
+} from '@/utils/constant.util';
+import { FiInfo, FiUpload } from 'react-icons/fi';
+import { BiTrash } from 'react-icons/bi';
+import { MEDICAL_HISTORY_DIAGNOSIS_OPTIONS } from '@/utils/options';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   getValidateOrderingProvider,
   getValidatePCPNumber,
   getValidateReferringProvider,
-  postMedicalHostoryData,
+  postMedicalHistoryData,
   postMedicalRecordData,
+  postUploadFile,
   setDisplayOrderingModal,
   setDisplayPCPNumberModal,
   setDisplayReferringModal,
   setValidationCancelForOrdering,
   setValidationCancelForPCPNumber,
   setValidationCancelForReferring,
-} from "@/store/orderSlice";
-import CretaeOrderModal from "./CretaeOrderModal";
+  orderSaveAsDraft,
+  setMedicalUploadedFilesById,
+  setPatientDocsFilesById,
+  setIsTab2DataChanges,
+  setMedicalFilesAtEditById,
+  setPatientFilesAtEditById,
+  updateOrderData,
+  setTab1FormData,
+  setHistoryCreated,
+  resetSearchPatientData,
+} from '@/store/orderSlice';
+import CretaeOrderModal from './CretaeOrderModal';
 import {
+  resetCreateOrderDataBacktoInitialState,
   setCurrentSelectedTab,
   setDisplayPcpNumberSuccessTick,
   setDisplayReferringSuccessTick,
   setDisplayorderingSuccessTick,
   setInsuranceInfoTab,
   setTab2FormData,
-} from "@/store/createOrderFormSlice";
-import { AiOutlineClose } from "react-icons/ai";
+} from '@/store/createOrderFormSlice';
+import {
+  AiFillExclamationCircle,
+  AiOutlineClose,
+  AiOutlineUnorderedList,
+} from 'react-icons/ai';
+import { useRouter } from 'next/router';
+import OrderModal from './OrderModal';
+import UploadedImageContainer from './UploadedImageContainer';
+import {
+  beforeFileUpload,
+  extractIdsFromNestedObjects,
+  fileLengthCheck,
+  filterObjectByKeys,
+  replaceNullWithEmptyString,
+} from '@/utils/commonFunctions';
 
 const MedicalHIstory = () => {
+  const router = useRouter();
+  const { orderId } = router.query;
   const [formData] = Form.useForm();
   const formValues = Form.useWatch([], formData);
   const [submittable, setSubmittable] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [modalText, setModalText] = useState(ARE_YOU_SURE_WANT_TO_CANCEL_ORDER);
+  const [isDraftModal, setIsDraftModal] = useState(false);
 
   const dispatch = useDispatch();
   // Managing Ordering Provider State
@@ -98,20 +149,35 @@ const MedicalHIstory = () => {
   );
 
   // Whole Tab Data
+  const medicalUploadedFilesById = useSelector(
+    (state) => state.allOrdersData.medicalUploadedFilesById
+  );
+
+  const createNewHistory = useSelector(
+    (state) => state.allOrdersData.createNewHistory
+  );
+
+  const patientSearchData = useSelector(
+    (state) => state.allOrdersData.patientRecordSearchData
+  );
   const medicalHistoryOnly = useSelector(
     (state) => state.allOrdersData.medicalHistoryOnly
   );
   const medicalRecordOnly = useSelector(
     (state) => state.allOrdersData.medicalRecordOnly
   );
-  const medicalHostoryAllData = useSelector(
-    (state) => state.allOrdersData.medicalHostoryAllData
+  const searchResponse = useSelector(
+    (state) => state.allOrdersData.patientSearchResponse
   );
-
+  const displaySearchModal = useSelector(
+    (state) => state.allOrdersData.displaySearchModal
+  );
   const patientDemographicsData = useSelector(
     (state) => state.allOrdersData.patientDemographicsData
   );
-
+  const isNewPatientCreated = useSelector(
+    (state) => state.allOrdersData.isNewPatientCreated
+  );
   // State for Display Success Tick
   const orderingSuccessTick = useSelector(
     (state) => state.createOrderTabs.displayOrderingSuccessTick
@@ -126,20 +192,41 @@ const MedicalHIstory = () => {
   const tab2FormData = useSelector(
     (state) => state.createOrderTabs.tab2FormData
   );
+  const tab2DataForTraceEdit = useSelector(
+    (state) => state.allOrdersData.medicalHistoryAndRecordDataForEdit
+  );
+  // Handling Documents Uploads state
+  const patientAllUploadedFilesData = useSelector(
+    (state) => state.allOrdersData.patientAllUploadedFilesData
+  );
+  const patientUploadedDocsData = useSelector(
+    (state) => state.allOrdersData.patientUploadedDocsData
+  );
 
-  const [chemoStaus, setChemoStatus] = useState(false);
+  const [chemoStatus, setChemoStatus] = useState(
+    tab2FormData?.chemoTherapyStatus || false
+  );
   const [refPhysicianChecked, setRefPhysicianChecked] = useState(true);
-  const [radilogyStatus, setRadilogyStatus] = useState(false);
-  const [pathologyStatus, setPathologyStatus] = useState(false);
-  const [labStatus, setLabStatus] = useState(false);
-  const [previousAuthorization, setPreviousAuthorization] = useState(false);
+  const [radiologyStatus, setRadiologyStatus] = useState(
+    tab2FormData?.isRadiologyStatus || false
+  );
+  const [pathologyStatus, setPathologyStatus] = useState(
+    tab2FormData?.isPathologyStatus || false
+  );
+  const [labStatus, setLabStatus] = useState(
+    tab2FormData?.isLabStatus || false
+  );
+  const [previousAuthorization, setPreviousAuthorization] = useState(
+    tab2FormData?.isPreviousAuthorizationStatus || false
+  );
 
   const [disableOrderingBtn, setDisableOrderingBtn] = useState(true);
   const [disableProviderBtn, setDisableProviderBtn] = useState(true);
   const [disbalePCPBtn, setDisbalePCPBtn] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handleOrderingProvider = (value) => {
-    if (value?.toString()?.trim()?.length === 10) {
+    if (value?.toString()?.trim()?.length === ALL_PROVIDERS_MAX_LENGTH_COUNT) {
       setDisableOrderingBtn(false);
     } else {
       setDisableOrderingBtn(true);
@@ -148,20 +235,20 @@ const MedicalHIstory = () => {
     if (
       orderingResStatus &&
       orderingSuccessTick &&
-      orderingProviderData?.npiNumber !== value
+      orderingProviderData?.npiNumber != value
     ) {
       dispatch(setDisplayorderingSuccessTick(false));
     } else if (
       orderingResStatus &&
       !orderingSuccessTick &&
-      orderingProviderData?.npiNumber === value
+      orderingProviderData?.npiNumber == value
     ) {
       dispatch(setDisplayorderingSuccessTick(true));
     }
   };
 
   const handleReferringProvider = (value) => {
-    if (value?.toString()?.trim()?.length === 10) {
+    if (value?.toString()?.trim()?.length === ALL_PROVIDERS_MAX_LENGTH_COUNT) {
       setDisableProviderBtn(false);
     } else {
       setDisableProviderBtn(true);
@@ -170,20 +257,20 @@ const MedicalHIstory = () => {
     if (
       referringResStatus &&
       referringSuccessTick &&
-      referringProviderData?.npiNumber !== value
+      referringProviderData?.npiNumber != value
     ) {
       dispatch(setDisplayReferringSuccessTick(false));
     } else if (
       referringResStatus &&
       !referringSuccessTick &&
-      referringProviderData?.npiNumber === value
+      referringProviderData?.npiNumber == value
     ) {
       dispatch(setDisplayReferringSuccessTick(true));
     }
   };
 
   const handlePCPNumber = (value) => {
-    if (value?.toString()?.trim()?.length === 10) {
+    if (value?.toString()?.trim()?.length === ALL_PROVIDERS_MAX_LENGTH_COUNT) {
       setDisbalePCPBtn(false);
     } else {
       setDisbalePCPBtn(true);
@@ -192,13 +279,13 @@ const MedicalHIstory = () => {
     if (
       pcpNumberResStatus &&
       pcpNumberSuccessTick &&
-      pcpNumberData.npiNumber !== value
+      pcpNumberData.npiNumber != value
     ) {
       dispatch(setDisplayPCPNumberModal(false));
     } else if (
       pcpNumberResStatus &&
       !pcpNumberSuccessTick &&
-      pcpNumberData.npiNumber === value
+      pcpNumberData.npiNumber == value
     ) {
       dispatch(setDisplayPCPNumberModal(true));
     }
@@ -208,8 +295,12 @@ const MedicalHIstory = () => {
     const npiNumber = formData.getFieldValue(
       CREATE_ORDER_FORM_KEY_NAMES.orderingProvider
     );
-    if (npiNumber?.toString()?.trim()?.length === 10) {
-      dispatch(getValidateOrderingProvider(npiNumber)).then((res) => {
+    if (
+      npiNumber?.toString()?.trim()?.length === ALL_PROVIDERS_MAX_LENGTH_COUNT
+    ) {
+      dispatch(
+        getValidateOrderingProvider({ npiNumber, event: 'atCreate' })
+      ).then((res) => {
         if (!res?.payload?.status) {
           message.error(res?.payload?.message);
         }
@@ -223,8 +314,12 @@ const MedicalHIstory = () => {
     const npiNumber = formData.getFieldValue(
       CREATE_ORDER_FORM_KEY_NAMES.referringProvider
     );
-    if (npiNumber?.toString()?.trim()?.length === 10) {
-      dispatch(getValidateReferringProvider(npiNumber)).then((res) => {
+    if (
+      npiNumber?.toString()?.trim()?.length === ALL_PROVIDERS_MAX_LENGTH_COUNT
+    ) {
+      dispatch(
+        getValidateReferringProvider({ npiNumber, event: 'atCreate' })
+      ).then((res) => {
         if (!res?.payload?.status) {
           message.error(res?.payload?.message);
         }
@@ -238,12 +333,16 @@ const MedicalHIstory = () => {
     const npiNumber = formData.getFieldValue(
       CREATE_ORDER_FORM_KEY_NAMES.pcpNumber
     );
-    if (npiNumber?.toString()?.trim()?.length === 10) {
-      dispatch(getValidatePCPNumber(npiNumber)).then((res) => {
-        if (!res?.payload?.status) {
-          message.error(res?.payload?.message);
+    if (
+      npiNumber?.toString()?.trim()?.length === ALL_PROVIDERS_MAX_LENGTH_COUNT
+    ) {
+      dispatch(getValidatePCPNumber({ npiNumber, event: 'atCreate' })).then(
+        (res) => {
+          if (!res?.payload?.status) {
+            message.error(res?.payload?.message);
+          }
         }
-      });
+      );
     } else {
       message.error(NPI_NUMBER_VALIDATION_ERROR_MESSAGE);
     }
@@ -304,20 +403,41 @@ const MedicalHIstory = () => {
     dispatch(setDisplayPCPNumberModal(true));
   };
 
-  const handleSubmitTab2Data = (values) => {
+  const customRequest = (file, category) => {
+    const { id = 1 } = patientDemographicsData;
+    const matchingCategory = MEDICAL_AND_INSURANCE_FILE_UPLOAD_CATEGORIES.find(
+      (cat) => cat.value === category
+    );
+    if (
+      matchingCategory &&
+      fileLengthCheck(patientAllUploadedFilesData[matchingCategory.key])
+    ) {
+      dispatch(
+        postUploadFile({ file: file.file, type: category, patientId: id })
+      ).then((res) => {
+        message[res?.payload?.status ? 'success' : 'error'](
+          res?.payload?.message
+        );
+      });
+    } else {
+      message.error(ERROR_MESSAGE_FOR_MAX_UPLOAD_DOCS);
+    }
+  };
+
+  const handleSubmitTab2Data = async (values) => {
+    let traceChanges = false;
     const { id } = patientDemographicsData;
     const payload = { ...tab2FormData, ...values };
     payload.orderingProvider = payload.orderingProvider?.toString();
     payload.referringProvider = payload.referringProvider?.toString();
     payload.pcpName = payload.pcpName?.toString();
-
     const {
       diagnosis,
       chemoTherapyStatus,
       orderingProvider,
       referringProvider,
       isReferringPhysician,
-      pcpName = "",
+      pcpName = '',
       ...payload2
     } = payload;
 
@@ -331,22 +451,185 @@ const MedicalHIstory = () => {
       pcpName,
     };
     payload2.patientId = id;
-    dispatch(postMedicalHostoryData(payload1)).then((res) => {
-      if (res?.payload?.status) {
-        message.success(res?.payload?.message);
-        dispatch(setInsuranceInfoTab());
-        dispatch(setCurrentSelectedTab("insuranceInfo"));
-      } else {
-        message.error(res?.payload?.message);
+
+    if (searchResponse) {
+      const commonKeys =
+        tab2DataForTraceEdit &&
+        Object.keys(tab2DataForTraceEdit).filter((key) =>
+          payload.hasOwnProperty(key)
+        );
+      const updatedTab2Data = replaceNullWithEmptyString(payload);
+      const updatedEditChangeValue =
+        replaceNullWithEmptyString(tab2DataForTraceEdit);
+
+      traceChanges = commonKeys.some(
+        (key) => updatedTab2Data[key] != updatedEditChangeValue[key]
+      );
+    }
+
+    if (createNewHistory || traceChanges) {
+      try {
+        const [medicalHistoryResponse, medicalRecordResponse] =
+          await Promise.all([
+            dispatch(postMedicalHistoryData(payload1)),
+            dispatch(postMedicalRecordData(payload2)),
+          ]);
+        const medicalHistorySuccess = medicalHistoryResponse?.payload?.status;
+        const medicalRecordSuccess = medicalRecordResponse?.payload?.status;
+
+        if (medicalHistorySuccess && medicalRecordSuccess) {
+          message.success(MEDICAL_HISTORY_AND_RECORD_CREATED_MESSAGE);
+          dispatch(setInsuranceInfoTab(false));
+          dispatch(setHistoryCreated(false));
+          dispatch(setCurrentSelectedTab('insuranceInfo'));
+        } else {
+          if (!medicalHistorySuccess) {
+            message.error(medicalHistoryResponse?.payload?.message);
+          }
+          if (!medicalRecordSuccess) {
+            message.error(medicalRecordResponse?.payload?.message);
+          }
+        }
+      } catch (error) {
+        message.error(error?.message);
       }
-    });
-    dispatch(postMedicalRecordData(payload2)).then((res) => {
-      if (res?.payload?.status) {
-        message.success(res?.payload?.message);
-      } else {
-        message.error(res?.payload?.message);
+    } else {
+      dispatch(setCurrentSelectedTab('insuranceInfo'));
+    }
+  };
+
+  const saveOrderAsDraft = async () => {
+    let traceChanges = false;
+    setLoading(true);
+    const { id } = patientDemographicsData;
+    const newValues = {
+      ...tab2FormData,
+    };
+
+    const medicalHistory = {
+      patientId: id,
+      diagnosis: newValues.diagnosis,
+      chemoTherapyStatus: newValues.chemoTherapyStatus || false,
+      orderingProvider: newValues.orderingProvider.toString(),
+      referringProvider: newValues.referringProvider.toString(),
+      isReferringPhysician: newValues.isReferringPhysician,
+      pcpName: newValues.isReferringPhysician
+        ? newValues.referringProvider.toString()
+        : newValues.pcpName.toString(),
+    };
+
+    const medicalRecord = {
+      patientId: id,
+      isRadiologyStatus: newValues.isRadiologyStatus || false,
+      radiologyFacility: newValues.radiologyFacility || '',
+      isPathologyStatus: newValues.isPathologyStatus || false,
+      pathologyFacility: newValues.pathologyFacility || '',
+      isLabStatus: newValues.isLabStatus || false,
+      labFacility: newValues.labFacility || '',
+      isPreviousAuthorizationStatus:
+        newValues.isPreviousAuthorizationStatus || false,
+      singleMedicalReleaseForm: newValues.singleMedicalReleaseForm,
+    };
+    // here we will identify that if the user has changed any value in the form
+    if (searchResponse) {
+      const commonKeys =
+        tab2DataForTraceEdit &&
+        Object.keys(tab2DataForTraceEdit).filter((key) =>
+        medicalHistory.hasOwnProperty(key)
+        );
+      const updatedTab2Data = replaceNullWithEmptyString(medicalHistory);
+      const updatedEditChangeValue =
+        replaceNullWithEmptyString(tab2DataForTraceEdit);
+
+      traceChanges = commonKeys.some(
+        (key) => updatedTab2Data[key] != updatedEditChangeValue[key]
+      );
+    }
+    let historyId = medicalHistoryOnly?.id;
+    let recordId = medicalRecordOnly?.id;
+    if (createNewHistory || traceChanges) {
+      const createdHistory = await dispatch(
+        postMedicalHistoryData(medicalHistory)
+      );
+      if (createdHistory) {
+        historyId = createdHistory?.payload?.data?.id;
       }
-    });
+      if (!createdHistory?.payload?.status) {
+        message.error(createdHistory?.payload?.message);
+        return;
+      }
+      const createdRecord = await dispatch(
+        postMedicalRecordData(medicalRecord)
+      );
+      if (createdRecord) {
+        recordId = createdRecord?.payload?.data?.id;
+      }
+      if (!createdRecord?.payload?.status) {
+        message.error(createdRecord?.payload?.message);
+        return;
+      }
+    }
+    let order;
+    if (orderId) {
+      const payload = {
+        patientId: id,
+        historyId: historyId,
+        recordId: recordId,
+        uploadFiles: medicalUploadedFilesById,
+      };
+      order = await dispatch(updateOrderData({ orderId, payload }));
+    } else {
+      order = await dispatch(
+        orderSaveAsDraft({
+          caseId: CASE_ID,
+          patientId: id,
+          historyId: historyId,
+          recordId: recordId,
+          currentStatus: ORDER_STATUS.draft,
+          uploadFiles: medicalUploadedFilesById,
+        })
+      );
+    }
+    if (order?.payload?.status) {
+      dispatch(setTab1FormData({}));
+      dispatch(resetCreateOrderDataBacktoInitialState());
+      dispatch(resetSearchPatientData());
+      message.success(order?.payload?.message);
+      router.push('/order-management');
+      setLoading(false);
+    } else {
+      message.info(order?.payload?.message);
+      setLoading(false);
+    }
+  };
+
+  const showModal = (type) => {
+    if (type === ORDER_STATUS.draft) {
+      setIsDraftModal(true);
+      setModalText(ARE_YOU_SURE_WANT_DRAFT_ORDER);
+    } else {
+      setIsDraftModal(false);
+      setModalText(ARE_YOU_SURE_WANT_TO_CANCEL_ORDER);
+    }
+    setOpen(true);
+  };
+  const handleOk = () => {
+    setConfirmLoading(true);
+    if (isDraftModal) {
+      setOpen(false);
+      setConfirmLoading(false);
+      saveOrderAsDraft();
+      return;
+    }
+    setOpen(false);
+    setConfirmLoading(false);
+    dispatch(resetCreateOrderDataBacktoInitialState());
+    dispatch(setTab1FormData({}));
+    dispatch(resetSearchPatientData());
+    router.push('/order-management');
+  };
+  const handleCancel = () => {
+    setOpen(false);
   };
 
   useEffect(() => {
@@ -377,23 +660,110 @@ const MedicalHIstory = () => {
 
   useEffect(() => {
     const initialValues = { ...tab2FormData };
-    initialValues.chemoTherapyStatus = chemoStaus;
-    initialValues.isReferringPhysician = refPhysicianChecked;
-    initialValues.isRadiologyStatus = radilogyStatus;
-    initialValues.isPathologyStatus = pathologyStatus;
-    initialValues.isLabStatus = labStatus;
-    initialValues.isPreviousAuthorizationStatus = previousAuthorization;
-    dispatch(setTab2FormData(initialValues));
+    const laterValues = {
+      chemoTherapyStatus: chemoStatus,
+      isReferringPhysician: refPhysicianChecked,
+      isRadiologyStatus: radiologyStatus,
+      isPathologyStatus: pathologyStatus,
+      isLabStatus: labStatus,
+      isPreviousAuthorizationStatus: previousAuthorization,
+    };
+    const updatedValues = { ...initialValues, ...laterValues };
+    dispatch(setTab2FormData(updatedValues));
   }, [
-    chemoStaus,
+    chemoStatus,
     refPhysicianChecked,
-    radilogyStatus,
+    radiologyStatus,
     pathologyStatus,
     labStatus,
     previousAuthorization,
   ]);
+
+  useEffect(() => {
+    if (
+      searchResponse &&
+      medicalHistoryOnly &&
+      medicalRecordOnly &&
+      Object.keys(medicalHistoryOnly)?.length > 0 &&
+      Object.keys(medicalRecordOnly)?.length > 0
+    ) {
+      const updatedMedicalHistoryData = filterObjectByKeys(
+        medicalHistoryOnly,
+        MEDICAL_HISTORY_FIELDS_ONLY
+      );
+      const updatedMedicalRecordData = filterObjectByKeys(
+        medicalRecordOnly,
+        MEDICAL_RECORD__FIELDS_ONLY
+      );
+      formData.setFieldsValue({
+        ...updatedMedicalHistoryData,
+        ...updatedMedicalRecordData,
+      });
+      const updatedValues = {
+        ...tab2FormData,
+        ...updatedMedicalHistoryData,
+        ...updatedMedicalRecordData,
+      };
+      setChemoStatus(medicalHistoryOnly?.chemoTherapyStatus);
+      setRefPhysicianChecked(medicalHistoryOnly?.isReferringPhysician);
+      setRadiologyStatus(medicalRecordOnly?.isRadiologyStatus);
+      setPathologyStatus(medicalRecordOnly?.isPathologyStatus);
+      setLabStatus(medicalRecordOnly?.isLabStatus);
+      setPreviousAuthorization(
+        medicalRecordOnly?.isPreviousAuthorizationStatus
+      );
+      dispatch(setTab2FormData(updatedValues));
+      dispatch(
+        setIsTab2DataChanges({
+          ...updatedMedicalHistoryData,
+          ...updatedMedicalRecordData,
+        })
+      );
+      const idsArrForMedicalAndInsurance = extractIdsFromNestedObjects(
+        patientAllUploadedFilesData
+      );
+      dispatch(setMedicalUploadedFilesById(idsArrForMedicalAndInsurance));
+      dispatch(setMedicalFilesAtEditById(idsArrForMedicalAndInsurance));
+      const idsArrForPatientDocumentsTab = extractIdsFromNestedObjects(
+        patientUploadedDocsData
+      );
+      dispatch(setPatientDocsFilesById(idsArrForPatientDocumentsTab));
+      const validateProvider = (
+        providerType,
+        validateAction,
+        successAction
+      ) => {
+        const npiNumber = medicalHistoryOnly?.[providerType];
+        if (npiNumber) {
+          dispatch(validateAction({ npiNumber })).then((res) => {
+            if (res?.payload?.status) {
+              dispatch(successAction(true));
+            }
+          });
+        }
+      };
+
+      validateProvider(
+        'orderingProvider',
+        getValidateOrderingProvider,
+        setDisplayorderingSuccessTick
+      );
+      validateProvider(
+        'referringProvider',
+        getValidateReferringProvider,
+        setDisplayReferringSuccessTick
+      );
+      validateProvider(
+        'pcpName',
+        getValidatePCPNumber,
+        setDisplayPcpNumberSuccessTick
+      );
+    }
+  }, [displaySearchModal, patientSearchData]);
+
   return (
     <div className="create-order-medical-history-tab-2-container">
+      {loading && <Spin fullscreen />}
       <Form
         form={formData}
         name="create-order-medecal-history"
@@ -432,8 +802,8 @@ const MedicalHIstory = () => {
             >
               <Form.Item label="Chemotherapy Status">
                 <Switch
-                  checked={chemoStaus}
-                  onChange={() => setChemoStatus(!chemoStaus)}
+                  checked={chemoStatus}
+                  onChange={() => setChemoStatus(!chemoStatus)}
                 />
               </Form.Item>
             </Col>
@@ -461,7 +831,7 @@ const MedicalHIstory = () => {
                 }
                 name={CREATE_ORDER_FORM_KEY_NAMES.orderingProvider}
                 rules={CREATE_ORDER_FORM_FIELD_RULES.orderingProvider}
-                validateStatus={orderingSuccessTick && "success"}
+                validateStatus={orderingSuccessTick && SMALL_SUCCESS}
                 hasFeedback
               >
                 <InputNumber
@@ -469,7 +839,7 @@ const MedicalHIstory = () => {
                   size="large"
                   placeholder="Enter NPI Number"
                   onChange={handleOrderingProvider}
-                  minLength={10}
+                  minLength={ALL_PROVIDERS_MAX_LENGTH_COUNT}
                 />
               </Form.Item>
               {!orderingSuccessTick && (
@@ -512,7 +882,7 @@ const MedicalHIstory = () => {
                 }
                 name={CREATE_ORDER_FORM_KEY_NAMES.referringProvider}
                 rules={CREATE_ORDER_FORM_FIELD_RULES.referringProvider}
-                validateStatus={referringSuccessTick && "success"}
+                validateStatus={referringSuccessTick && SMALL_SUCCESS}
                 hasFeedback
               >
                 <InputNumber
@@ -520,7 +890,7 @@ const MedicalHIstory = () => {
                   size="large"
                   placeholder="Enter NPI Number"
                   onChange={handleReferringProvider}
-                  minLength={10}
+                  minLength={ALL_PROVIDERS_MAX_LENGTH_COUNT}
                 />
               </Form.Item>
               {!referringSuccessTick && (
@@ -577,7 +947,7 @@ const MedicalHIstory = () => {
                   }
                   name={CREATE_ORDER_FORM_KEY_NAMES.pcpNumber}
                   rules={CREATE_ORDER_FORM_FIELD_RULES.pcpNumber}
-                  validateStatus={referringSuccessTick && "success"}
+                  validateStatus={referringSuccessTick && SMALL_SUCCESS}
                   hasFeedback
                 >
                   <InputNumber
@@ -585,7 +955,7 @@ const MedicalHIstory = () => {
                     size="large"
                     placeholder="Enter PCP Number"
                     onChange={handlePCPNumber}
-                    minLength={10}
+                    minLength={ALL_PROVIDERS_MAX_LENGTH_COUNT}
                   />
                 </Form.Item>
                 {!pcpNumberSuccessTick && (
@@ -620,8 +990,11 @@ const MedicalHIstory = () => {
             >
               <Form.Item label="Radiology Status">
                 <Switch
-                  checked={radilogyStatus}
-                  onChange={() => setRadilogyStatus(!radilogyStatus)}
+                  checked={radiologyStatus}
+                  onChange={() => setRadiologyStatus(!radiologyStatus)}
+                  disabled={
+                    patientAllUploadedFilesData?.radiologyFiles?.length > 0
+                  }
                 />
               </Form.Item>
             </Col>
@@ -640,35 +1013,61 @@ const MedicalHIstory = () => {
               </Form.Item>
             </Col>
 
-            {radilogyStatus && (
+            {radiologyStatus &&
+              patientAllUploadedFilesData?.radiologyFiles?.length <= 4 && (
+                <Col
+                  xs={{ span: 24 }}
+                  sm={{ span: 12 }}
+                  md={{ span: 12 }}
+                  lg={{ span: 8 }}
+                >
+                  <Form.Item label="Radiology Status File">
+                    <Upload
+                      beforeUpload={beforeFileUpload}
+                      customRequest={(file) =>
+                        customRequest(
+                          file,
+                          DOCUMENTS_UPLOAD_IN_RADIOLOGY_CATEGORY
+                        )
+                      }
+                      listType="picture"
+                      maxCount={MAX_UPLOAD_DOCUMENTS_PER_CATEGORY}
+                      showUploadList={false}
+                      disabled={
+                        patientAllUploadedFilesData?.radiologyFiles?.length ===
+                        MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
+                      }
+                    >
+                      <Button
+                        size="large"
+                        className="co-tab-2-upload-btn"
+                        icon={<FiUpload />}
+                      >
+                        Upload File
+                      </Button>
+                    </Upload>
+                  </Form.Item>
+                </Col>
+              )}
+          </Row>
+          <Row span={24} gutter={24}>
+            {patientAllUploadedFilesData?.radiologyFiles?.map((elem) => (
               <Col
                 xs={{ span: 24 }}
                 sm={{ span: 12 }}
                 md={{ span: 12 }}
                 lg={{ span: 8 }}
+                className="co-tab-2-upload-image-container-at-radiology"
+                key={elem?.id}
               >
-                <Form.Item label="Radiology Status File">
-                  <Upload
-                    action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
-                    listType="picture"
-                    maxCount={1}
-                    showUploadList={{
-                      removeIcon: (
-                        <BiTrash className="trash-icon-for-uploaded-img" />
-                      ),
-                    }}
-                  >
-                    <Button
-                      size="large"
-                      className="co-tab-2-upload-btn"
-                      icon={<FiUpload />}
-                    >
-                      Upload File
-                    </Button>
-                  </Upload>
-                </Form.Item>
+                <UploadedImageContainer
+                  data={{
+                    ...elem,
+                    category: DOCUMENTS_UPLOAD_IN_RADIOLOGY_CATEGORY,
+                  }}
+                />
               </Col>
-            )}
+            ))}
           </Row>
 
           <Row span={24} gutter={24}>
@@ -682,6 +1081,9 @@ const MedicalHIstory = () => {
                 <Switch
                   checked={pathologyStatus}
                   onChange={() => setPathologyStatus(!pathologyStatus)}
+                  disabled={
+                    patientAllUploadedFilesData?.pathologyFiles?.length > 0
+                  }
                 />
               </Form.Item>
             </Col>
@@ -700,35 +1102,61 @@ const MedicalHIstory = () => {
               </Form.Item>
             </Col>
 
-            {pathologyStatus && (
+            {pathologyStatus &&
+              patientAllUploadedFilesData?.pathologyFiles?.length <= 4 && (
+                <Col
+                  xs={{ span: 24 }}
+                  sm={{ span: 12 }}
+                  md={{ span: 12 }}
+                  lg={{ span: 8 }}
+                >
+                  <Form.Item label="Pathology Status File">
+                    <Upload
+                      beforeUpload={beforeFileUpload}
+                      customRequest={(file) =>
+                        customRequest(
+                          file,
+                          DOCUMENTS_UPLOAD_IN_PATHOLOGY_CATEGORY
+                        )
+                      }
+                      listType="picture"
+                      maxCount={MAX_UPLOAD_DOCUMENTS_PER_CATEGORY}
+                      showUploadList={false}
+                      disabled={
+                        patientAllUploadedFilesData?.pathologyFiles?.length ===
+                        MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
+                      }
+                    >
+                      <Button
+                        size="large"
+                        className="co-tab-2-upload-btn"
+                        icon={<FiUpload />}
+                      >
+                        Upload File
+                      </Button>
+                    </Upload>
+                  </Form.Item>
+                </Col>
+              )}
+          </Row>
+          <Row span={24} gutter={24}>
+            {patientAllUploadedFilesData?.pathologyFiles?.map((elem) => (
               <Col
                 xs={{ span: 24 }}
                 sm={{ span: 12 }}
                 md={{ span: 12 }}
                 lg={{ span: 8 }}
+                className="co-tab-2-upload-image-container-at-radiology"
+                key={elem?.id}
               >
-                <Form.Item label="Pathology Status File">
-                  <Upload
-                    action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
-                    listType="picture"
-                    maxCount={1}
-                    showUploadList={{
-                      removeIcon: (
-                        <BiTrash className="trash-icon-for-uploaded-img" />
-                      ),
-                    }}
-                  >
-                    <Button
-                      size="large"
-                      className="co-tab-2-upload-btn"
-                      icon={<FiUpload />}
-                    >
-                      Upload File
-                    </Button>
-                  </Upload>
-                </Form.Item>
+                <UploadedImageContainer
+                  data={{
+                    ...elem,
+                    category: DOCUMENTS_UPLOAD_IN_PATHOLOGY_CATEGORY,
+                  }}
+                />
               </Col>
-            )}
+            ))}
           </Row>
 
           <Row span={24} gutter={24}>
@@ -742,6 +1170,9 @@ const MedicalHIstory = () => {
                 <Switch
                   checked={labStatus}
                   onChange={() => setLabStatus(!labStatus)}
+                  disabled={
+                    patientAllUploadedFilesData?.labStatusFiles?.length > 0
+                  }
                 />
               </Form.Item>
             </Col>
@@ -760,35 +1191,61 @@ const MedicalHIstory = () => {
               </Form.Item>
             </Col>
 
-            {labStatus && (
+            {labStatus &&
+              patientAllUploadedFilesData?.labStatusFiles?.length <= 4 && (
+                <Col
+                  xs={{ span: 24 }}
+                  sm={{ span: 12 }}
+                  md={{ span: 12 }}
+                  lg={{ span: 8 }}
+                >
+                  <Form.Item label="Lab Status File">
+                    <Upload
+                      beforeUpload={beforeFileUpload}
+                      customRequest={(file) =>
+                        customRequest(
+                          file,
+                          DOCUMENTS_UPLOAD_IN_LAB_STATUS_CATEGORY
+                        )
+                      }
+                      listType="picture"
+                      maxCount={MAX_UPLOAD_DOCUMENTS_PER_CATEGORY}
+                      showUploadList={false}
+                      disabled={
+                        patientAllUploadedFilesData?.labStatusFiles?.length ===
+                        MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
+                      }
+                    >
+                      <Button
+                        size="large"
+                        className="co-tab-2-upload-btn"
+                        icon={<FiUpload />}
+                      >
+                        Upload File
+                      </Button>
+                    </Upload>
+                  </Form.Item>
+                </Col>
+              )}
+          </Row>
+          <Row span={24} gutter={24}>
+            {patientAllUploadedFilesData?.labStatusFiles?.map((elem) => (
               <Col
                 xs={{ span: 24 }}
                 sm={{ span: 12 }}
                 md={{ span: 12 }}
                 lg={{ span: 8 }}
+                className="co-tab-2-upload-image-container-at-radiology"
+                key={elem?.id}
               >
-                <Form.Item label="Lab Status File">
-                  <Upload
-                    action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
-                    listType="picture"
-                    maxCount={1}
-                    showUploadList={{
-                      removeIcon: (
-                        <BiTrash className="trash-icon-for-uploaded-img" />
-                      ),
-                    }}
-                  >
-                    <Button
-                      size="large"
-                      className="co-tab-2-upload-btn"
-                      icon={<FiUpload />}
-                    >
-                      Upload File
-                    </Button>
-                  </Upload>
-                </Form.Item>
+                <UploadedImageContainer
+                  data={{
+                    ...elem,
+                    category: DOCUMENTS_UPLOAD_IN_LAB_STATUS_CATEGORY,
+                  }}
+                />
               </Col>
-            )}
+            ))}
           </Row>
 
           <Row span={24} gutter={24}>
@@ -804,38 +1261,71 @@ const MedicalHIstory = () => {
                   onChange={() =>
                     setPreviousAuthorization(!previousAuthorization)
                   }
+                  disabled={
+                    patientAllUploadedFilesData?.prevAuthorizationFiles
+                      ?.length > 0
+                  }
                 />
               </Form.Item>
             </Col>
 
-            {previousAuthorization && (
-              <Col
-                xs={{ span: 24 }}
-                sm={{ span: 12 }}
-                md={{ span: 12 }}
-                lg={{ span: 12 }}
-              >
-                <Form.Item label="Previous Authorization Status File">
-                  <Upload
-                    action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
-                    listType="picture"
-                    maxCount={1}
-                    showUploadList={{
-                      removeIcon: (
-                        <BiTrash className="trash-icon-for-uploaded-img" />
-                      ),
-                    }}
-                  >
-                    <Button
-                      size="large"
-                      className="co-tab-2-upload-btn"
-                      icon={<FiUpload />}
+            {previousAuthorization &&
+              patientAllUploadedFilesData?.prevAuthorizationFiles?.length <=
+                4 && (
+                <Col
+                  xs={{ span: 24 }}
+                  sm={{ span: 12 }}
+                  md={{ span: 12 }}
+                  lg={{ span: 12 }}
+                >
+                  <Form.Item label="Previous Authorization Status File">
+                    <Upload
+                      beforeUpload={beforeFileUpload}
+                      customRequest={(file) =>
+                        customRequest(
+                          file,
+                          DOCUMENTS_UPLOAD_IN_PREV_AUTH_CATEGORY
+                        )
+                      }
+                      listType="picture"
+                      maxCount={MAX_UPLOAD_DOCUMENTS_PER_CATEGORY}
+                      showUploadList={false}
+                      disabled={
+                        patientAllUploadedFilesData?.prevAuthorizationFiles
+                          ?.length === MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
+                      }
                     >
-                      Upload File
-                    </Button>
-                  </Upload>
-                </Form.Item>
-              </Col>
+                      <Button
+                        size="large"
+                        className="co-tab-2-upload-btn"
+                        icon={<FiUpload />}
+                      >
+                        Upload File
+                      </Button>
+                    </Upload>
+                  </Form.Item>
+                </Col>
+              )}
+          </Row>
+          <Row span={24} gutter={24}>
+            {patientAllUploadedFilesData?.prevAuthorizationFiles?.map(
+              (elem) => (
+                <Col
+                  xs={{ span: 24 }}
+                  sm={{ span: 12 }}
+                  md={{ span: 12 }}
+                  lg={{ span: 8 }}
+                  className="co-tab-2-upload-image-container-at-radiology"
+                  key={elem?.id}
+                >
+                  <UploadedImageContainer
+                    data={{
+                      ...elem,
+                      category: DOCUMENTS_UPLOAD_IN_PREV_AUTH_CATEGORY,
+                    }}
+                  />
+                </Col>
+              )
             )}
           </Row>
 
@@ -846,40 +1336,83 @@ const MedicalHIstory = () => {
               md={{ span: 24 }}
               lg={{ span: 24 }}
             >
-              <Form.Item label="Single Medical Release Form">
-                <Upload
-                  action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
-                  listType="picture"
-                  maxCount={1}
-                  showUploadList={{
-                    removeIcon: (
-                      <BiTrash className="trash-icon-for-uploaded-img" />
-                    ),
-                  }}
-                >
-                  <Button
-                    size="large"
-                    className="co-tab-2-upload-btn"
-                    icon={<FiUpload />}
+              {patientAllUploadedFilesData?.medicalReleaseFiles?.length ===
+                MAX_UPLOAD_DOCUMENTS_PER_CATEGORY && (
+                <p className="co-tab-2-p-tag-customize">
+                  Single Medical Release Form
+                </p>
+              )}
+              {patientAllUploadedFilesData?.medicalReleaseFiles?.length <=
+                4 && (
+                <Form.Item label="Single Medical Release Form">
+                  <Upload
+                    beforeUpload={beforeFileUpload}
+                    customRequest={(file) =>
+                      customRequest(
+                        file,
+                        DOCUMENTS_UPLOAD_IN_MEDICAL_RELEASE_CATEGORY
+                      )
+                    }
+                    listType="picture"
+                    maxCount={MAX_UPLOAD_DOCUMENTS_PER_CATEGORY}
+                    showUploadList={false}
+                    disabled={
+                      patientAllUploadedFilesData?.medicalReleaseFiles
+                        ?.length === MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
+                    }
                   >
-                    Upload File
-                  </Button>
-                </Upload>
-              </Form.Item>
+                    <Button
+                      size="large"
+                      className="co-tab-2-upload-btn"
+                      icon={<FiUpload />}
+                    >
+                      Upload File
+                    </Button>
+                  </Upload>
+                </Form.Item>
+              )}
             </Col>
+          </Row>
+          <Row span={24} gutter={24}>
+            {patientAllUploadedFilesData?.medicalReleaseFiles?.map((elem) => (
+              <Col
+                xs={{ span: 24 }}
+                sm={{ span: 12 }}
+                md={{ span: 12 }}
+                lg={{ span: 8 }}
+                className="co-tab-2-upload-image-container-at-radiology"
+                key={elem?.id}
+              >
+                <UploadedImageContainer
+                  data={{
+                    ...elem,
+                    category: DOCUMENTS_UPLOAD_IN_MEDICAL_RELEASE_CATEGORY,
+                  }}
+                />
+              </Col>
+            ))}
           </Row>
         </Col>
 
         <Form.Item>
           <Row className="co-all-tabs-btn-container">
             <Col>
-              <Button className="co-all-tabs-cancel-btn" size="large">
+              <Button
+                className="co-all-tabs-cancel-btn"
+                size="large"
+                onClick={() => showModal(ORDER_STATUS.cancel)}
+              >
                 Cancel
               </Button>
             </Col>
 
             <Col>
-              <Button className="co-all-tabs-save-as-draft-btn" size="large">
+              <Button
+                className="co-all-tabs-save-as-draft-btn"
+                size="large"
+                disabled={!submittable}
+                onClick={() => showModal(ORDER_STATUS.draft)}
+              >
                 Save As Draft
               </Button>
             </Col>
@@ -1010,6 +1543,22 @@ const MedicalHIstory = () => {
       >
         <CretaeOrderModal dataObj={pcpNumberData} />
       </Modal>
+      <OrderModal
+        title={
+          isDraftModal ? (
+            <AiOutlineUnorderedList size={40} color="grey" />
+          ) : (
+            <AiFillExclamationCircle color="red" size={45} />
+          )
+        }
+        open={open}
+        handleOk={handleOk}
+        confirmLoading={confirmLoading}
+        handleCancel={handleCancel}
+        modalText={modalText}
+        okText={ORDER_MODAL_OK_TEXT}
+        cancelText={ORDER_MODAL_CANCEL_TEXT}
+      />
     </div>
   );
 };

@@ -1,20 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import "../styles/orderManagement.css";
-import { useDispatch, useSelector } from "react-redux";
-import { Button, Col, Checkbox, Row, Select, Drawer, Skeleton } from "antd";
-import CustomTable from "@/components/customTable/CustomTable";
-import { TOTAL_ITEMS_PER_PAGE } from "@/utils/constant.util";
-import { FaPlus } from "react-icons/fa6";
-import { LuSlidersHorizontal } from "react-icons/lu";
-import { ORDER_MANAGEMENT_ORDER_STATUS_OPTIONS } from "@/utils/options";
-import { TABLE_FOR_ORDER_MANAGEMENT } from "@/utils/columns";
-import DisplayOrderDetails from "@/components/orders/DisplayOrderDetails";
-import OrderFilters from "@/components/orders/OrderFilters";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import '../styles/orderManagement.css';
+import { useDispatch, useSelector } from 'react-redux';
+import { Button, Col, Checkbox, Row, Select, Drawer, Skeleton } from 'antd';
+import CustomTable from '@/components/customTable/CustomTable';
+import { TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
+import { FaPlus } from 'react-icons/fa6';
+import { LuSlidersHorizontal } from 'react-icons/lu';
+import { ORDER_MANAGEMENT_ORDER_STATUS_OPTIONS } from '@/utils/options';
+import { TABLE_FOR_ORDER_MANAGEMENT } from '@/utils/columns';
+import DisplayOrderDetails from '@/components/orders/DisplayOrderDetails';
+import OrderFilters from '@/components/orders/OrderFilters';
 import {
   getAllCreatedOrderData,
   getUserListBasedOnLoggedInPerson,
-} from "@/store/orderSlice";
+  setSearchResponse,
+} from '@/store/orderSlice';
+import { resetCreateOrderDataBacktoInitialState } from '@/store/createOrderFormSlice';
 
 const OrderManagement = () => {
   const router = useRouter();
@@ -36,7 +38,7 @@ const OrderManagement = () => {
   );
 
   const [isAuth, setIsAuth] = useState(false);
-  const [selectedUser, setSelectedUser] = useState("");
+  const [selectedUser, setSelectedUser] = useState('');
   const [checkedOrderStatus, setCheckedOrderStatus] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [clickedColumnId, setClickedColumnId] = useState(null);
@@ -45,14 +47,14 @@ const OrderManagement = () => {
 
   const generateDropdownOptions = (data = []) => {
     const emptyOption = {
-      value: "",
-      label: "All Orders",
+      value: 'all',
+      label: 'All Orders',
     };
     const optionsArr = data.map((elem) => {
       const label = `${elem.firstName} ${elem.lastName}`;
       return {
         value: elem.id,
-        label: elem.id === userId ? "My Orders" : label,
+        label: elem.id === userId ? 'My Orders' : label,
       };
     });
 
@@ -66,7 +68,7 @@ const OrderManagement = () => {
   };
 
   const handleCreateOrder = () => {
-    router.push("/order-management/create");
+    router.push('/order-management/create');
   };
 
   const handleSelectUserChange = (value) => {
@@ -85,6 +87,8 @@ const OrderManagement = () => {
 
   const handleEditOrders = (record) => {
     setClickedColumnId(record?.id);
+    dispatch(setSearchResponse(true))
+    router.push('/order-management/create?orderId=' + record?.id);
   };
 
   const handleFilterDrawer = () => {
@@ -106,10 +110,17 @@ const OrderManagement = () => {
   useEffect(() => {
     dispatch(
       getAllCreatedOrderData({
-        filters: { userId: selectedUser, status: checkedOrderStatus[0] },
+        filters: {
+          userId: selectedUser
+            ? selectedUser === 'all'
+              ? ''
+              : selectedUser
+            : userId,
+          status: checkedOrderStatus,
+        },
         page: currentPage,
         pageSize: TOTAL_ITEMS_PER_PAGE,
-        orderBy: "updatedAt",
+        orderBy: 'updatedAt',
         ascending: false,
       })
     );
@@ -145,6 +156,7 @@ const OrderManagement = () => {
                   options={generateDropdownOptions(getUsersListForDropdown)}
                   onChange={handleSelectUserChange}
                   placeholder="Select"
+                  defaultValue={userId}
                 />
               </Col>
 
@@ -205,7 +217,7 @@ const OrderManagement = () => {
               open={displayViewDrawer}
               onClose={handleCloseDrawer}
               closable={true}
-              width={"80%"}
+              width={'80%'}
               destroyOnClose={true}
               footer={
                 <Col className="order-mgt-drawer-footer">
@@ -229,7 +241,7 @@ const OrderManagement = () => {
               open={displayFilterDrawer}
               onClose={handleCloseDrawer}
               closable={true}
-              width={"300px"}
+              width={'300px'}
               destroyOnClose={false}
               footer={false}
             >

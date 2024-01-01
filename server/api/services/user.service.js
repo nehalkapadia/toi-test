@@ -72,7 +72,7 @@ exports.allList = async ({
   
   // Add email filter if provided
   if (filters?.email) {
-    whereClause.email = { [Op.iLike]: `%${filters?.email}%` };
+    whereClause.email = { [Op.like]: `%${filters?.email}%` };
   }
 
   // Add phoneNumber filter if provided

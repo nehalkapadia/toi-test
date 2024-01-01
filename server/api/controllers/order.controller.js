@@ -1,9 +1,7 @@
 const orderService = require('../services/order.service');
 const { successResponse, errorResponse } = require('../utils/response.util');
 const constants = require('../utils/constants.util');
-const statusCodes = require('../utils/statuscode.utils');
-
-
+const eventEmitter = require("../handlers/eventEmitter");
 /**
  * Controller function to create a new order.
  *
@@ -18,30 +16,34 @@ exports.createOrder = async (req, res) => {
     // Extract order data from the request body
     const orderData = req.body;
     const userId = req?.userData?.id;
-    if(userId) {
+    if (userId) {
       orderData.createdBy = userId;
       orderData.updatedBy = userId;
     }
     // If no existing order, create a new one using the service
     const createdOrder = await orderService.createOrderInfo(orderData);
 
-    if(createdOrder) {
-      if(orderData.uploadedFiles) {
-        await orderService.uploadFiles(createdOrder, orderData.uploadFiles);
-        await orderService.createOrderAuthDocuments(createdOrder, orderData.orderAuthDocuments);
-      }
+    if (createdOrder) {
+      await createOrUpdateOrderDocuments(createdOrder, orderData)
     }
-    
-    // Success response with the created order
-    return res.status(constants.CREATED).json(successResponse(constants.ORDER_CREATED_SUCCESSFULLY, { createdOrder }));
-  } catch (error) {
 
+    // call event to send data to salesforce api
+    eventEmitter.on("SubmitOrderToSalesForce", orderData);
+
+    // Success response with the created order
+    return res
+      .status(constants.CREATED)
+      .json(
+        successResponse(constants.ORDER_CREATED_SUCCESSFULLY, { createdOrder })
+      );
+  } catch (error) {
     // Determine error message and send appropriate response
     const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(errorMessage));
   }
 };
-
 
 /**
  * Controller function to get an order by its ID.
@@ -67,14 +69,17 @@ exports.getOrderById = async (req, res) => {
     }
 
     // Success response with the retrieved order and the custom success message
-    return res.status(constants.SUCCESS).json(successResponse(constants.ORDER_RETRIEVED_SUCCESSFULLY, order));
+    return res
+      .status(constants.SUCCESS)
+      .json(successResponse(constants.ORDER_RETRIEVED_SUCCESSFULLY, order));
   } catch (error) {
     // Determine error message and send appropriate response
     const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(errorMessage));
   }
 };
-
 
 /**
  * Controller function to list orders with pagination and sorting.
@@ -95,18 +100,29 @@ exports.listOrders = async (req, res) => {
     const page = parseInt(req.body.page) || 1;
     const pageSize = parseInt(req.body.pageSize) || 5;
     const sortBy = req.body.sortBy || 'createdAt';
-    const sortOrder = req.body.sortOrder || 'asc';
+    const sortOrder = req?.body?.ascending || false;
     const filters = req?.body?.filters ? req?.body?.filters : {};
     const userData = req?.userData;
     // Get the list of orders using the service with pagination and sorting
-    const orders = await orderService.listOrders({ page, pageSize, sortBy, sortOrder, filters, userData });
+    const orders = await orderService.listOrders({
+      page,
+      pageSize,
+      sortBy,
+      sortOrder,
+      filters,
+      userData,
+    });
 
     // Success response with the list of orders
-    return res.status(constants.SUCCESS).json(successResponse(constants.ORDERS_LISTED_SUCCESSFULLY, orders));
+    return res
+      .status(constants.SUCCESS)
+      .json(successResponse(constants.ORDERS_LISTED_SUCCESSFULLY, orders));
   } catch (error) {
     // Determine error message and send appropriate response
     const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(errorMessage));
   }
 };
 
@@ -124,21 +140,32 @@ exports.updateOrder = async (req, res) => {
     // Extract order data from the request body
     const orderData = req.body;
     const userId = req?.userData?.id;
-    if(userId) {
+    if (userId) {
       orderData.updatedBy = userId;
     }
     // If no existing order, create a new one using the service
-    const updatedOrder = await orderService.updateOrderInfo(req.params.orderId, orderData);
-    
-    // Success response with the created order
-    return res.status(constants.SUCCESS).json(successResponse(constants.ORDER_UPDATED_SUCCESSFULLY, { updatedOrder }));
-  } catch (error) {
+    const updatedOrder = await orderService.updateOrderInfo(
+      req.params.orderId,
+      orderData
+    );
+    if (updatedOrder) {
+      await createOrUpdateOrderDocuments(updatedOrder, orderData)
+    }
 
+    // Success response with the created order
+    return res
+      .status(constants.SUCCESS)
+      .json(
+        successResponse(constants.ORDER_UPDATED_SUCCESSFULLY, { updatedOrder })
+      );
+  } catch (error) {
     // Determine error message and send appropriate response
     const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(errorMessage));
   }
-}
+};
 
 /**
  * Controller function to get uploaded documents for an order.
@@ -155,13 +182,74 @@ exports.getUploadedDocuments = async (req, res) => {
     const orderId = req.params.orderId;
 
     const uploadedFiles = await orderService.getOrderDocuments(orderId);
-    
-    // Success response with the created order
-    return res.status(constants.SUCCESS).json(successResponse(constants.ORDER_UPDATED_SUCCESSFULLY, uploadedFiles));
-  } catch (error) {
 
+    // Success response with the created order
+    return res
+      .status(constants.SUCCESS)
+      .json(
+        successResponse(constants.ORDER_UPDATED_SUCCESSFULLY, uploadedFiles)
+      );
+  } catch (error) {
     // Determine error message and send appropriate response
     const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(errorMessage));
+  }
+};
+
+/**
+ * Controller function to save an order as a draft.
+ *
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @returns {Object} - Express JSON response.
+ * @description To save the order data save as a draft.
+ * @api /api/order/SaveAsDraft
+ * @method POST
+ */
+exports.saveOrderAsDraft = async (req, res) => {
+  try {
+    // Extract order data from the request body
+    const orderData = req.body;
+    const userId = req?.userData?.id;
+    const organizationId = req?.userData?.user?.organizationId;
+
+    if (userId) {
+      orderData.createdBy = userId;
+      orderData.updatedBy = userId;
+    }
+
+    if (organizationId) {
+      orderData.organizationId = organizationId;
+    }
+    // Save the order using the orderService
+    const order = await orderService.saveOrderAsDraft(orderData);
+
+    if (order) {
+      await createOrUpdateOrderDocuments(order, orderData)
+    }
+
+    // Respond with a success message and the saved order
+    return res
+      .status(constants.CREATED)
+      .json(successResponse(constants.ORDER_SAVED_SUCCESSFULLY, order));
+  } catch (error) {
+    // Determine error message and send an appropriate response
+    const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(errorMessage));
+  }
+};
+
+const createOrUpdateOrderDocuments = async (order, orderData) => {
+  if (orderData?.uploadFiles?.length > 0) {
+    await orderService.uploadFiles(order, orderData.uploadFiles);
+    if (orderData?.orderAuthDocuments?.length > 0)
+      await orderService.createOrderAuthDocuments(
+        order,
+        orderData.orderAuthDocuments
+      );
   }
 }

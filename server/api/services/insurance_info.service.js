@@ -46,8 +46,24 @@ async function createInsuranceInformation(insuranceData) {
   return await InsuranceInfos.create(insuranceData);
 }
 
+// Function to get insurance by ID
+const getInsuranceById = async (insuranceId) => {
+  try {
+    // Use the Insurance model to find insurance by ID
+    const insurance = await InsuranceInfos.findByPk(insuranceId);
+
+    // Return the insurance details
+    return insurance;
+  } catch (error) {
+    // Handle the error or throw it to be caught in the controller
+    throw error;
+  }
+};
+
+
 module.exports = {
   checkPatientExistence,
   checkExistingInsurance,
   createInsuranceInformation,
+  getInsuranceById,
 };

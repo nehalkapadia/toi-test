@@ -2,8 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 300px;
-  max-width: 300px;
+  min-width: 180px;
+  max-width: 100%;
+  flex: 1;
 }
 
 .common-uploaded-doc-row-with-icon {
@@ -45,6 +46,12 @@
   height: 40px;
 }
 
+.common-uploaded-doc-delete-icon {
+  cursor: pointer;
+}
+
+/* Second Container */
+
 .display-single-doc-file-container {
   display: flex;
   justify-content: space-between;
@@ -53,7 +60,7 @@
   max-width: 220px;
   border: 1px solid #ddd;
   padding: 7px;
-  border-radius:8px;
+  border-radius: 8px;
 }
 
 .display-single-doc-file-child-container {

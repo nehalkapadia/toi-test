@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from "react";
-import "../../styles/organizations/addOrganization.css";
-import { Form, Input, Row, Button, InputNumber, message } from "antd";
+import React, { useEffect, useState } from 'react';
+import '../../styles/organizations/addOrganization.css';
+import { Form, Input, Row, Button, InputNumber, message, Spin } from 'antd';
 import {
   FORM_NAME_VALUES,
   ORGANIZATION_FORM_FIELD_RULES,
   API_RESPONSE_MESSAGES,
   TOTAL_ITEMS_PER_PAGE,
-} from "@/utils/constant.util";
-import { replaceMultipleSpacesWithSingleSpace } from "@/utils/patterns";
-import { useDispatch } from "react-redux";
+  ERROR_WHEN_CREATING_ORGANIZATION,
+  ORG_LABEL
+} from '@/utils/constant.util';
+import { replaceMultipleSpacesWithSingleSpace } from '@/utils/patterns';
+import { useDispatch } from 'react-redux';
 import {
   getOrganizationsFunc,
   postOrganizationFunc,
-} from "@/store/organizationSlice";
-import { formatPhoneNumberForInput } from "@/utils/commonFunctions";
+} from '@/store/organizationSlice';
+import { formatPhoneNumberForInput } from '@/utils/commonFunctions';
 
 const { TextArea } = Input;
 
@@ -21,28 +23,37 @@ const AddOrganization = ({ onClose, page }) => {
   const dispatch = useDispatch();
   const [formData] = Form.useForm();
   const [submittable, setSubmittable] = useState(false);
+  const [loading, setLoading] = useState(false);
   const formValues = Form.useWatch([], formData);
 
   const handleSubmitFormData = async (values) => {
-    // const createdBy = localStorage.getItem("userId");
-    values.isActive = true;
-    values.name = replaceMultipleSpacesWithSingleSpace(values.name);
-    values.domain = replaceMultipleSpacesWithSingleSpace(values.domain);
-    values.address = replaceMultipleSpacesWithSingleSpace(values.address);
-    values.phoneNumber = values.phoneNumber.toString();
-    dispatch(postOrganizationFunc(values)).then((res) => {
-      if (res?.payload?.status) {
-        dispatch(
-          getOrganizationsFunc({ page: page, perPage: TOTAL_ITEMS_PER_PAGE })
-        );
-        message.success(API_RESPONSE_MESSAGES.org_added);
-        onClose();
-      } else if (res?.payload?.status === false) {
-        message.error(res?.payload?.message);
-      } else {
-        message.error(API_RESPONSE_MESSAGES.err_rest_api);
-      }
-    });
+    try {
+      setLoading(true);
+      values.isActive = true;
+      values.name = replaceMultipleSpacesWithSingleSpace(values.name);
+      values.domain = replaceMultipleSpacesWithSingleSpace(values.domain);
+      values.address = replaceMultipleSpacesWithSingleSpace(values.address);
+      values.phoneNumber = values.phoneNumber.toString();
+      dispatch(postOrganizationFunc(values)).then((res) => {
+        if (res?.payload?.status) {
+          dispatch(
+            getOrganizationsFunc({ page: page, perPage: TOTAL_ITEMS_PER_PAGE })
+          );
+          message.success(API_RESPONSE_MESSAGES.org_added);
+          setLoading(false);
+          onClose();
+        } else if (res?.payload?.status === false) {
+          message.error(res?.payload?.message);
+          setLoading(false);
+        } else {
+          message.error(API_RESPONSE_MESSAGES.err_rest_api);
+          setLoading(false);
+        }
+      });
+    } catch (error) {
+      message.error(error?.message ? error?.message : ERROR_WHEN_CREATING_ORGANIZATION);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -70,8 +81,7 @@ const AddOrganization = ({ onClose, page }) => {
           <Form.Item
             className="each-one-for-item-itself-at-org"
             name={FORM_NAME_VALUES.name}
-            label={"Organization Name"}
-            validateStatus="validating"
+            label={ORG_LABEL.org_name}
             rules={ORGANIZATION_FORM_FIELD_RULES.org_name}
           >
             <Input
@@ -84,8 +94,7 @@ const AddOrganization = ({ onClose, page }) => {
           <Form.Item
             className="each-one-for-item-itself-at-org"
             name={FORM_NAME_VALUES.email}
-            label={"Email ID"}
-            validateStatus="validating"
+            label={ORG_LABEL.email}
             rules={ORGANIZATION_FORM_FIELD_RULES.org_email}
           >
             <Input
@@ -101,7 +110,7 @@ const AddOrganization = ({ onClose, page }) => {
           <Form.Item
             className="each-one-for-item-itself-at-org"
             name={FORM_NAME_VALUES.domain}
-            label={"Domain Name"}
+            label={ORG_LABEL.domain}
             rules={ORGANIZATION_FORM_FIELD_RULES.domain}
           >
             <Input
@@ -114,7 +123,7 @@ const AddOrganization = ({ onClose, page }) => {
           <Form.Item
             className="each-one-for-item-itself-at-org"
             name={FORM_NAME_VALUES.number}
-            label={"Phone Number"}
+            label={ORG_LABEL.number}
             rules={ORGANIZATION_FORM_FIELD_RULES.number}
           >
             <InputNumber
@@ -123,7 +132,7 @@ const AddOrganization = ({ onClose, page }) => {
               className="add-org-form-input-box add-org-number-input"
               placeholder="Please Enter Phone Number"
               formatter={(value) => formatPhoneNumberForInput(value)}
-              parser={(value) => value.replace(/\D/g, "")}
+              parser={(value) => value.replace(/\D/g, '')}
               maxLength={14}
             />
           </Form.Item>
@@ -133,7 +142,7 @@ const AddOrganization = ({ onClose, page }) => {
           <Form.Item
             className="each-one-for-item-itself-at-org"
             name={FORM_NAME_VALUES.address}
-            label={"Address"}
+            label={ORG_LABEL.address}
           >
             <TextArea
               className="add-org-form-input-box"
@@ -164,6 +173,7 @@ const AddOrganization = ({ onClose, page }) => {
           </Row>
         </Form.Item>
       </div>
+      {loading && <Spin fullscreen />}
     </Form>
   );
 };

@@ -82,7 +82,7 @@
   font-weight: 500;
 }
 
-.co-tab-2-modal-validate-btn{
+.co-tab-2-modal-validate-btn {
   color: #fff;
   background-color: #396571;
   font-size: 14px !important;
@@ -97,6 +97,20 @@
 
 .close-icon-for-modal {
   cursor: pointer;
+}
+
+.uploaded-image-container-1-for-radiology {
+  display: flex;
+  width: 100%;
+  gap: 16px;
+}
+
+.co-tab-2-upload-image-container-at-radiology {
+  margin-bottom: 8px;
+}
+
+.co-tab-2-p-tag-customize {
+  margin: 0;
 }
 
 /* Antd CSS Styles Override */

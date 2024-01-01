@@ -44,7 +44,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       mrn: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
       },
       createdBy: {
         type: Sequelize.INTEGER,

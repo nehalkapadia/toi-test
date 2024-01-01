@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, query } = require('express-validator');
 const constants = require("../utils/constants.util");
 
 /* create insurance_info schema */
@@ -11,3 +11,11 @@ exports.createInsuranceSchema = [
     body('primaryStartDate').notEmpty().withMessage(constants.PRIMARY_START_DATE_REQUIRED),
     body('primaryEndDate').notEmpty().withMessage(constants.PRIMARY_END_DATE_REQUIRED),
   ];
+
+
+// get insurance_info schema
+exports.getInsuranceSchema = [
+  query('insuranceId')
+    .notEmpty().withMessage(constants.CANT_BE_EMPTY + 'Insurance ID')
+    .isNumeric().withMessage(constants.MUST_BE_NUMBER + 'Insurance ID'),
+];

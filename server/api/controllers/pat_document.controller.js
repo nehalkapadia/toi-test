@@ -83,7 +83,7 @@ exports.delete = async (req, res) => {
   try {
     await createLog(req, 'PatDocuments', 'Delete');
     const patDocId = req.params.id;
-    const deletedPatDocument = await patDocumentService.delete(patDocId);
+    const deletedPatDocument = await patDocumentService.softDelete(patDocId, req?.query?.orderId);
     return res
       .status(constants.SUCCESS)
       .json(successResponse(constants.message('Patient Document', 'Delete')));
@@ -93,5 +93,58 @@ exports.delete = async (req, res) => {
     return res
       .status(status)
       .json(errorResponse(constants.INTERNAL_SERVER_ERROR));
+  }
+};
+
+/**
+ * Controller function to get patient details by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @description Patients getPatientById
+ * @api /api/patients?
+ * @method GET
+ */
+exports.getLatestDocuments = async (req, res) => {
+  try {
+    // Extract user ID from request data
+    const userId = req?.userData?.id;
+    // Extract patient ID from request parameters
+    const patientId = req.query.patientId;
+
+    // Check if the patient exists
+    const isPatientExist = await patientService.getPatientById(patientId);
+    
+    // If patient does not exist, return a bad request response
+    if (!isPatientExist) {
+      return res
+        .status(constants.BAD_REQUEST)
+        .json(errorResponse(constants.PATIENT_NOT_FOUND));
+    }
+
+    // Fetch all document types dynamically
+    const allDocumentTypes = await patDocumentService.getAllDocumentTypes();
+
+    // Fetch the latest 5 documents for each document type
+    const latestDocuments = {};
+    for (const docType of allDocumentTypes) {
+      const documents = await patDocumentService.getLatestDocumentsByType(patientId, docType.id, 5);
+      latestDocuments[`${docType.name}`] = documents;
+    }
+
+    // Return success response with the latest documents data
+    return res
+      .status(constants.SUCCESS)
+      .json(successResponse(constants.LATEST_DOCUMENTS_FETCHED, latestDocuments));
+  } catch (error) {
+    // Handle errors and log them
+    await createLog(req, 'PatDocuments', 'GetLatestDocuments', error);
+    
+    // Determine the response status based on the error or use internal server status
+    const status = error.status ?? constants.INTERNAL_SERVER_STATUS;
+    
+    // Return an error response with the appropriate status and error message
+    return res
+      .status(status)
+      .json(errorResponse(constants.INTERNAL_SERVER_ERROR, error?.message));
   }
 };

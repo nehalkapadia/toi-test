@@ -44,3 +44,37 @@ exports.create = async (req, res, next) => {
       .status(constantsUtil.INTERNAL_SERVER_STATUS).json(errorResponse(constantsUtil.INTERNAL_SERVER_ERROR, error))
   }
 };
+
+
+
+/**
+ * Controller function to get medical history details by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @description MedicalHistory getMedicalHistoryById
+ * @api /api/medicalHistory?
+ * @method GET
+ */
+exports.getMedicalHistoryById = async (req, res) => {
+  try {
+    // Extract medical history ID from the request parameters
+    const medicalHistoryId = req.query.historyId;
+
+    // Get the medical history by ID using the service
+    const medicalHistory = await medicalHistoryService.getMedicalHistoryById(medicalHistoryId);
+
+    // Check if the medical history exists
+    if (!medicalHistory) {
+      // If medical history not found, return a not found response
+      const errorMessage = constantsUtil.MEDICAL_HISTORY_NOT_FOUND;
+      return res.status(constantsUtil.NOT_FOUND).json(errorResponse(errorMessage));
+    }
+
+    // Success response with the retrieved medical history and the custom success message
+    return res.status(constantsUtil.SUCCESS).json(successResponse(constantsUtil.MEDICAL_HISTORY_RETRIEVED_SUCCESSFULLY, medicalHistory));
+  } catch (error) {
+    // Determine error message and send an appropriate response
+    const errorMessage = error.message || constantsUtil.INTERNAL_SERVER_ERROR;
+    return res.status(constantsUtil.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
+  }
+};

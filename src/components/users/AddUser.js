@@ -10,6 +10,7 @@ import {
   Col,
   Select,
   Skeleton,
+  Spin,
 } from 'antd';
 import {
   FORM_NAME_VALUES,
@@ -41,9 +42,11 @@ const AddUser = ({
   const formValues = Form.useWatch([], formData);
   const isLoading = useSelector((state) => state.userTable.viewIsLoading);
   const getUserDetails = useSelector((state) => state.userTable.getUserDetails);
+  const [loading, setLoading] = useState(false);
   // const { firstName, lastName, email, roleId, isActive } = getUserDetails;
 
   const handleSubmitFormData = async (values) => {
+    setLoading(true);
     values.firstName = replaceMultipleSpacesWithSingleSpace(values.firstName);
     values.lastName = replaceMultipleSpacesWithSingleSpace(values.lastName);
 
@@ -61,11 +64,14 @@ const AddUser = ({
             })
           );
           message.success(API_RESPONSE_MESSAGES.user_added);
+          setLoading(false);
           onClose();
         } else if (res?.payload?.status === false) {
           message.error(res?.payload?.message);
+          setLoading(false);
         } else {
           message.error(API_RESPONSE_MESSAGES.err_rest_api);
+          setLoading(false);
         }
       });
     } else if (isEditClicked) {
@@ -80,11 +86,14 @@ const AddUser = ({
             })
           );
           message.success(API_RESPONSE_MESSAGES.user_updated);
+          setLoading(false);
           onClose();
         } else if (res?.payload?.status === false) {
           message.error(res?.payload?.message);
+          setLoading(false);
         } else {
           message.error(API_RESPONSE_MESSAGES.err_rest_api);
+          setLoading(false);
         }
       });
     }
@@ -137,7 +146,6 @@ const AddUser = ({
                 className="each-one-for-item-itself-at-user"
                 name={FORM_NAME_VALUES.first_name}
                 label={'First Name'}
-                validateStatus="validating"
                 rules={USER_FORM_FIELD_RULES.first_name}
               >
                 <Input
@@ -151,7 +159,6 @@ const AddUser = ({
                 className="each-one-for-item-itself-at-user"
                 name={FORM_NAME_VALUES.last_name}
                 label={'Last Name'}
-                validateStatus="validating"
                 rules={USER_FORM_FIELD_RULES.last_name}
               >
                 <Input
@@ -167,7 +174,6 @@ const AddUser = ({
                 className="each-one-for-item-itself-at-user"
                 name={FORM_NAME_VALUES.email}
                 label={'Email ID'}
-                validateStatus="validating"
                 rules={USER_FORM_FIELD_RULES.user_email}
               >
                 <Input
@@ -241,6 +247,7 @@ const AddUser = ({
               </Row>
             </Form.Item>
           </div>
+          {loading && <Spin fullscreen />}
         </Form>
       )}
     </>

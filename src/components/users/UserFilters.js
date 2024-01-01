@@ -1,28 +1,28 @@
-import React, { useEffect, useState } from "react";
-import "../../styles/users/userFilters.css";
-import { Button, Col, Input, Row, Select } from "antd";
-import { ORGANIZATION_STATUS_SELECT_OPTIONS } from "@/utils/options";
-import { useDispatch } from "react-redux";
-import { TOTAL_ITEMS_PER_PAGE } from "@/utils/constant.util";
-import { getUsersFunc } from "@/store/userTableDataSlice";
+import React, { useEffect, useState } from 'react';
+import '../../styles/users/userFilters.css';
+import { Button, Col, Input, Row, Select, message } from 'antd';
+import { ORGANIZATION_STATUS_SELECT_OPTIONS } from '@/utils/options';
+import { useDispatch } from 'react-redux';
+import { TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
+import { getUsersFunc } from '@/store/userTableDataSlice';
 
 const UserFilters = ({ onClose, page, organizationID }) => {
   const dispatch = useDispatch();
   const [isClearable, setIsClearable] = useState(false);
   const [filterParams, setFilterparams] = useState({});
-  const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [isActive, setIsActive] = useState("");
+  const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [isActive, setIsActive] = useState('');
 
   const handleFilterByFirstName = (e) => {
     const value = e.target.value;
     if (
-      value?.toString()?.trim() === "" ||
+      value?.toString()?.trim() === '' ||
       value?.toString()?.trim()?.length <= 0 ||
       !value
     ) {
-      setFirstName("");
+      setFirstName('');
       setFilterparams((prevFilterparams) => {
         const { firstName, ...rest } = prevFilterparams;
         return { ...rest };
@@ -39,8 +39,8 @@ const UserFilters = ({ onClose, page, organizationID }) => {
 
   const handleFilterByLastName = (e) => {
     const value = e.target.value;
-    if (value?.trim() === "" || !value) {
-      setLastName("");
+    if (value?.trim() === '' || !value) {
+      setLastName('');
       setFilterparams((prevFilterparams) => {
         const { lastName, ...rest } = prevFilterparams;
         return { ...rest };
@@ -56,8 +56,8 @@ const UserFilters = ({ onClose, page, organizationID }) => {
 
   const handleFilterByEmail = (e) => {
     const value = e.target.value;
-    if (value?.trim() === "" || !value) {
-      setEmail("");
+    if (value?.trim() === '' || !value) {
+      setEmail('');
       setFilterparams((prevFilterparams) => {
         const { email, ...rest } = prevFilterparams;
         return { ...rest };
@@ -72,8 +72,8 @@ const UserFilters = ({ onClose, page, organizationID }) => {
   };
 
   const handleFilterByStatus = (value) => {
-    if (value === "") {
-      setIsActive("");
+    if (value === '') {
+      setIsActive('');
       setFilterparams((prevFilterparams) => {
         const { isActive, ...rest } = prevFilterparams;
         return { ...rest };
@@ -104,10 +104,10 @@ const UserFilters = ({ onClose, page, organizationID }) => {
 
   const handleClearFilters = () => {
     setFilterparams({});
-    setEmail("");
-    setFirstName("");
-    setLastName("");
-    setIsActive("");
+    setEmail('');
+    setFirstName('');
+    setLastName('');
+    setIsActive('');
     setIsClearable(false);
     dispatch(
       getUsersFunc({
@@ -120,10 +120,32 @@ const UserFilters = ({ onClose, page, organizationID }) => {
 
   useEffect(() => {
     const hasFilterValues = Object.values(filterParams).some(
-      (value) => value !== ""
+      (value) => value !== ''
     );
     setIsClearable(hasFilterValues);
   }, [filterParams]);
+
+  const onFilterClose = () => {
+    if (!firstName && !lastName && !email && !isActive) {
+      setFilterparams({});
+      setEmail('');
+      setFirstName('');
+      setLastName('');
+      setIsActive('');
+      setIsClearable(false);
+      dispatch(
+        getUsersFunc({
+          page: page,
+          perPage: TOTAL_ITEMS_PER_PAGE,
+          organizationId: organizationID,
+        })
+      );
+      onClose();
+      return;
+    }
+    onClose();
+  };
+
   return (
     <div className="all-user-filter-element-container">
       <Col className="each-filter-form-elem-single-at-user-mgt">
@@ -148,7 +170,12 @@ const UserFilters = ({ onClose, page, organizationID }) => {
 
       <Col className="each-filter-form-elem-single-at-user-mgt">
         <label>Email Id</label>
-        <Input size="large" placeholder="Enter Email Id" value={email} onChange={handleFilterByEmail} />
+        <Input
+          size="large"
+          placeholder="Enter Email Id"
+          value={email}
+          onChange={handleFilterByEmail}
+        />
       </Col>
 
       <Col className="each-filter-form-elem-single-at-user-mgt">
@@ -166,9 +193,9 @@ const UserFilters = ({ onClose, page, organizationID }) => {
         <Button
           size="large"
           className="close-filter-btn-drawer-at-user"
-          onClick={isClearable ? handleClearFilters : onClose}
+          onClick={isClearable ? handleClearFilters : onFilterClose}
         >
-          {isClearable ? "Clear" : "Close"}
+          {isClearable ? 'Clear' : 'Close'}
         </Button>
 
         <Button

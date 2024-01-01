@@ -44,3 +44,36 @@ exports.createInsurance = async (req, res) => {
     return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.INTERNAL_SERVER_ERROR));
   }
 };
+
+
+/**
+ * Controller function to get insurance details by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @description Insurance_Info getInsuranceById
+ * @api /api/insuranceInfo?
+ * @method GET
+ */
+exports.getInsuranceById = async (req, res) => {
+  try {
+    // Extract insurance ID from the request parameters
+    const insuranceId = req.query.insuranceId;
+
+    // Get the insurance by ID using the service
+    const insurance = await insuranceService.getInsuranceById(insuranceId);
+
+    // Check if the insurance exists
+    if (!insurance) {
+      // If insurance not found, return a not found response
+      const errorMessage = constants.INSURANCE_NOT_FOUND;
+      return res.status(constants.NOT_FOUND).json(errorResponse(errorMessage));
+    }
+
+    // Success response with the retrieved insurance and the custom success message
+    return res.status(constants.SUCCESS).json(successResponse(constants.INSURANCE_RETRIEVED_SUCCESSFULLY, insurance));
+  } catch (error) {
+    // Determine error message and send an appropriate response
+    const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
+    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
+  }
+};
