@@ -139,6 +139,33 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
     );
   };
 
+  const onFilterClose = () => {
+    if (!firstName && !lastName && !dateOfBirth && !gender && !orderId) {
+      setFilterparams({});
+      setGender('');
+      setOrderId('');
+      setFirstName('');
+      setLastName('');
+      setDateOfBirth('');
+      setIsClearable(false);
+      dispatch(
+        getAllCreatedOrderData({
+          filters: {
+            userId,
+            status: Orderstatus[0],
+          },
+          page,
+          pageSize: TOTAL_ITEMS_PER_PAGE,
+          orderBy: "updatedAt",
+          ascending: false,
+        })
+      );
+      onClose();
+      return;
+    }
+    onClose();
+  };
+
   useEffect(() => {
     const hasFilterValues = Object.values(filterParams).some(
       (value) => value !== ""
@@ -204,7 +231,7 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
         <Button
           size="large"
           className="close-filter-btn-drawer-at-order-mgt"
-          onClick={isClearable ? handleClearFilters : onClose}
+          onClick={isClearable ? handleClearFilters : onFilterClose}
         >
           {isClearable ? "Clear" : "Close"}
         </Button>

@@ -1,18 +1,18 @@
-import React from "react";
-import "./customTable.css";
-import propTypes from "prop-types";
-import { Table, Button } from "antd";
-import Image from "next/image";
-import Create_User_Icon from "../../icons/create_user.svg";
-import View_Icon from "../../icons/eye_icon.svg";
-import Edit_Icon from "../../icons/pen.svg";
-import Delete_Icon from "../../icons/trash.svg";
-import { useRouter } from "next/router";
+import React from 'react';
+import './customTable.css';
+import propTypes from 'prop-types';
+import { Table, Button } from 'antd';
+import Image from 'next/image';
+import Create_User_Icon from '../../icons/create_user.svg';
+import View_Icon from '../../icons/eye_icon.svg';
+import Edit_Icon from '../../icons/pen.svg';
+import Delete_Icon from '../../icons/trash.svg';
+import { useRouter } from 'next/router';
 
 const CustomTable = (props) => {
   const router = useRouter();
   const { pathname } = router;
-  const { columns, rows, rowSelectionType, total, size = "default" } = props;
+  const { columns, rows, rowSelectionType, total, size = 'default' } = props;
 
   const prepareRowSelection = () => {
     const rowSelection = {
@@ -61,8 +61,8 @@ const CustomTable = (props) => {
       allColumns = [
         ...columns,
         {
-          title: "Actions",
-          dataIndex: "actions",
+          title: 'Actions',
+          dataIndex: 'actions',
           // width: 130,
           render: (_, record) => {
             return (
@@ -89,18 +89,20 @@ const CustomTable = (props) => {
                   </Button>
                 )}
 
-                {isEditable && pathname !== "/order-management" && (
-                  <Button
-                    type="link"
-                    onClick={(e) => editFunction(e, record, onEdit)}
-                  >
-                    <Image src={Edit_Icon} alt="Edit" />
-                  </Button>
-                )}
+                {isEditable &&
+                  pathname !== '/order-management' &&
+                  record?.name?.toLowerCase() !== 'toi' && (
+                    <Button
+                      type="link"
+                      onClick={(e) => editFunction(e, record, onEdit)}
+                    >
+                      <Image src={Edit_Icon} alt="Edit" />
+                    </Button>
+                  )}
 
                 {isEditable &&
-                  pathname === "/order-management" &&
-                  record.status === "draft" && (
+                  pathname === '/order-management' &&
+                  record?.currentStatus?.toLowerCase() === 'draft' && (
                     <Button
                       type="link"
                       onClick={(e) => editFunction(e, record, onEdit)}
@@ -127,16 +129,16 @@ const CustomTable = (props) => {
   };
 
   return (
-    <div className="custom-table-container" style={{ overflowX: "auto" }}>
+    <div className="custom-table-container" style={{ overflowX: 'auto' }}>
       <Table
-        className={props.className || ""}
-        rowKey={props.rowKey || "id"}
+        className={props.className || ''}
+        rowKey={props.rowKey || 'id'}
         dataSource={rows ? rows : []}
         columns={prepareTableColumns() ? prepareTableColumns() : columns}
         scroll={props?.scroll || {}}
         rowSelection={
           rowSelectionType
-            ? { type: "checkbox", ...prepareRowSelection() }
+            ? { type: 'checkbox', ...prepareRowSelection() }
             : null
         }
         pagination={
@@ -150,7 +152,7 @@ const CustomTable = (props) => {
                   showTotal: (total) => `Total ${total} items`,
                   total: total,
                   current: props.current,
-                  position: ["bottomRight"],
+                  position: ['bottomRight'],
                   onChange: (page) => {
                     props.onPageChange(page);
                   },
@@ -160,7 +162,7 @@ const CustomTable = (props) => {
                   showQuickJumper: true,
                   showTotal: (total) => `Total ${total} items`,
                   total: { total },
-                  position: ["bottomRight"],
+                  position: ['bottomRight'],
                   defaultPageSize: props.pageSize ? props.pageSize : 5,
                 }
             : props?.pagination

@@ -56,6 +56,10 @@ module.exports = (sequelize, Sequelize) => {
       currentStatus: {
         type: Sequelize.STRING,
       },
+      salesForceSyncUp: {
+        type: Sequelize.BOOLEAN,
+        default: false,
+      },
       createdBy: {
         type: Sequelize.INTEGER,
         references: {
@@ -80,7 +84,7 @@ module.exports = (sequelize, Sequelize) => {
     { timestamps: true }
   );
 
-  Orders.belongsTo(PatientDemo, { foreignKey: 'patientId', as: 'patient' });
+  Orders.belongsTo(PatientDemo, { foreignKey: 'patientId', as: 'patientDemography' });
   Orders.belongsTo(MedicalHistory, { foreignKey: 'historyId', as: 'medicalHistory' });
   Orders.belongsTo(MedicalRecord, { foreignKey: 'recordId', as: 'medicalRecord' });
   Orders.belongsTo(InsuranceInfo, { foreignKey: 'insuranceId', as: 'insuranceInfo' });

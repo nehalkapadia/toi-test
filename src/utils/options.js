@@ -131,28 +131,25 @@ export const OrderManagementCreateOrderTabs = (tab2, tab3, tab4) => {
   return tabs;
 };
 
-export const CREATE_ORDER_PATIENT_DOCS_TAB_FILE_TYPE = [
-  {
-    value: "writtenOrdersForTreatment",
-    label: "Written Orders For Treatment",
-  },
-  {
-    value: "mdNotes",
-    label: "MD Notes",
-  },
-  {
-    value: "mostRecentLabs",
-    label: "Most Recent Labs",
-  },
-  {
-    value: "mostRecentPathology",
-    label: "Most Recent Pathology",
-  },
-  {
-    value: "imagingDetails",
-    label: "Imaging Details",
-  },
-];
+export const patientDocumentsUploadCategoryOptions = (
+  writtenOrdersCategory,
+  mdNotesCategory,
+) => {
+  const patDocsCategory = [
+    {
+      value: "written orders for treatment",
+      label: "Written Orders For Treatment",
+      disabled: writtenOrdersCategory,
+    },
+    {
+      value: "md notes",
+      label: "MD Notes",
+      disabled: mdNotesCategory,
+    },
+  ];
+
+  return patDocsCategory;
+};
 
 export const MEDICAL_HISTORY_DIAGNOSIS_OPTIONS = [
   {
@@ -193,19 +190,19 @@ export const INSURANCE_INFO_LOB_OPTIONS = [
 
 export const DISPLAY_DIFFERENT_TABS_OF_ORDER_MANAGEMENT = [
   {
-    key:1,
+    key: 1,
     label: "Patient Demographics",
   },
   {
-    key:2,
+    key: 2,
     label: "Medical History & Records",
   },
   {
-    key:3,
+    key: 3,
     label: "Insurance information",
   },
   {
-    key:4,
+    key: 4,
     label: "Patient Documents",
-  }
-]
+  },
+];

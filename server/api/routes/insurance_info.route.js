@@ -5,14 +5,20 @@ const router = express.Router();
 // Require middlewares
 const { validate } = require('../middlewares/validate.middleware');
 
-// Require validators
-const { createInsuranceSchema } = require('../validators/insurance_info.validator');
+// Require authentication middleware
+const { verifyToken } = require('../middlewares/auth.middleware');
 
-// require Controllers
+// Require validators
+const { createInsuranceSchema, getInsuranceSchema } = require('../validators/insurance_info.validator');
+
+// Require Controllers
 const insuranceController = require('../controllers/insurance_info.controller');
 
+// Route to create a new insurance
+router.post('/', verifyToken, validate(createInsuranceSchema), insuranceController.createInsurance);
 
-// insurance route
-router.post('/', validate(createInsuranceSchema), insuranceController.createInsurance);
+// Route to get insurance by ID
+router.get('/', verifyToken, validate(getInsuranceSchema), insuranceController.getInsuranceById);
+
 
 module.exports = router;

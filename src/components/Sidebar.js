@@ -1,17 +1,25 @@
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import Image from "next/image";
-import Link from "next/link";
-import { Menu } from "antd";
-import Logo from "../icons/logo.svg";
-import { LuFileText } from "react-icons/lu";
-import { FaRegUser } from "react-icons/fa6";
-import { HiOutlineUsers } from "react-icons/hi";
-import Sider from "antd/es/layout/Sider";
-import "../styles/index.css";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Menu } from 'antd';
+import Logo from '../icons/logo.svg';
+import { LuFileText } from 'react-icons/lu';
+import { FaRegUser } from 'react-icons/fa6';
+import { HiOutlineUsers } from 'react-icons/hi';
+import Sider from 'antd/es/layout/Sider';
+import '../styles/index.css';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  resetCreateOrderDataBacktoInitialState,
+  setDisplayPcpNumberSuccessTick,
+  setDisplayReferringSuccessTick,
+  setDisplayorderingSuccessTick,
+} from '@/store/createOrderFormSlice';
+import { resetSearchPatientData, setTab1FormData } from '@/store/orderSlice';
 
 const AppSidebar = ({ collapsed, setCollapsed }) => {
+  const dispatch = useDispatch();
   const router = useRouter();
   const { asPath } = router;
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -20,15 +28,24 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
 
   const handleSubmenu = () => {};
 
+  const onOrderManagementClick = () => {
+    dispatch(resetCreateOrderDataBacktoInitialState());
+    dispatch(setDisplayPcpNumberSuccessTick(false));
+    dispatch(setDisplayReferringSuccessTick(false));
+    dispatch(setDisplayorderingSuccessTick(false));
+    dispatch(setTab1FormData({}));
+    dispatch(resetSearchPatientData());
+  };
+
   const adminItems = [
     {
-      key: "/organization-management",
+      key: '/organization-management',
       icon: (
         <LuFileText
           style={
             collapsed
-              ? { width: "22px", height: "22px" }
-              : { width: "22px", height: "22px" }
+              ? { width: '22px', height: '22px' }
+              : { width: '22px', height: '22px' }
           }
         />
       ),
@@ -37,13 +54,13 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
       ),
     },
     {
-      key: "/user-management",
+      key: '/user-management',
       icon: (
         <FaRegUser
           style={
             collapsed
-              ? { width: "22px", height: "20px" }
-              : { width: "22px", height: "20px" }
+              ? { width: '22px', height: '20px' }
+              : { width: '22px', height: '20px' }
           }
         />
       ),
@@ -66,17 +83,21 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
 
   const memberItems = [
     {
-      key: "/order-management",
+      key: '/order-management',
       icon: (
         <LuFileText
           style={
             collapsed
-              ? { width: "22px", height: "22px" }
-              : { width: "22px", height: "22px" }
+              ? { width: '22px', height: '22px' }
+              : { width: '22px', height: '22px' }
           }
         />
       ),
-      label: <Link href="/order-management">Order Management</Link>,
+      label: (
+        <Link href="/order-management" onClick={onOrderManagementClick}>
+          Order Management
+        </Link>
+      ),
     },
   ];
 
@@ -92,7 +113,7 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
 
   return (
     <Sider
-      className={`universal-sidebar ${collapsed ? "collapsed" : "expanded"}`}
+      className={`universal-sidebar ${collapsed ? 'collapsed' : 'expanded'}`}
       collapsible={true}
       trigger={null}
       collapsed={collapsed}
@@ -100,15 +121,21 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
       onBreakpoint={(broken) => setCollapsed(broken)}
     >
       <div className="oncology-univsersal-logo">
-        <Image src={Logo} alt="Logo" style={collapsed && { width: "80px" }} />
+        <Image src={Logo} alt="Logo" style={collapsed && { width: '80px' }} />
       </div>
       <div className="handle-sidebar-menu-container">
         <Menu
           theme="light"
           mode="inline"
-          openKeys={""}
+          openKeys={''}
           onOpenChange={handleSubmenu}
-          defaultSelectedKeys={[asPath.includes("login-success") ? userRole == 1 ? "/organization-management" : "/order-management" : asPath]}
+          defaultSelectedKeys={[
+            asPath.includes('login-success')
+              ? userRole == 1
+                ? '/organization-management'
+                : '/order-management'
+              : asPath,
+          ]}
           items={items}
         ></Menu>
       </div>

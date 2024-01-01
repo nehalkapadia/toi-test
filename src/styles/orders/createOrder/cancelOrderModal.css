@@ -1,0 +1,41 @@
+.ant-modal-footer {
+    display: flex;
+    justify-content: space-between !important;
+    padding-top: 16px;
+}
+
+:where(.css-dev-only-do-not-override-zcfrx9).ant-modal .ant-modal-body {
+    font-size: 14px;
+    line-height: 1.5714285714285714;
+    word-wrap: break-word;
+    text-align: center;
+}
+
+:where(.css-dev-only-do-not-override-zcfrx9).ant-modal .ant-modal-header {
+    color: rgba(0, 0, 0, 0.88);
+    background: #ffffff;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+b {
+    font-weight: 600;
+    font-size: large;
+}
+
+:where(.css-dev-only-do-not-override-zcfrx9).ant-btn-primary {
+    color: #fff;
+    background-color: #396571;
+    box-shadow: 0 2px 0 rgba(5, 145, 255, 0.1);
+}
+
+:where(.css-dev-only-do-not-override-zcfrx9).ant-btn-primary:not(:disabled):not(.ant-btn-disabled):hover {
+    color: #fff;
+    background-color: #396571;
+}
+
+:where(.css-dev-only-do-not-override-zcfrx9).ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover {
+    color: black;
+    border-color: lightgrey;
+}

@@ -4,8 +4,34 @@ const PatientDemos = db.PatientDemos;
 
 async function searchPatient(criteria) {
   try {
+    let whereClause = {};
+    if(criteria?.mrn) {
+      whereClause = {
+        [Op.or]: [
+          {
+            [Op.and]: [
+              { firstName: criteria.firstName },
+              { lastName: criteria.lastName },
+              { dob: criteria.dob },
+              { gender: criteria.gender },
+            ],
+          },
+          { mrn: criteria.mrn },
+        ],
+      };
+    } else {
+      whereClause = {
+        [Op.and]: [
+          { firstName: criteria.firstName },
+          { lastName: criteria.lastName },
+          { dob: criteria.dob },
+          { gender: criteria.gender },
+        ],
+      }
+    }
     const existingPatient = await PatientDemos.findOne({
-      where: criteria,
+      where: whereClause,
+      order: [['createdAt', 'DESC']],
     });
 
     return existingPatient;

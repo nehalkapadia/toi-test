@@ -84,8 +84,9 @@ export const CREATE_ORDER_FORM_KEY_NAMES = {
   email: "email",
   primaryPhoneNumber: "primaryPhoneNumber",
   secondaryPhoneNumber: "secondaryPhoneNumber",
-  language: "language",
+  preferredLanguage: "preferredLanguage",
   address: "address",
+  mrn: "mrn",
   race: "race",
   diagnosis: "diagnosis",
   chemoStatus: "chemoTherapyStatus",
@@ -135,7 +136,7 @@ export const CREATE_ORDER_FORM_FIELD_RULES = {
     { validator: validatePhoneNumber },
   ],
   email: [{ required: false }, { validator: validateAnEmail }],
-  language: [{ required: false }],
+  preferredLanguage: [{ required: false }],
   address: [{ required: true, message: "Address is Required" }],
   race: [{ required: false }],
   diagnosis: [{ required: true, message: "Select Diagnosis Status" }],
@@ -174,6 +175,7 @@ export const CREATE_ORDER_FORM_FIELD_RULES = {
     { required: true, message: "Secondary End Date is Required" },
   ],
   medicareId: [{ required: true, message: "Medicare ID is Required" }],
+  mrn: [{ required: true, message: "MRN Number is Required" }],
 };
 
 export const getFileTypeForUploadedDocs = (fileName) => {
@@ -217,3 +219,129 @@ export const MEDICARE_CONDITIONAL_VALIDATION = "medicare";
 export const DATE_FORMAT_STARTING_FROM_YEAR = "YYYY-MM-DD";
 export const DATE_FORMAT_STARTING_FROM_MONTH = "MM-DD-YYYY";
 export const DUMMAY_ARR_FOR_ORDER_DETAILS = [0, 0, 0, 0, 0];
+export const ERROR_WHEN_CREATING_ORGANIZATION = "Error When Creating Org";
+
+export const ORG_LABEL = {
+  org_name: "Organization Name",
+  org_email: "Organization Email",
+  domain: "Domain Name",
+  number: "Phone Number",
+  email: "Email ID",
+  address: "Address",
+};
+
+export const ORG_MESSAGES = {
+  address_not_available: "Address Not Available",
+};
+
+export const ACTIVE_STATUS = "Active";
+export const INACTIVE_STATUS = "Inactive";
+export const CANCEL = "Cancel";
+export const CLOSE = "Close";
+export const CLEAR = "Clear";
+export const ARE_YOU_SURE_WANT_TO_CANCEL_ORDER =
+  "Are you sure you want to cancel the order?";
+export const MEDICARE_ID = "M12564gf34";
+export const CASE_ID = "C12564gf34";
+
+export const ORDER_STATUS = {
+  draft: "draft",
+  submitted: "submitted",
+  complete: "complete",
+  cancel: "cancel",
+};
+
+export const SMALL_SUCCESS = "success";
+export const ALLOWED_FILE_TYPE_FOR_UPLOAD = [
+  "image/jpeg",
+  "image/png",
+  "application/pdf",
+];
+export const ERROR_MESSAGE_FOR_UPLOADED_FILE_TYPE =
+  '"You can only upload JPG, PNG, or PDF files!"';
+export const MAX_FILE_SIZE_FOR_UPLOAD = 10 * 1024 * 1024;
+export const ERROR_MESSAGE_FOR_FILE_SIZE = "File size must be within 10 MB!";
+
+// While Uploading Documents it show the category name as key.
+// Do not change it otherwise whole upload patient file functionality will break.
+export const DOCUMENTS_UPLOAD_IN_RADIOLOGY_CATEGORY = "radiology status";
+export const DOCUMENTS_UPLOAD_IN_PATHOLOGY_CATEGORY = "pathology status";
+export const DOCUMENTS_UPLOAD_IN_LAB_STATUS_CATEGORY = "lab status";
+export const DOCUMENTS_UPLOAD_IN_PREV_AUTH_CATEGORY =
+  "previous authorization status";
+export const DOCUMENTS_UPLOAD_IN_MEDICAL_RELEASE_CATEGORY =
+  "single medical release form";
+export const DOCUMENTS_UPLOAD_IN_INSURANCE_COPY_CATEGORY =
+  "copy of insurance card";
+export const DOCUMENTS_UPLOAD_IN_SECONDARY_INSURANCE_CATEGORY =
+  "secondary insurance";
+export const DOCUMENTS_UPLOAD_IN_WRITTEN_ORDERS_CATEGORY =
+  "written orders for treatment";
+export const DOCUMENTS_UPLOAD_IN_MD_NOTES_CATEGORY = "md notes";
+// Categories ending here.
+
+export const MAX_UPLOAD_DOCUMENTS_PER_CATEGORY = 5;
+export const ERROR_MESSAGE_FOR_MAX_UPLOAD_DOCS =
+  "Maximum 5 Documents can be uploaded!";
+
+export const MEDICAL_AND_INSURANCE_FILE_UPLOAD_CATEGORIES = [
+  { key: "radiologyFiles", value: DOCUMENTS_UPLOAD_IN_RADIOLOGY_CATEGORY },
+  { key: "pathologyFiles", value: DOCUMENTS_UPLOAD_IN_PATHOLOGY_CATEGORY },
+  { key: "labStatusFiles", value: DOCUMENTS_UPLOAD_IN_LAB_STATUS_CATEGORY },
+  {
+    key: "prevAuthorizationFiles",
+    value: DOCUMENTS_UPLOAD_IN_PREV_AUTH_CATEGORY,
+  },
+  {
+    key: "medicalReleaseFiles",
+    value: DOCUMENTS_UPLOAD_IN_MEDICAL_RELEASE_CATEGORY,
+  },
+  {
+    key: "insuranceCardCopyFiles",
+    value: DOCUMENTS_UPLOAD_IN_INSURANCE_COPY_CATEGORY,
+  },
+  {
+    key: "secondaryInsuranceFiles",
+    value: DOCUMENTS_UPLOAD_IN_SECONDARY_INSURANCE_CATEGORY,
+  },
+];
+
+export const PATIENT_DOCUMENTS_FILE_UPLOAD_CATEGORIES = [
+  {
+    key: "writtenOrdersFiles",
+    value: DOCUMENTS_UPLOAD_IN_WRITTEN_ORDERS_CATEGORY,
+  },
+  { key: "mdNotesFiles", value: DOCUMENTS_UPLOAD_IN_MD_NOTES_CATEGORY },
+];
+export const ARE_YOU_SURE_WANT_DRAFT_ORDER =
+  "Are you sure you want to save this order as draft?";
+export const ORDER_MODAL_OK_TEXT = "Yes";
+export const ORDER_MODAL_CANCEL_TEXT = "No";
+export const MISSING_REQUIRED_FIELDS = "Missing Required Fields";
+
+export const MEDICAL_HISTORY_FIELDS_ONLY = [
+  "diagnosis",
+  "chemoTherapyStatus",
+  "orderingProvider",
+  "referringProvider",
+  "isReferringPhysician",
+  "pcpName",
+];
+
+export const MEDICAL_RECORD__FIELDS_ONLY = [
+  "isRadiologyStatus",
+  "isPathologyStatus",
+  "isLabStatus",
+  "isPreviousAuthorizationStatus",
+  "labFacility",
+  "pathologyFacility",
+  "radiologyFacility",
+];
+
+export const ALL_PROVIDERS_MAX_LENGTH_COUNT = 10;
+export const MEDICAL_HISTORY_AND_RECORD_CREATED_MESSAGE =
+  "Medical History and Record has been created successfully";
+export const SUCCESS_TEXT_ONLY = "success";
+export const ERROR_TEXT_ONLY = "error";
+
+export const CREATE_NEW_RECORD_AT_PATIENT_DEMO =  " Please continue creating a new record"

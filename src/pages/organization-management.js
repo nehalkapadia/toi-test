@@ -12,10 +12,8 @@ import OrganizationFilters from "@/components/organizations/OrganizationFilters"
 import { useDispatch, useSelector } from "react-redux";
 import { getOrganizationsFunc } from "@/store/organizationSlice";
 import { TOTAL_ITEMS_PER_PAGE } from "@/utils/constant.util";
-import useQueryParams from "@/components/useQueryParams";
 
 const OrganizationManagement = () => {
-  const { queryParams, updateQueryParams } = useQueryParams();
   const dispatch = useDispatch();
   const isLoading = useSelector((state) => state.organizationTable.isLoading);
   const getOrganizations = useSelector(
@@ -25,7 +23,7 @@ const OrganizationManagement = () => {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const userRole = useSelector((state) => state.auth.userRole);
   const [isAuth, setIsAuth] = useState(false);
-  const [searchedValue, setSearchedValue] = useState(queryParams?.search || "");
+  const [searchedValue, setSearchedValue] = useState("");
   const [drawerHeadingText, setDrawerHeadingText] = useState("");
   const [displayViewDrawer, setDisplayViewDrawer] = useState(false);
   const [displayAddOrgDrawer, setDisplayAddOrgDrawer] = useState(false);
@@ -35,13 +33,6 @@ const OrganizationManagement = () => {
   const [page, setPage] = useState(1);
 
   const handleSearchValue = (e) => {
-    const newSearchValue = e.target.value;
-    if (newSearchValue === "" || !newSearchValue) {
-      const { search, ...rest } = queryParams;
-      updateQueryParams(rest);
-    } else {
-      updateQueryParams({ search: e.target.value });
-    }
     setSearchedValue(e.target.value);
   };
 
@@ -73,10 +64,6 @@ const OrganizationManagement = () => {
     setDisplayFilterDrawer(false);
     getOrganizationsFunc({ page: page, perPage: TOTAL_ITEMS_PER_PAGE });
   };
-
-  // useEffect(() => {
-  //   setSearchedValue(queryParams?.search || "");
-  // }, [queryParams.search]);
 
   useEffect(() => {
     if (searchedValue?.trim().length > 0) {

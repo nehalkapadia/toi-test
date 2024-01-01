@@ -24,5 +24,8 @@ router.post('/list', verifyToken, orderController.listOrders);
 // get uploaded documents for an order
 router.get('/files/:orderId', verifyToken, orderController.getUploadedDocuments);
 
+// Route to create a save as draft with validation
+router.post('/draft/save', verifyToken, orderController.saveOrderAsDraft);
+
 
 module.exports = router;

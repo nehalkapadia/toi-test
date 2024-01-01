@@ -11,6 +11,7 @@ const medicalHistoryController = require('../controllers/medical_history.control
 // TODO: Import the createNpiSchema
 const {
   createMedicalHistorySchema,
+  getMedicalHistorySchema,
 } = require('../validators/medical_history.validator');
 const { verifyToken } = require('../middlewares/auth.middleware');
 
@@ -21,5 +22,9 @@ router.post(
   validate(createMedicalHistorySchema),
   medicalHistoryController.create
 );
+
+// get medical history
+router.get('/', verifyToken, validate(getMedicalHistorySchema), medicalHistoryController.getMedicalHistoryById);
+
 
 module.exports = router;

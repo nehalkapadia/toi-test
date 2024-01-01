@@ -30,7 +30,7 @@ exports.searchPatient = async (req, res) => {
   try {
     await createLog(req, 'PatientDemos', 'Search');
     // Extracting query parameters from the request object
-    const { firstName, lastName, dob, gender } = req.query;
+    const { firstName, lastName, dob, gender, mrn } = req.query;
 
     // Use the service to search for a patient
     const existingPatient = await patientService.searchPatient({
@@ -38,6 +38,7 @@ exports.searchPatient = async (req, res) => {
       lastName,
       dob,
       gender,
+      mrn
     });
 
     if (existingPatient) {
@@ -91,27 +92,9 @@ exports.searchPatient = async (req, res) => {
 exports.createPatient = async (req, res) => {
   try {
     await createLog(req, 'PatientDemos', 'Create');
-    // Extract necessary information from the request body
-    const { firstName, lastName, dob, gender, address } = req.body;
+
     const userId = req?.userData?.id;
 
-    // Check if a patient with the same details already exists
-    const existingPatient = await patientService.searchPatient({
-      firstName,
-      lastName,
-      dob,
-      gender,
-      address,
-    });
-
-    // If a patient with the same details exists, return an error
-    if (existingPatient) {
-      return res.status(constants.BAD_REQUEST).json({
-        status: false,
-        message: constants.PATIENT_EXISTS,
-        data: null,
-      });
-    }
     if(userId) {
       req.body.createdBy = userId;
       req.body.updatedBy = userId;
@@ -201,5 +184,37 @@ exports.updatePatient = async (req, res) => {
     return res.status(constants.INTERNAL_SERVER_STATUS).json(
       errorResponse(constants.INTERNAL_SERVER_ERROR, error)
     );
+  }
+};
+
+/**
+ * Controller function to get patient details by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @description Patients getPatientById
+ * @api /api/patients?
+ * @method GET
+ */
+exports.getPatientById = async (req, res) => {
+  try {
+    // Extract patient ID from the request parameters
+    const patientId = req.query.patientId;
+
+    // Get the patient by ID using the service
+    const patient = await patientService.getPatientById(patientId);
+
+    // Check if the patient exists
+    if (!patient) {
+      // If patient not found, return a not found response
+      const errorMessage = constants.PATIENT_NOT_FOUND;
+      return res.status(constants.NOT_FOUND).json(errorResponse(errorMessage));
+    }
+
+    // Success response with the retrieved patient and the custom success message
+    return res.status(constants.SUCCESS).json(successResponse(constants.PATIENT_RETRIEVED_SUCCESSFULLY, patient));
+  } catch (error) {
+    // Determine error message and send an appropriate response
+    const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
+    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
   }
 };

@@ -1,9 +1,9 @@
 {
   "development": {
     "username": "sa",
-    "password": "Kiran@9210",
-    "database": "toi-test",
-    "host": "localhost",
+    "password": "Nehal@2567!",
+    "database": "toi",
+    "host": "172.31.79.77",
     "dialect": "mssql"
   },
   "test": {

@@ -44,3 +44,36 @@ exports.create = async (req, res, next) => {
       .status(constantsUtil.INTERNAL_SERVER_STATUS).json(errorResponse(constantsUtil.INTERNAL_SERVER_ERROR, error))
   }
 };
+
+
+/**
+ * Controller function to get medical record details by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @description Medical_Record getMedicalRecordById
+ * @api /api/medicalRecords?
+ * @method GET
+ */
+exports.getMedicalRecordById = async (req, res) => {
+  try {
+    // Extract medical record ID from the request parameters
+    const medicalRecordId = req.query.recordId;
+
+    // Get the medical record by ID using the service
+    const medicalRecord = await medicalRecordService.getMedicalRecordById(medicalRecordId);
+
+    // Check if the medical record exists
+    if (!medicalRecord) {
+      // If medical record not found, return a not found response
+      const errorMessage = constantsUtil.MEDICAL_RECORD_NOT_FOUND;
+      return res.status(constantsUtil.NOT_FOUND).json(errorResponse(errorMessage));
+    }
+
+    // Success response with the retrieved medical record and the custom success message
+    return res.status(constantsUtil.SUCCESS).json(successResponse(constantsUtil.MEDICAL_RECORD_RETRIEVED_SUCCESSFULLY, medicalRecord));
+  } catch (error) {
+    // Determine error message and send an appropriate response
+    const errorMessage = error.message || constantsUtil.INTERNAL_SERVER_ERROR;
+    return res.status(constantsUtil.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
+  }
+};

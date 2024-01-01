@@ -1,20 +1,38 @@
-import React, { useEffect, useState } from "react";
-import "../../styles/organizations/displayOrganization.css";
-import { Button, Col, Form, Input, Radio, Row, Skeleton, message } from "antd";
+import React, { useEffect, useState } from 'react';
+import '../../styles/organizations/displayOrganization.css';
 import {
+  Button,
+  Col,
+  Form,
+  Input,
+  InputNumber,
+  Radio,
+  Row,
+  Skeleton,
+  message,
+} from 'antd';
+import {
+  ACTIVE_STATUS,
   API_RESPONSE_MESSAGES,
+  CANCEL,
+  CLOSE,
   FORM_NAME_VALUES,
+  INACTIVE_STATUS,
   ORGANIZATION_FORM_FIELD_RULES,
+  ORG_MESSAGES,
   TOTAL_ITEMS_PER_PAGE,
-} from "@/utils/constant.util";
-import { useDispatch, useSelector } from "react-redux";
+} from '@/utils/constant.util';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   getOrganizationsById,
   getOrganizationsFunc,
   updateOrganizationFunc,
-} from "@/store/organizationSlice";
-import { formatPhoneNumberToUSFormat } from "@/utils/commonFunctions";
-import TextArea from "antd/es/input/TextArea";
+} from '@/store/organizationSlice';
+import {
+  formatPhoneNumberForInput,
+  formatPhoneNumberToUSFormat,
+} from '@/utils/commonFunctions';
+import TextArea from 'antd/es/input/TextArea';
 
 const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
   const dispatch = useDispatch();
@@ -37,6 +55,7 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
       phoneNumber,
       ...values,
     };
+    payload.phoneNumber = payload?.phoneNumber?.toString();
     dispatch(updateOrganizationFunc({ id: columnId, payload })).then((res) => {
       if (res?.payload?.status) {
         dispatch(getOrganizationsFunc({ page, perPage: TOTAL_ITEMS_PER_PAGE }));
@@ -93,17 +112,38 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
               <Col className="each-single-detail-row-child-container">
                 <p className="column-name-lable-at-om">Email ID</p>
                 <p className="column-value-as-heading-at-om">
-                  {email || "N/A"}
+                  {email || 'N/A'}
                 </p>
               </Col>
             )}
 
-            <Col className="each-single-detail-row-child-container">
-              <p className="column-name-lable-at-om">Phone Number</p>
-              <p className="column-value-as-heading-at-om">
-                {formatPhoneNumberToUSFormat(phoneNumber)}
-              </p>
-            </Col>
+            {!isEditClicked && (
+              <Col className="each-single-detail-row-child-container">
+                <p className="column-name-lable-at-om">Phone Number</p>
+                <p className="column-value-as-heading-at-om">
+                  {formatPhoneNumberToUSFormat(phoneNumber)}
+                </p>
+              </Col>
+            )}
+            {isEditClicked && (
+              <Form.Item
+                className="each-single-detail-row-child-container"
+                initialValue={phoneNumber}
+                name={FORM_NAME_VALUES.number}
+                label="Phone Number"
+                rules={ORGANIZATION_FORM_FIELD_RULES.number}
+              >
+                <InputNumber
+                  type="tel"
+                  size="large"
+                  className="add-org-form-input-box add-org-number-input"
+                  placeholder="Please Enter Phone Number"
+                  formatter={(value) => formatPhoneNumberForInput(value)}
+                  parser={(value) => value.replace(/\D/g, '')}
+                  maxLength={14}
+                />
+              </Form.Item>
+            )}
 
             {!isEditClicked && (
               <Col className="each-single-detail-row-child-container">
@@ -122,7 +162,6 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
                 initialValue={domain}
                 name={FORM_NAME_VALUES.domain}
                 label="Domain"
-                validateStatus="validating"
                 rules={ORGANIZATION_FORM_FIELD_RULES.domain}
               >
                 <Input
@@ -137,7 +176,6 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
                 initialValue={email}
                 name={FORM_NAME_VALUES.email}
                 label="Email ID"
-                validateStatus="validating"
                 rules={ORGANIZATION_FORM_FIELD_RULES.org_email}
               >
                 <Input
@@ -155,7 +193,7 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
               <Col className="each-single-detail-row-child-container">
                 <p className="column-name-lable-at-om">Address</p>
                 <p className="column-value-as-heading-at-om text-transform-class-om">
-                  {address || "Address Not Available"}
+                  {address || ORG_MESSAGES.address_not_available}
                 </p>
               </Col>
 
@@ -164,7 +202,7 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
                 <p
                   className={`text-transform-class-om organization-current-${isActive}`}
                 >
-                  {isActive ? "Active" : "InActive"}
+                  {isActive ? ACTIVE_STATUS : INACTIVE_STATUS}
                 </p>
               </Col>
             </Row>
@@ -218,7 +256,7 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
                 className="org-mgt-edit-btn-for-cancel"
                 onClick={onClose}
               >
-                {isEditClicked ? "Cancel" : "Close"}
+                {isEditClicked ? CANCEL : CLOSE}
               </Button>
 
               {isEditClicked && (

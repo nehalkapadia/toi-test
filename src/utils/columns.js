@@ -1,5 +1,6 @@
 import { formatPhoneNumberToUSFormat } from "./commonFunctions";
 import dayjs from "dayjs";
+import { DATE_FORMAT_STARTING_FROM_MONTH } from "./constant.util";
 
 export const TABLE_FOR_ORGANIZATION_MANAGEMENT = [
   {
@@ -122,7 +123,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     key: "firstName",
     className: "order-table-common-cell-customization",
     render: (_, record) => {
-      return <span>{record?.patient?.firstName}</span>;
+      return <span>{record?.patientDemography?.firstName}</span>;
     },
   },
   {
@@ -131,7 +132,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     key: "lastName",
     className: "order-table-common-cell-customization",
     render: (_, record) => {
-      return <span>{record?.patient?.lastName}</span>;
+      return <span>{record?.patientDemography?.lastName}</span>;
     },
   },
   {
@@ -140,7 +141,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     key: "dateOfBirth",
     className: "order-table-common-cell-customization",
     render: (_, record) => {
-      return <span>{dayjs(record?.patient?.dob).format("MM-DD-YYYY")}</span>;
+      return <span>{dayjs(record?.patientDemography?.dob).format("MM-DD-YYYY")}</span>;
     },
   },
   {
@@ -152,7 +153,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
       return (
         <span>
           {record?.patient?.primaryPhoneNumber
-            ? formatPhoneNumberToUSFormat(record?.patient?.primaryPhoneNumber)
+            ? formatPhoneNumberToUSFormat(record?.patientDemography?.primaryPhoneNumber)
             : "N/A"}
         </span>
       );
@@ -160,9 +161,14 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
   },
   {
     title: "Created By",
-    dataIndex: "createdBy",
-    key: "createdBy",
+    dataIndex: "userData",
+    key: "userData",
     className: "order-table-common-cell-customization",
+    render: (data) => (
+      <span>
+        {data?.firstName} {data?.lastName}
+      </span>
+    ),
   },
   {
     title: "Status",
@@ -180,24 +186,51 @@ export const TABLE_FOR_DISPLAYING_SEARCHED_PATIENT = [
     dataIndex: "firstName",
     key: "firstName",
     className: "co-tab-1-common-cell-customization",
+    render: (_, record) => {
+      return <span>{record?.firstName}</span>;
+    },
   },
   {
     title: "Last Name",
     dataIndex: "lastName",
     key: "lastName",
     className: "co-tab-1-common-cell-customization",
+    render: (_, record) => {
+      return <span>{record?.lastName}</span>;
+    },
   },
   {
     title: "DOB",
     dataIndex: "dob",
     key: "dob",
     className: "co-tab-1-common-cell-customization",
+    render: (_, record) => {
+      return (
+        <span>
+          {dayjs(record?.dob).format(
+            DATE_FORMAT_STARTING_FROM_MONTH
+          )}
+        </span>
+      );
+    },
   },
   {
     title: "Gender",
     dataIndex: "gender",
     key: "gender",
     className: "co-tab-1-common-cell-customization",
+    render: (_, record) => {
+      return <span>{record?.gender}</span>;
+    },
+  },
+  {
+    title: "MRN Number",
+    dataIndex: "mrn",
+    key: "mrn",
+    className: "co-tab-1-common-cell-customization",
+    render: (_, record) => {
+      return <span>{record?.mrn}</span>;
+    },
   },
   {
     title: "Address",
@@ -205,16 +238,23 @@ export const TABLE_FOR_DISPLAYING_SEARCHED_PATIENT = [
     key: "address",
     className: "co-tab-1-common-cell-customization",
     width: 180,
+    render: (_, record) => {
+      return <span>{record?.address}</span>;
+    },
   },
   {
     title: "Primary Number",
     dataIndex: "primaryPhoneNumber",
     key: "primaryPhoneNumber",
     className: "co-tab-1-common-cell-customization",
-    render: (text) => {
+    render: (_, record) => {
       return (
         <span>
-          {text ? formatPhoneNumberToUSFormat(text) : "Not Available"}
+          {record?.primaryPhoneNumber
+            ? formatPhoneNumberToUSFormat(
+                record?.primaryPhoneNumber
+              )
+            : "Not Available"}
         </span>
       );
     },

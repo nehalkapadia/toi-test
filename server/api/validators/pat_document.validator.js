@@ -1,4 +1,5 @@
-const { body } = require('express-validator');
+const { body, query } = require('express-validator');
+const constants = require('../utils/constants.util');
 
 exports.patDocumentSchema = [
     body('file')
@@ -25,4 +26,11 @@ exports.patDocumentSchema = [
 
             return true;
         })
+];
+
+// get pat documents schema
+exports.getPatDocumentSchema = [
+    query('patientId')
+      .notEmpty().withMessage(constants.CANT_BE_EMPTY + 'Patients ID')
+      .isNumeric().withMessage(constants.MUST_BE_NUMBER + 'Patients ID'),
 ];

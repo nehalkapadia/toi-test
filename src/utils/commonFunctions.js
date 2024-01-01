@@ -1,3 +1,12 @@
+import { message } from "antd";
+import {
+  ALLOWED_FILE_TYPE_FOR_UPLOAD,
+  ERROR_MESSAGE_FOR_FILE_SIZE,
+  ERROR_MESSAGE_FOR_UPLOADED_FILE_TYPE,
+  MAX_FILE_SIZE_FOR_UPLOAD,
+  MAX_UPLOAD_DOCUMENTS_PER_CATEGORY,
+} from "./constant.util";
+
 export const formatPhoneNumberToUSFormat = (number) => {
   if (!number) {
     return;
@@ -38,7 +47,7 @@ export const formatPhoneNumberForInput = (value) => {
   }
 
   value = value.toString();
-  console.log(value);
+
   const cleanNumber = value.replace(/\D/g, "");
 
   if (cleanNumber.length === 3) {
@@ -51,4 +60,87 @@ export const formatPhoneNumberForInput = (value) => {
       6
     )}-${cleanNumber.slice(6, 10)}`;
   }
+};
+
+// Common Function for Checking File type and size Validation before Uploading.
+export const beforeFileUpload = (file) => {
+  if (!ALLOWED_FILE_TYPE_FOR_UPLOAD.includes(file.type)) {
+    message.error(ERROR_MESSAGE_FOR_UPLOADED_FILE_TYPE);
+    return false;
+  }
+  if (file.size > MAX_FILE_SIZE_FOR_UPLOAD) {
+    message.error(ERROR_MESSAGE_FOR_FILE_SIZE);
+    return false;
+  }
+  return true;
+};
+
+// FOr extracting uploaded doc filename from the url we received in response.
+export const extractFileNameFromUrl = (url) => {
+  if (!url) {
+    return;
+  }
+  const urlParts = url.split("/");
+  const fileName = urlParts[urlParts.length - 1];
+  return fileName || "";
+};
+
+// Func for checking the length of uploaded document array in a single category
+export const fileLengthCheck = (categoryFiles) =>
+  categoryFiles?.length < MAX_UPLOAD_DOCUMENTS_PER_CATEGORY;
+
+// for extracting the id from the nested obj of arrays for documents uploaded at edit time
+
+export const extractIdsFromNestedObjects = (obj) => {
+  if (!obj) {
+    return [];
+  }
+  let allIds = [];
+  Object.keys(obj)?.forEach((key) => {
+    if (Array.isArray(obj[key])) {
+      const idsFromArray = obj[key]?.map((item) => item?.id);
+      allIds = allIds.concat(idsFromArray);
+    }
+  });
+  return allIds;
+};
+
+export const replaceNullWithEmptyString = (obj) => {
+  if (!obj) {
+    return {};
+  }
+  const result = {};
+  Object.keys(obj)?.forEach((key) => {
+    result[key] = obj[key] === null ? "" : obj[key];
+  });
+
+  return result;
+};
+
+export const filterObjectByKeys = (originalObject, keyArray) => {
+  const result = {};
+  keyArray?.forEach((key) => {
+    if (originalObject?.hasOwnProperty(key)) {
+      result[key] = originalObject[key];
+    }
+  });
+
+  return result;
+};
+
+export const compareTwoArraysElements = (arr1 = [], arr2 = []) => {
+  if (!arr1 || !arr2 || arr1.length !== arr2.length) {
+    return false;
+  }
+
+  const sortedArr1 = arr1.slice().sort((a, b) => a - b);
+  const sortedArr2 = arr2.slice().sort((a, b) => a - b);
+
+  for (let i = 0; i < sortedArr1.length; i++) {
+    if (sortedArr1[i] !== sortedArr2[i]) {
+      return false;
+    }
+  }
+
+  return true;
 };

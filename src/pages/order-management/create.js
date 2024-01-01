@@ -7,8 +7,14 @@ import PatientDemographics from "@/components/orders/createOrder/PatientDemograp
 import MedicalHistory from "@/components/orders/createOrder/MedicalHistory";
 import InsuranceInfo from "@/components/orders/createOrder/InsuranceInfo";
 import PatientDocs from "@/components/orders/createOrder/PatientDocs";
+import { useRouter } from "next/router";
+import { getOrderDetailsById } from "@/store/orderSlice";
+import { resetCreateOrderDataBacktoInitialState, setCurrentSelectedTab } from "@/store/createOrderFormSlice";
 
 const CreateOrder = () => {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { orderId } = router.query;
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const userRole = useSelector((state) => state.auth.userRole);
   const tab2 = useSelector((state) => state.createOrderTabs.medicalHistoryTab);
@@ -17,6 +23,7 @@ const CreateOrder = () => {
   const currentTab = useSelector(
     (state) => state.createOrderTabs.currentSelectedTab
   );
+
   const orderingResStatus = useSelector(
     (state) => state.allOrdersData.orderingResStatus
   );
@@ -29,6 +36,11 @@ const CreateOrder = () => {
   const [isAuth, setIsAuth] = useState(false);
   const [selectedTab, setSelectedTab] = useState("");
 
+  const handleTabChange = (value) => {
+    setSelectedTab(value);
+    dispatch(setCurrentSelectedTab(value));
+  };
+
   useEffect(() => {
     setIsAuth(isAuthenticated);
   }, [isAuthenticated, userRole]);
@@ -36,6 +48,20 @@ const CreateOrder = () => {
   useEffect(() => {
     setSelectedTab(currentTab);
   }, [currentTab]);
+
+  useEffect(() => {
+    if(orderId) {
+      orderDetailsByOrderId(orderId);
+    }
+  }, [orderId])
+
+  const orderDetailsByOrderId = async (orderId) => {
+    if(orderId) {
+     await dispatch(getOrderDetailsById(orderId));
+    } else {
+      dispatch(resetCreateOrderDataBacktoInitialState())
+    }
+  }
 
   return (
     <>
@@ -48,7 +74,7 @@ const CreateOrder = () => {
             <Segmented
               size="large"
               options={OrderManagementCreateOrderTabs(tab2, tab3, tab4)}
-              onChange={(value) => setSelectedTab(value)}
+              onChange={handleTabChange}
               value={selectedTab}
             />
           </Row>
