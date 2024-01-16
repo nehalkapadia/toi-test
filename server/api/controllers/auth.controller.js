@@ -5,6 +5,7 @@ const auditLogService = require('../services/audit_log.service');
 const constantsUtils = require('../utils/constants.util'); // Import constants
 const { errorResponse, successResponse } = require('../utils/response.util');
 const { createUserLog } = require('../services/user_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 /**
  * Handles the initiation of Facebook login authentication by using Passport.js
@@ -36,7 +37,7 @@ exports.microsoftLogin = passport.authenticate('microsoft', {
  */
 exports.loginCallback = async (req, res) => {
   try {
-    await auditLogService.createLog(req, 'USER', 'LOGIN');
+    await auditLogService.createLog(formatRequest(req), 'USER', 'LOGIN');
     // Check if user authentication failed
     if (!req.user) {
       return res.redirect('/login-failed?errorMessage=' + constantsUtils.USER_AUTH_FAILED);
@@ -77,7 +78,7 @@ exports.loginCallback = async (req, res) => {
     // Respond with successful login message, token, userId, oauthId, and oauthProvider
     res.redirect(`/login-success?successMessage=${constantsUtils.LOGIN_SUCCESSFUL}&token=${token}&role=${user.roleId}`);
   } catch (error) {
-    await auditLogService.createLog(req, 'USER', 'LOGIN', error);
+    await auditLogService.createLog(formatRequest(req), 'USER', 'LOGIN', error);
     return res
       .status(constantsUtils.INTERNAL_SERVER_STATUS)
       .json({ message: constantsUtils.INTERNAL_SERVER_ERROR });

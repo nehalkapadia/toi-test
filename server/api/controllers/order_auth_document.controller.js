@@ -3,6 +3,7 @@ const { successResponse, errorResponse } = require('../utils/response.util');
 const constants = require('../utils/constants.util');
 const orderAuthDocumentService = require('../services/order_auth_document.service');
 const auditLogService = require('../services/audit_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 /**
  * List of order auth documents
@@ -16,7 +17,7 @@ const auditLogService = require('../services/audit_log.service');
  */
 exports.list = async (req, res) => {
   try {
-    await auditLogService.createLog(req, 'OrderAuthDocuments', 'GET');
+    await auditLogService.createLog(formatRequest(req), 'OrderAuthDocuments', 'GET');
     const orderAuthDocuments = await orderAuthDocumentService.list();
     return res
       .status(constants.SUCCESS)
@@ -27,7 +28,7 @@ exports.list = async (req, res) => {
         )
       );
   } catch (error) {
-    await auditLogService.createLog(req, 'OrderAuthDocuments', 'GET', error);
+    await auditLogService.createLog(formatRequest(req), 'OrderAuthDocuments', 'GET', error);
     return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.INTERNAL_SERVER_ERROR));
   }
 };
@@ -44,7 +45,7 @@ exports.list = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     // create log
-    await auditLogService.createLog(req, 'OrderAuthDocuments', 'Create');
+    await auditLogService.createLog(formatRequest(req), 'OrderAuthDocuments', 'Create');
     const reqData = req.body;
     const userId = req?.userData?.id;
     if (userId) {
@@ -63,7 +64,7 @@ exports.create = async (req, res) => {
         )
       );
   } catch (error) {
-    await auditLogService.createLog(req, 'OrderAuthDocuments', 'Create', error);
+    await auditLogService.createLog(formatRequest(req), 'OrderAuthDocuments', 'Create', error);
     return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.INTERNAL_SERVER_ERROR));
   }
 };
@@ -80,7 +81,7 @@ exports.create = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     // create log
-    await auditLogService.createLog(req, 'OrderAuthDocuments', 'DELETE');
+    await auditLogService.createLog(formatRequest(req), 'OrderAuthDocuments', 'DELETE');
     const id = req.params.id;
     // delete order auth document
     await orderAuthDocumentService.delete(id);
@@ -91,7 +92,7 @@ exports.delete = async (req, res) => {
         successResponse(constants.message('Order Auth Document', 'Delete'))
       );
   } catch (error) {
-    await auditLogService.createLog(req, 'OrderAuthDocuments', 'DELETE', error);
+    await auditLogService.createLog(formatRequest(req), 'OrderAuthDocuments', 'DELETE', error);
     return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.INTERNAL_SERVER_ERROR));
   }
 };

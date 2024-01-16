@@ -17,6 +17,17 @@
   font-weight: 600;
   letter-spacing: 0.5px;
   margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.disabled-patient-search-btn {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-top: 24px;
+  margin-bottom: 24px;
 }
 
 .patient-search-btn:hover {
@@ -85,3 +96,4 @@
     min-width: 180px;
   }
 }
+

@@ -24,5 +24,16 @@ router.post('/list', verifyToken, orderController.listOrders);
 // get uploaded documents for an order
 router.get('/files/:orderId', verifyToken, orderController.getUploadedDocuments);
 
+// Route to create a save as draft with validation
+router.post('/draft/save', verifyToken, orderController.saveOrderAsDraft);
+
+// Route to get all order documents by order ID
+router.get('/documents/:orderId', verifyToken, orderController.getAllOrderDocuments);
+
+// Route to delete order by id
+router.delete('/:orderId', verifyToken, orderController.deleteOrderById);
+
+// Route to Soft delete order
+router.post('/soft/delete/:orderId', verifyToken, orderController.softDeleteOrder);
 
 module.exports = router;

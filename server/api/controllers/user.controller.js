@@ -5,6 +5,7 @@ const auditService = require('../services/audit_log.service');
 const { errorResponse, successResponse } = require('../utils/response.util');
 const { sendMail } = require('../services/email.service');
 const { createUserLog } = require('../services/user_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 /**
  *
@@ -43,7 +44,7 @@ exports.list = async (req, res, next) => {
  */
 exports.allList = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Users', 'POST');
+    await auditService.createLog(formatRequest(req), 'Users', 'POST');
     const page = parseInt(req?.body?.page);
     const perPage = parseInt(req?.body?.perPage);
     const order = {
@@ -66,7 +67,7 @@ exports.allList = async (req, res) => {
       successResponse(constants.message(constants.userModule, 'List'), userList)
     );
   } catch (error) {
-    await auditService.createLog(req, 'Users', 'POST', error);
+    await auditService.createLog(formatRequest(req), 'Users', 'POST', error);
     return res.json(
       errorResponse(
         constants.message(constants.userModule, 'List', false),
@@ -87,7 +88,7 @@ exports.allList = async (req, res) => {
  */
 exports.detail = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Users', 'GET');
+    await auditService.createLog(formatRequest(req), 'Users', 'GET');
     const userDetail = await userService.detail(req.params.id);
     if (!userDetail) {
       return res.json(errorResponse(constants.notFound(constants.userModule)));
@@ -99,7 +100,7 @@ exports.detail = async (req, res) => {
       )
     );
   } catch (error) {
-    await auditService.createLog(req, 'Users', 'GET', error);
+    await auditService.createLog(formatRequest(req), 'Users', 'GET', error);
     return res.json(
       errorResponse(
         constants.message(constants.userModule, 'Detail', false),
@@ -121,7 +122,7 @@ exports.detail = async (req, res) => {
  */
 exports.create = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Users', 'POST');
+    await auditService.createLog(formatRequest(req), 'Users', 'POST');
     const reqData = req?.body;
     const id = req?.userData?.id;
 
@@ -151,7 +152,7 @@ exports.create = async (req, res) => {
       )
     );
   } catch (error) {
-    auditService.createLog(req, 'Users', 'POST', error);
+    auditService.createLog(formatRequest(req), 'Users', 'POST', error);
     return res.json(
       errorResponse(
         constants.message(constants.userModule, 'Create', false),
@@ -173,7 +174,7 @@ exports.create = async (req, res) => {
  */
 exports.update = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Users', 'PUT');
+    await auditService.createLog(formatRequest(req), 'Users', 'PUT');
     const reqData = req.body;
     const userId = req.params.id;
     const { id } = req.userData;
@@ -210,7 +211,7 @@ exports.update = async (req, res) => {
       successResponse(constants.message(constants.userModule, 'Update'))
     );
   } catch (error) {
-    await auditService.createLog(req, 'Users', 'PUT', error);
+    await auditService.createLog(formatRequest(req), 'Users', 'PUT', error);
     return res.json(
       errorResponse(
         constants.message(constants.userModule, 'Update', false),
@@ -227,7 +228,7 @@ exports.update = async (req, res) => {
 */
 exports.delete = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Users', 'DELETE');
+    await auditService.createLog(formatRequest(req), 'Users', 'DELETE');
     const userDetail = await userService.detail(req.params.id);
 
     if (!userDetail) {
@@ -238,7 +239,7 @@ exports.delete = async (req, res) => {
       errorResponse(constants.message(constants.userModule, 'Delete'))
     );
   } catch (error) {
-    await auditService.createLog(req, 'Users', 'DELETE', error);
+    await auditService.createLog(formatRequest(req), 'Users', 'DELETE', error);
     return res.json(
       errorResponse(
         constants.message(constants.userModule, 'Delete', false),

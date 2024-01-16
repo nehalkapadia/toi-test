@@ -62,3 +62,7 @@
   border: 1px solid #34657f !important;
   color: #fff !important;
 }
+
+:where(.css-dev-only-do-not-override-zcfrx9).ant-input-number:hover .ant-input-number-handler-wrap, :where(.css-dev-only-do-not-override-zcfrx9).ant-input-number-focused .ant-input-number-handler-wrap {
+  display: none;
+}

@@ -18,7 +18,7 @@ module.exports = {
         name: 'toi',
         address: '123 Main Street',
         email: 'institutetoi@gmail.com',
-        phoneNumber: '123-456-7890',
+        phoneNumber: '1234567890',
         domain: 'sample.org',
         isActive: true,
         createdAt: new Date(),

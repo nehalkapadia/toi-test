@@ -22,6 +22,7 @@
 .all-tabs-form-container-at-create-order {
   max-height: 55vh;
   overflow-y: scroll;
+  
 }
 
 .co-all-tabs-btn-container {
@@ -81,7 +82,6 @@
   color: #fff !important;
 }
 
-
 /* Antd CSS Override */
 .ant-segmented-item-label {
   font-size: 14px !important;
@@ -91,11 +91,23 @@
   padding: 0 0 3px !important;
 }
 
+.ant-segmented.ant-segmented-lg .ant-segmented-item-label {
+  color: #396571;
+}
 
+.ant-segmented .ant-segmented-item-selected {
+  background-color: rgba(57, 101, 113, 0.1);
+}
 
 /* Media Queries Start from here */
 @media only screen and (max-width: 768px) and (min-width: 250px) {
   .co-all-tabs-btn-container {
     width: calc(100% - 92px);
+  }
+}
+
+@media only screen and (max-width: 570px) and (min-width: 200px) {
+  .all-tabs-parent-container-at-co {
+    margin-bottom: 80px;
   }
 }

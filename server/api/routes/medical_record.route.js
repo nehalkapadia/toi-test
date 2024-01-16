@@ -11,6 +11,7 @@ const medicalRecordController = require('../controllers/medical_record.controlle
 // TODO: Import the createNpiSchema
 const {
   createMedicalRecordSchema,
+  getMedicalRecordSchema,
 } = require('../validators/medical_record.validator');
 const { verifyToken } = require('../middlewares/auth.middleware');
 
@@ -21,5 +22,8 @@ router.post(
   validate(createMedicalRecordSchema),
   medicalRecordController.create
 );
+
+// get medical record
+router.get('/', verifyToken, validate(getMedicalRecordSchema), medicalRecordController.getMedicalRecordById);
 
 module.exports = router;

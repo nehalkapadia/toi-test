@@ -6,7 +6,7 @@ const patDocumentController = require('../controllers/pat_document.controller');
 const multerMiddleware = require('../middlewares/multer.middleware');
 const { validate } = require('../middlewares/validate.middleware');
 // import validators
-const { patDocumentSchema } = require('../validators/pat_document.validator');
+const { patDocumentSchema, getPatDocumentSchema } = require('../validators/pat_document.validator');
 const { verifyToken } = require('../middlewares/auth.middleware');
 
 // upload patient document
@@ -20,5 +20,8 @@ router.post(
 
 // Delete patient document
 router.delete('/:id', verifyToken, patDocumentController.delete);
+
+// Route to get the latest documents for a patient
+router.get('/', verifyToken, validate(getPatDocumentSchema), patDocumentController.getLatestDocuments);
 
 module.exports = router;

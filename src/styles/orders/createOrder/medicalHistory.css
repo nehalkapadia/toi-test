@@ -20,6 +20,7 @@
 
 .co-tab-2-medical-history-number-input {
   width: 100%;
+  background: #f9f9fc;
 }
 
 .co-tab-2-ordering-btn {
@@ -28,7 +29,7 @@
   font-size: 14px !important;
   font-weight: 600;
   letter-spacing: 0.5px;
-  margin: -16px 0 24px -12px;
+  margin: 0px 0 24px -12px;
 }
 
 .co-tab-2-ordering-btn:hover {
@@ -82,7 +83,7 @@
   font-weight: 500;
 }
 
-.co-tab-2-modal-validate-btn{
+.co-tab-2-modal-validate-btn {
   color: #fff;
   background-color: #396571;
   font-size: 14px !important;
@@ -97,6 +98,20 @@
 
 .close-icon-for-modal {
   cursor: pointer;
+}
+
+.uploaded-image-container-1-for-radiology {
+  display: flex;
+  width: 100%;
+  gap: 16px;
+}
+
+.co-tab-2-upload-image-container-at-radiology {
+  margin-bottom: 8px;
+}
+
+.co-tab-2-p-tag-customize {
+  margin: 0;
 }
 
 /* Antd CSS Styles Override */

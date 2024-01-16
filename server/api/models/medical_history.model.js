@@ -16,6 +16,13 @@ module.exports = (sequelize, Sequelize) => {
     diagnosis: {
       type: Sequelize.STRING,
     },
+    diagnosisId: {
+      type: Sequelize.INTEGER,
+      references: {
+        model: 'DiagnosisCodes',
+        key: 'id',
+      },
+    },
     chemoTherapyStatus: {
       type: Sequelize.BOOLEAN,
     },

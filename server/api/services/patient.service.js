@@ -4,8 +4,34 @@ const PatientDemos = db.PatientDemos;
 
 async function searchPatient(criteria) {
   try {
+    let whereClause = {};
+    if(criteria?.mrn) {
+      whereClause = {
+        [Op.or]: [
+          {
+            [Op.and]: [
+              { firstName: criteria.firstName },
+              { lastName: criteria.lastName },
+              { dob: criteria.dob },
+              { gender: criteria.gender },
+            ],
+          },
+          { mrn: criteria.mrn },
+        ],
+      };
+    } else {
+      whereClause = {
+        [Op.and]: [
+          { firstName: criteria.firstName },
+          { lastName: criteria.lastName },
+          { dob: criteria.dob },
+          { gender: criteria.gender },
+        ],
+      }
+    }
     const existingPatient = await PatientDemos.findOne({
-      where: criteria,
+      where: whereClause,
+      order: [['createdAt', 'DESC']],
     });
 
     return existingPatient;
@@ -79,11 +105,53 @@ const isPatientExist = async (patientId) => {
   });
 }
 
+const searchOrUpdatePatient = async (payload) => {
+  if(payload?.patientId) {
+    const whereClause = {
+      patientId: payload?.patientId
+    }
+    if(payload?.orderId) {
+      whereClause.id = { [Op.ne]: payload?.orderId }
+    }
+    const order = await db.Orders.findOne({
+      where: whereClause
+    });
+    if(order) {
+      return null;
+    }
+    const patient = await PatientDemos.findByPk(payload?.patientId);
+    if(patient) {
+      delete payload?.patientId;
+      delete payload?.orderId;
+      await patient.update(payload);
+      return patient;
+    } else {
+      return null;
+    }
+  } else {
+    const patient = await PatientDemos.findOne({
+      where: {
+        firstName: payload?.firstName,
+        lastName: payload?.lastName,
+        dob: payload?.dob,
+        gender: payload?.gender,
+        mrn: payload?.mrn
+      }
+    })
+    if(patient) {
+      return patient;
+    } else {
+      return null;
+    }
+  }
+}
+
 module.exports = {
   searchPatient,
   createPatient,
   getPatientById,
   updatePatient,
   checkForDataConflict,
-  isPatientExist
+  isPatientExist,
+  searchOrUpdatePatient
 };

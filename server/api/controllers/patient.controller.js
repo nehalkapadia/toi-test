@@ -1,11 +1,13 @@
 const { successResponse, errorResponse } = require('../utils/response.util');
 const constants = require('../utils/constants.util');
 const patientService = require('../services/patient.service');
+const orderService = require('../services/order.service');
 const { getMedicalHistoryByPatientId } = require('../services/medical_history.service');
 const { getMedicalRecordByPatientId } = require('../services/medical_record.service');
 const { checkExistingInsurance } = require('../services/insurance_info.service');
 const { getOrderAuthDocumentByPatientId } = require('../services/order_auth_document.service');
 const { createLog } = require('../services/audit_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 
 /**
@@ -28,9 +30,9 @@ const { createLog } = require('../services/audit_log.service');
  */
 exports.searchPatient = async (req, res) => {
   try {
-    await createLog(req, 'PatientDemos', 'Search');
+    await createLog(formatRequest(req), 'PatientDemos', 'Search');
     // Extracting query parameters from the request object
-    const { firstName, lastName, dob, gender } = req.query;
+    const { firstName, lastName, dob, gender, mrn } = req.query;
 
     // Use the service to search for a patient
     const existingPatient = await patientService.searchPatient({
@@ -38,9 +40,16 @@ exports.searchPatient = async (req, res) => {
       lastName,
       dob,
       gender,
+      mrn
     });
 
     if (existingPatient) {
+      const order = await orderService.getOrderByPatientId(existingPatient?.id);
+      if(order) {
+        return res.status(constants.SUCCESS).json(
+          successResponse(constants.SEARCH_SUCCESS, order)
+        );
+      }
       const medicalHistoryData = await getMedicalHistoryByPatientId(existingPatient.id);
       const medicalRecordData = await getMedicalRecordByPatientId(existingPatient.id);
       const insuranceInfoData = await checkExistingInsurance(existingPatient.id);
@@ -63,7 +72,7 @@ exports.searchPatient = async (req, res) => {
       );
     }
   } catch (error) {
-    await createLog(req, 'PatientDemos', 'Search', error);
+    await createLog(formatRequest(req), 'PatientDemos', 'Search', error);
     // Handle the error and return an error response
     return res.status(constants.INTERNAL_SERVER_STATUS).json(
       errorResponse(constants.INTERNAL_SERVER_ERROR, error.message)
@@ -90,38 +99,29 @@ exports.searchPatient = async (req, res) => {
  */
 exports.createPatient = async (req, res) => {
   try {
-    await createLog(req, 'PatientDemos', 'Create');
-    // Extract necessary information from the request body
-    const { firstName, lastName, dob, gender, address } = req.body;
+    await createLog(formatRequest(req), 'PatientDemos', 'Create');
+    const reqData = req.body;
     const userId = req?.userData?.id;
 
-    // Check if a patient with the same details already exists
-    const existingPatient = await patientService.searchPatient({
-      firstName,
-      lastName,
-      dob,
-      gender,
-      address,
-    });
+    // Check if the patient already exists
+    const existingPatient = await patientService.searchOrUpdatePatient(reqData)
 
-    // If a patient with the same details exists, return an error
     if (existingPatient) {
-      return res.status(constants.BAD_REQUEST).json({
-        status: false,
-        message: constants.PATIENT_EXISTS,
-        data: null,
-      });
+      return res.status(constants.SUCCESS).json(
+        successResponse(constants.UPDATE_SUCCESS, existingPatient)
+      );
     }
     if(userId) {
       req.body.createdBy = userId;
       req.body.updatedBy = userId;
     }
     // Create a new patient
+    delete reqData?.patientId;
+    delete reqData?.orderId;
     const newPatient = await patientService.createPatient(req.body);
 
     // Fetch the newly created patient with all details
     const createdPatient = await patientService.getPatientById(newPatient.id);
-
 
     // Return the detailed patient information in the response
     return res.status(constants.CREATED).json({
@@ -130,7 +130,7 @@ exports.createPatient = async (req, res) => {
       data: createdPatient,
     });
   } catch (error) {
-    await createLog(req, 'PatientDemos', 'Create', error);
+    await createLog(formatRequest(req), 'PatientDemos', 'Create', error);
     // Handle the error and return an error response
     return res.status(constants.INTERNAL_SERVER_STATUS).json({
       status: false,
@@ -161,7 +161,7 @@ exports.createPatient = async (req, res) => {
  */
 exports.updatePatient = async (req, res) => {
   try {
-    await createLog(req, 'PatientDemos', 'Update');
+    await createLog(formatRequest(req), 'PatientDemos', 'Update');
     const { id } = req.params;
     const userId = req?.userData?.id;
 
@@ -196,10 +196,42 @@ exports.updatePatient = async (req, res) => {
       successResponse(constants.UPDATE_SUCCESS, updatedPatient)
     );
   } catch (error) {
-    await createLog(req, 'PatientDemos', 'Update', error);
+    await createLog(formatRequest(req), 'PatientDemos', 'Update', error);
     // Handle the error and return an error response
     return res.status(constants.INTERNAL_SERVER_STATUS).json(
       errorResponse(constants.INTERNAL_SERVER_ERROR, error)
     );
+  }
+};
+
+/**
+ * Controller function to get patient details by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @description Patients getPatientById
+ * @api /api/patients?
+ * @method GET
+ */
+exports.getPatientById = async (req, res) => {
+  try {
+    // Extract patient ID from the request parameters
+    const patientId = req.query.patientId;
+
+    // Get the patient by ID using the service
+    const patient = await patientService.getPatientById(patientId);
+
+    // Check if the patient exists
+    if (!patient) {
+      // If patient not found, return a not found response
+      const errorMessage = constants.PATIENT_NOT_FOUND;
+      return res.status(constants.NOT_FOUND).json(errorResponse(errorMessage));
+    }
+
+    // Success response with the retrieved patient and the custom success message
+    return res.status(constants.SUCCESS).json(successResponse(constants.PATIENT_RETRIEVED_SUCCESSFULLY, patient));
+  } catch (error) {
+    // Determine error message and send an appropriate response
+    const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
+    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
   }
 };

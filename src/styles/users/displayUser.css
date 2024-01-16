@@ -14,7 +14,7 @@
   display: flex;
   flex-direction: column;
   max-width: calc(50% - 12px);
-  /* gap: 6px; */
+  gap: 6px;
 }
 
 .column-name-lable-at-user-mgt {
@@ -62,16 +62,9 @@
 }
 
 .user-mgt-edit-btn-for-cancel {
-  border: 1px solid #f04438;
-  color: #f04438;
   font-weight: 600;
   font-size: 14px !important;
   letter-spacing: 0.5px;
-}
-
-.user-mgt-edit-btn-for-cancel:hover {
-  color: #f04438 !important;
-  border: 1px solid #f04438 !important;
 }
 
 .user-mgt-edit-btn-for-update {

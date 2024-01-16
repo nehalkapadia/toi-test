@@ -4,6 +4,7 @@ const constants = require('../utils/constants.util');
 // import Services
 const documentTypeService = require('../services/document_type.service');
 const auditLogService = require('../services/audit_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 /**
  * List of document types
@@ -18,11 +19,11 @@ const auditLogService = require('../services/audit_log.service');
  */
 exports.list = async (req, res) => {
   try {
-    await auditLogService.createLog(req, 'DocumentTypes', 'GET');
+    await auditLogService.createLog(formatRequest(req), 'DocumentTypes', 'GET');
     const documentTypeList = await documentTypeService.list();
     return res.status(constants.SUCCESS).json(successResponse(constants.message('Document Type', 'List'), documentTypeList));
   } catch (error) {
-    await auditLogService.createLog(req, 'DocumentTypes', 'GET', true);
+    await auditLogService.createLog(formatRequest(req), 'DocumentTypes', 'GET', true);
     const status = error.status ?? constants.INTERNAL_SERVER_STATUS;
     return res.status(status).json(errorResponse(constants.INTERNAL_SERVER_ERROR));
   }
@@ -40,7 +41,7 @@ exports.list = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     // create log
-    await auditLogService.createLog(req, 'DocumentTypes', 'Create');
+    await auditLogService.createLog(formatRequest(req), 'DocumentTypes', 'Create');
     const reqData = req.body;
     const userId = req?.userData?.id
     // check if document type already exist
@@ -59,7 +60,7 @@ exports.create = async (req, res) => {
     return res.status(constants.SUCCESS).json(successResponse(constants.message('Document Type', 'Create'), documentType));
   } catch (error) {
     // create error log
-    await auditLogService.createLog(req, 'DocumentTypes', 'Create', true);
+    await auditLogService.createLog(formatRequest(req), 'DocumentTypes', 'Create', true);
     // return error response
     const status = error.status ?? constants.INTERNAL_SERVER_STATUS;
     return res.status(status).json(errorResponse(constants.INTERNAL_SERVER_ERROR));
@@ -79,14 +80,14 @@ exports.create = async (req, res) => {
 exports.delete = async (req, res) => {
   try {
     // create log
-    await auditLogService.createLog(req, 'DocumentTypes', 'Create');
+    await auditLogService.createLog(formatRequest(req), 'DocumentTypes', 'Create');
     const docTypeId = req.params.id;
     await documentTypeService.delete(docTypeId);
     // return response
     return res.status(constants.SUCCESS).json(successResponse(constants.message('Document Type', 'Delete')));
   } catch (error) {
     // create error log
-    await auditLogService.createLog(req, 'DocumentTypes', 'Create', true);
+    await auditLogService.createLog(formatRequest(req), 'DocumentTypes', 'Create', true);
     // return error response
     const status = error.status ?? constants.INTERNAL_SERVER_STATUS;
     return res.status(status).json(errorResponse(constants.INTERNAL_SERVER_ERROR));

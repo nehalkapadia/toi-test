@@ -56,6 +56,13 @@ module.exports = (sequelize, Sequelize) => {
       currentStatus: {
         type: Sequelize.STRING,
       },
+      ownerId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id',
+        },
+      },
       createdBy: {
         type: Sequelize.INTEGER,
         references: {
@@ -72,15 +79,17 @@ module.exports = (sequelize, Sequelize) => {
       },
       isDeleted: {
         type: Sequelize.BOOLEAN,
+        defaultValue: false,
       },
       deletedAt: {
         type: Sequelize.DATE,
+        allowNull: true,
       },
     },
     { timestamps: true }
   );
 
-  Orders.belongsTo(PatientDemo, { foreignKey: 'patientId', as: 'patient' });
+  Orders.belongsTo(PatientDemo, { foreignKey: 'patientId', as: 'patientDemography' });
   Orders.belongsTo(MedicalHistory, { foreignKey: 'historyId', as: 'medicalHistory' });
   Orders.belongsTo(MedicalRecord, { foreignKey: 'recordId', as: 'medicalRecord' });
   Orders.belongsTo(InsuranceInfo, { foreignKey: 'insuranceId', as: 'insuranceInfo' });
@@ -89,6 +98,7 @@ module.exports = (sequelize, Sequelize) => {
   Orders.hasMany(OrderPatDocument, {
     foreignKey: 'orderId'
   })
+  Orders.belongsTo(User, { foreignKey: 'ownerId', as: 'ownerData' });
 
   return Orders;
 };

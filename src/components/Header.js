@@ -3,7 +3,7 @@ import { Avatar, Button, Col, Divider, Dropdown, Row } from 'antd';
 import { Header } from 'antd/es/layout/layout';
 import { AiOutlineMenuUnfold, AiOutlineMenuFold } from 'react-icons/ai';
 import { IoNotificationsOutline } from 'react-icons/io5';
-import { FaAngleDown, FaAngleUp } from 'react-icons/fa6';
+import { FaAngleDown } from 'react-icons/fa6';
 import '../styles/index.css';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,11 +13,6 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const user = useSelector((state) => state.auth.user);
-  const [visible, setVisible] = useState(false);
-
-  const handleVisibleChange = (isVisible) => {
-    setVisible(isVisible);
-  };
 
   const handleLogutBtn = () => {
     dispatch(logout());
@@ -77,7 +72,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
           md={18}
           lg={18}
         >
-          <Col className="layout-header-notification-icon">
+          <Col xs={0} sm={2} className="layout-header-notification-icon">
             <IoNotificationsOutline />
           </Col>
 
@@ -86,7 +81,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
           </Col>
 
           <Row gutter={8}>
-            <Col>
+            <Col xs={0} sm={6}>
               <Avatar
                 size="large"
                 className="user-profile-icon-at-header"
@@ -103,8 +98,6 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
             <Col className="dropdown-for-profile-view-details">
               <Dropdown
                 menu={{ items }}
-                visible={visible}
-                onVisibleChange={handleVisibleChange}
                 trigger={['click']}
                 placement="bottom"
               >
@@ -122,7 +115,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
                       {user && user?.roleId === 1 ? 'Admin' : 'Member'}
                     </p>
                   </Col>
-                  {visible ? <FaAngleUp /> : <FaAngleDown />}
+                  <FaAngleDown />
                 </div>
               </Dropdown>
             </Col>

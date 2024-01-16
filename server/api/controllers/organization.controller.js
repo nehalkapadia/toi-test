@@ -4,6 +4,7 @@ const { errorResponse, successResponse } = require('../utils/response.util');
 const organizationService = require('../services/organization.service');
 const auditService = require('../services/audit_log.service');
 const { createOrganizationLog } = require('../services/organization_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 /**
  *
@@ -16,7 +17,7 @@ const { createOrganizationLog } = require('../services/organization_log.service'
  */
 exports.list = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Organizations', 'POST');
+    await auditService.createLog(formatRequest(req), 'Organizations', 'POST');
     const page = parseInt(req?.body?.page);
     const perPage = parseInt(req?.body?.perPage);
     const order = {
@@ -43,7 +44,7 @@ exports.list = async (req, res) => {
         )
       );
   } catch (error) {
-    await auditService.createLog(req, 'Organizations', 'POST', error);
+    await auditService.createLog(formatRequest(req), 'Organizations', 'POST', error);
     return res
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
@@ -66,7 +67,7 @@ exports.list = async (req, res) => {
  */
 exports.detail = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Organizations', 'GET');
+    await auditService.createLog(formatRequest(req), 'Organizations', 'GET');
     const organizationDetail = await organizationService.detail(req.params.id);
     if (!organizationDetail) {
       return res
@@ -82,7 +83,7 @@ exports.detail = async (req, res) => {
         )
       );
   } catch (error) {
-    await auditService.createLog(req, 'Organizations', 'GET', error);
+    await auditService.createLog(formatRequest(req), 'Organizations', 'GET', error);
     return res
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
@@ -105,7 +106,7 @@ exports.detail = async (req, res) => {
  */
 exports.create = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Organizations', 'POST');
+    await auditService.createLog(formatRequest(req), 'Organizations', 'POST');
 
     const reqData = req.body;
     const { id } = req.userData;
@@ -155,7 +156,7 @@ exports.create = async (req, res) => {
         )
       );
   } catch (error) {
-    await auditService.createLog(req, 'Organizations', 'POST', error);
+    await auditService.createLog(formatRequest(req), 'Organizations', 'POST', error);
     return res
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
@@ -178,7 +179,7 @@ exports.create = async (req, res) => {
  */
 exports.update = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Organizations', 'PUT');
+    await auditService.createLog(formatRequest(req), 'Organizations', 'PUT');
 
     const reqData = req.body;
     const { id } = req.userData;
@@ -242,7 +243,7 @@ exports.update = async (req, res) => {
       successResponse(constants.message(constants.organizationModule, 'Update'))
     );
   } catch (error) {
-    await auditService.createLog(req, 'Organizations', 'PUT', error);
+    await auditService.createLog(formatRequest(req), 'Organizations', 'PUT', error);
     return res
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
@@ -265,7 +266,7 @@ exports.update = async (req, res) => {
  */
 exports.delete = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Organizations', 'DELETE');
+    await auditService.createLog(formatRequest(req), 'Organizations', 'DELETE');
     const organizationDetail = await organizationService.detail(req.params.id);
     if (!organizationDetail) {
       return res
@@ -281,7 +282,7 @@ exports.delete = async (req, res) => {
         )
       );
   } catch (error) {
-    await auditService.createLog(req, 'Organizations', 'DELETE', error);
+    await auditService.createLog(formatRequest(req), 'Organizations', 'DELETE', error);
     return res
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
@@ -303,13 +304,11 @@ exports.delete = async (req, res) => {
  */
 exports.getOrganizationUsers = async (req, res) => {
   try {
-    await auditService.createLog(req, 'Organizations', 'User List');
     const userData = req?.userData;
     const organizationId = req.query.organizationId ? req.query.organizationId : userData?.user?.organizationId;
     const userList = await organizationService.getUserList(organizationId);
     return res.status(constants.SUCCESS).json(successResponse(constants.message('Organization', 'User List'), userList))
   } catch(error) {
-    await auditService.createLog(req, 'Organizations', 'User List', error);
     return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.message(constants.organizationModule, 'User List', false), error))
   }
 }
