@@ -176,7 +176,7 @@ const listOrders = async ({
     organizationId: userData?.user?.organizationId,
   };
 
-  if(!filters?.status || filters?.status?.length === 0) {
+  if (!filters?.status || filters?.status?.length === 0) {
     whereClause.isDeleted = false
   }
   if (filters) {
@@ -462,10 +462,11 @@ const saveOrderAsDraft = async (orderData) => {
 };
 
 /**
- * Service function to find an order by ID
- * @param {string} orderId - ID of the order to find
- * @returns {Promise<Object>} - Promise resolving to the found order or null if not found
- */
+* Service function to find an order by ID
+* @param { string } orderId - ID of the order to find
+* @returns { Promise < Object >} - Promise resolving to the found order or null if not found
+*/
+
 const findOneById = async (orderId) => {
   try {
     const order = await Order.findOne({ where: { id: String(orderId) } });
@@ -640,6 +641,35 @@ const deleteMany = (date) => {
     },
   });
 }
+/**
+ * Get orders which failed to syncup with salesforce
+ * 
+ * @returns {Object} - The saved order.
+ * @throws {Error} - Throws an error if there is an issue saving the order.
+ */
+const getSalesForceFailedSyncUpOrders = async () => {
+  try {
+    // get the list of failed orders
+    const ordersList = await Order.findAll({
+      attributes: ['id'],
+      where: {
+        salesForceSyncUpStatus: constantsUtil.FAILED_STATUS,
+        retry: 1
+      },
+    });
+
+    // return the order object
+    return ordersList.map((order) => {
+      return {
+        id: order.id,
+        retry: order.retry,
+        salesForceSyncUpStatus: order.salesForceSyncUpStatus
+      }
+    });
+  } catch (err) {
+    throw err;
+  }
+}
 
 module.exports = {
   createOrderInfo,
@@ -657,5 +687,6 @@ module.exports = {
   deleteOrderById,
   getOrderByPatientId,
   softDeleteOrder,
-  deleteMany
+  deleteMany,
+  getSalesForceFailedSyncUpOrders
 };

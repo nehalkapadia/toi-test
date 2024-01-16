@@ -6,6 +6,8 @@ module.exports = (sequelize, Sequelize) => {
   const Organization = require('./organization.model')(sequelize, Sequelize);
   const User = require('./user.model')(sequelize, Sequelize);
   const OrderPatDocument = require('./order_pat_document.model')(sequelize, Sequelize);
+  const constantsUtil = require("../utils/constants.util");
+
   const Orders = sequelize.define(
     'Order',
     {
@@ -62,6 +64,14 @@ module.exports = (sequelize, Sequelize) => {
           model: 'Users',
           key: 'id',
         },
+      },
+      salesForceSyncUpStatus: {
+        type: Sequelize.STRING,
+        default: constantsUtil.PENDING_STATUS,
+      },
+      retry: {
+        type: Sequelize.INTEGER,
+        default: 0,
       },
       createdBy: {
         type: Sequelize.INTEGER,

@@ -10,7 +10,11 @@ require('./auth/passport-config');
 // database connection
 require('../config/db.config');
 const db = require('./models');
+
+// get cronjobs
 const { scheduleDeleteOrderCronJob } = require('./cronjobs/order_delete');
+const salesForceFailedSyncUpOrders = require("./cronjobs/salesForceFa iledSyncUpOrders");
+
 // db.sequelize.sync();
 
 app.use(express.json());
@@ -33,6 +37,9 @@ app.use(
 app.use(passport.initialize());
 //Setting Up Session
 app.use(passport.session());
+
+//start the cron jobs
+salesForceFailedSyncUpOrders.start();
 
 app.use('/uploads', express.static('uploads'));
 

@@ -3,7 +3,7 @@ const { successResponse, errorResponse } = require('../utils/response.util');
 const constants = require('../utils/constants.util');
 const { createLog } = require('../services/audit_log.service');
 const { formatRequest } = require('../utils/common.util');
-
+const eventEmitter = require("../handlers/event_emitter");
 /**
  * Controller function to create a new order.
  *
@@ -29,6 +29,11 @@ exports.createOrder = async (req, res) => {
 
     if (createdOrder) {
       await createOrUpdateOrderDocuments(createdOrder, orderData);
+    }
+
+    // send data to salesforce only if order is submitted
+    if (createdOrder.currentStatus === 'submitted') {
+      eventEmitter.emit("SubmitOrderToSalesForce", createdOrder);
     }
 
     // Success response with the created order
@@ -154,6 +159,11 @@ exports.updateOrder = async (req, res) => {
     );
     if (updatedOrder) {
       await createOrUpdateOrderDocuments(updatedOrder, orderData);
+    }
+
+    // send data to salesforce only if order is submitted
+    if (updatedOrder.currentStatus === 'submitted') {
+      eventEmitter.emit("SubmitOrderToSalesForce", updatedOrder);
     }
 
     // Success response with the created order

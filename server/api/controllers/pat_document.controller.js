@@ -8,6 +8,7 @@ const documentTypeService = require('../services/document_type.service');
 const patientService = require('../services/patient.service');
 const { createLog } = require('../services/audit_log.service');
 const { formatRequest } = require('../utils/common.util');
+
 /**
  * File upload
  *
@@ -87,7 +88,7 @@ exports.delete = async (req, res) => {
   try {
     await createLog(formatRequest(req), 'PatDocuments', 'Delete');
     const patDocId = req.params.id;
-    if(req?.query?.orderId && req?.query?.uploaded !== 'true') {
+    if (req?.query?.orderId && req?.query?.uploaded !== 'true') {
       await patDocumentService.softDelete(patDocId, req?.query?.orderId, req?.query?.isAuth);
     } else {
       await patDocumentService.delete(patDocId);
@@ -123,7 +124,7 @@ exports.getLatestDocuments = async (req, res) => {
 
     // Check if the patient exists
     const isPatientExist = await patientService.getPatientById(patientId);
-    
+
     // If patient does not exist, return a bad request response
     if (!isPatientExist) {
       return res
@@ -131,15 +132,8 @@ exports.getLatestDocuments = async (req, res) => {
         .json(errorResponse(constants.PATIENT_NOT_FOUND));
     }
 
-    // Fetch all document types dynamically
-    const allDocumentTypes = await patDocumentService.getAllDocumentTypes();
-
-    // Fetch the latest 5 documents for each document type
-    const latestDocuments = {};
-    for (const docType of allDocumentTypes) {
-      const documents = await patDocumentService.getLatestDocumentsByType(patientId, docType.id, 5, orderId);
-      latestDocuments[`${docType.name}`] = documents;
-    }
+    // get all the latest documents 
+    const latestDocuments = await patDocumentService.getLatestDocumentsByPatientAndOrderId(patientId, orderId);
 
     // Return success response with the latest documents data
     return res
@@ -148,10 +142,10 @@ exports.getLatestDocuments = async (req, res) => {
   } catch (error) {
     // Handle errors and log them
     await createLog(formatRequest(req), 'PatDocuments', 'GetLatestDocuments', error);
-    
+
     // Determine the response status based on the error or use internal server status
     const status = error.status ?? constants.INTERNAL_SERVER_STATUS;
-    
+
     // Return an error response with the appropriate status and error message
     return res
       .status(status)
