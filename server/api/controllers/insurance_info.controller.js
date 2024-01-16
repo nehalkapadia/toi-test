@@ -2,6 +2,7 @@ const { successResponse, errorResponse } = require('../utils/response.util');
 const constants = require('../utils/constants.util');
 const insuranceService = require('../services/insurance_info.service');
 const { createLog } = require('../services/audit_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 
 /**
@@ -15,10 +16,15 @@ const { createLog } = require('../services/audit_log.service');
  */
 exports.createInsurance = async (req, res) => {
   try {
-    await createLog(req, 'InsuranceInfos', 'Create');
+    await createLog(formatRequest(req), 'InsuranceInfos', 'Create');
     const reqData = req.body;
     const userId = req?.userData?.id;
     const patientId = req?.body?.patientId;
+
+    if(reqData?.lob?.toLowerCase() === 'medicare' && !reqData?.medicareId) {
+      return res.status(constants.BAD_REQUEST).json(errorResponse(constants.MEDICARE_ID_REQUIRED));
+
+    }
 
     // Check if the patient exists
     const patient = await insuranceService.checkPatientExistence(patientId);
@@ -26,19 +32,29 @@ exports.createInsurance = async (req, res) => {
     if (!patient) {
       return res.status(constants.NOT_FOUND).json(errorResponse(constants.PATIENT_NOT_FOUND));
     }
+    if(reqData?.insuranceId) {
+      // Check if insurance information already exists for the patient
+      const existingInsurance = await insuranceService.updateInsuranceInfo(reqData);
+
+      if(existingInsurance) {
+        return res.status(constants.SUCCESS).json(successResponse(constants.INSURANCE_UPDATE_SUCCESS, existingInsurance));
+      }
+    }
 
     if(userId) {
       reqData.createdBy = userId;
       reqData.updatedBy = userId;
     }
     // Create insurance information
+    delete reqData?.insuranceId;
+    delete reqData?.orderId;
     const insuranceInfo = await insuranceService.createInsuranceInformation(reqData);
 
     // Return success response
     return res.status(constants.CREATED).json(successResponse(constants.CREATE_INSURANCE_SUCCESS, { insuranceInfo }));
   } catch (error) {
       // Return internal server error response
-    await createLog(req, 'InsuranceInfos', 'Create', error);
+    await createLog(formatRequest(req), 'InsuranceInfos', 'Create', error);
 
     // Return internal server error response
     return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.INTERNAL_SERVER_ERROR));

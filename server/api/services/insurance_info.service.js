@@ -1,4 +1,5 @@
 // insurance_info.service.js
+const { Op } = require('sequelize');
 const db = require('../models');
 const { PatientDemos, InsuranceInfos } = require('../models');
 
@@ -33,7 +34,7 @@ async function checkExistingInsurance(patientId) {
           },
         ],
       },
-    ]
+    ],
   });
 }
 
@@ -60,10 +61,33 @@ const getInsuranceById = async (insuranceId) => {
   }
 };
 
+const updateInsuranceInfo = async (payload) => {
+  if (payload?.insuranceId) {
+    const whereClause = {
+      insuranceId: payload.insuranceId,
+    };
+    if (payload?.orderId) {
+      whereClause.id = { [Op.ne]: payload?.orderId };
+    }
+    const order = await db.Orders.findOne({ where: whereClause });
+    if (order) {
+      return null;
+    }
+  }
+
+  const insurance = await InsuranceInfos.findByPk(payload.insuranceId);
+  if (insurance) {
+    await insurance.update(payload);
+    return insurance;
+  } else {
+    return null;
+  }
+};
 
 module.exports = {
   checkPatientExistence,
   checkExistingInsurance,
   createInsuranceInformation,
   getInsuranceById,
+  updateInsuranceInfo
 };

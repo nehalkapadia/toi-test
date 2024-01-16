@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from "react";
-import "../../styles/orders/createOrder.css";
-import { useDispatch, useSelector } from "react-redux";
-import { Row, Segmented } from "antd";
-import { OrderManagementCreateOrderTabs } from "@/utils/options";
-import PatientDemographics from "@/components/orders/createOrder/PatientDemographics";
-import MedicalHistory from "@/components/orders/createOrder/MedicalHistory";
-import InsuranceInfo from "@/components/orders/createOrder/InsuranceInfo";
-import PatientDocs from "@/components/orders/createOrder/PatientDocs";
-import { useRouter } from "next/router";
-import { getOrderDetailsById } from "@/store/orderSlice";
-import { resetCreateOrderDataBacktoInitialState, setCurrentSelectedTab } from "@/store/createOrderFormSlice";
+import React, { useEffect, useState } from 'react';
+import '../../styles/orders/createOrder.css';
+import { useDispatch, useSelector } from 'react-redux';
+import { Row, Segmented } from 'antd';
+import { OrderManagementCreateOrderTabs } from '@/utils/options';
+import PatientDemographics from '@/components/orders/createOrder/PatientDemographics';
+import MedicalHistory from '@/components/orders/createOrder/MedicalHistory';
+import InsuranceInfo from '@/components/orders/createOrder/InsuranceInfo';
+import PatientDocs from '@/components/orders/createOrder/PatientDocs';
+import { useRouter } from 'next/router';
+import { getOrderDetailsById } from '@/store/orderSlice';
+import {
+  resetCreateOrderDataBacktoInitialState,
+  setCurrentSelectedTab,
+} from '@/store/createOrderFormSlice';
+import { CREATE, EDIT } from '@/utils/constant.util';
 
 const CreateOrder = () => {
   const dispatch = useDispatch();
@@ -34,7 +38,7 @@ const CreateOrder = () => {
     (state) => state.allOrdersData.pcpNumberResStatus
   );
   const [isAuth, setIsAuth] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("");
+  const [selectedTab, setSelectedTab] = useState('');
 
   const handleTabChange = (value) => {
     setSelectedTab(value);
@@ -50,40 +54,43 @@ const CreateOrder = () => {
   }, [currentTab]);
 
   useEffect(() => {
-    if(orderId) {
+    if (orderId) {
       orderDetailsByOrderId(orderId);
     }
-  }, [orderId])
+  }, [orderId]);
 
   const orderDetailsByOrderId = async (orderId) => {
-    if(orderId) {
-     await dispatch(getOrderDetailsById(orderId));
+    if (orderId) {
+      await dispatch(getOrderDetailsById(orderId));
     } else {
-      dispatch(resetCreateOrderDataBacktoInitialState())
+      dispatch(resetCreateOrderDataBacktoInitialState());
     }
-  }
+  };
 
   return (
     <>
       {isAuth && userRole == 2 && (
-        <div className="create-order-parent-component">
-          <Row className="create-order-heading-container">
-            <h3 className="create-order-heading">Create Order</h3>
+        <div className='create-order-parent-component'>
+          <Row className='create-order-heading-container'>
+            <h3 className='create-order-heading'>
+              {orderId ? EDIT : CREATE} Order
+            </h3>
           </Row>
           <Row>
             <Segmented
-              size="large"
+              size='large'
               options={OrderManagementCreateOrderTabs(tab2, tab3, tab4)}
               onChange={handleTabChange}
               value={selectedTab}
+              block={true}
             />
           </Row>
-          <div className="all-tabs-parent-container-at-co">
-            <div className="all-tabs-form-container-at-create-order">
-              {selectedTab === "patientDemographics" && <PatientDemographics />}
-              {selectedTab === "medicalHistory" && <MedicalHistory />}
-              {selectedTab === "insuranceInfo" && <InsuranceInfo />}
-              {selectedTab === "patientDocuments" && <PatientDocs />}
+          <div className='all-tabs-parent-container-at-co'>
+            <div className='all-tabs-form-container-at-create-order'>
+              {selectedTab === 'patientDemographics' && <PatientDemographics />}
+              {selectedTab === 'medicalHistory' && <MedicalHistory />}
+              {selectedTab === 'insuranceInfo' && <InsuranceInfo />}
+              {selectedTab === 'patientDocuments' && <PatientDocs />}
             </div>
           </div>
         </div>

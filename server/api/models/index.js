@@ -47,5 +47,6 @@ db.OrganizationLogs = require("./organization_log.model")(sequelize, Sequelize);
 db.UserLogs = require("./user_log.model")(sequelize, Sequelize);
 db.AuditLogs = require("./audit_log.model")(sequelize, Sequelize);
 db.OrderPatDocuments = require("./order_pat_document.model")(sequelize, Sequelize);
+db.Diagnosis = require("./diagnosis.model") (sequelize, Sequelize);
 
 module.exports = db;

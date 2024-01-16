@@ -160,6 +160,17 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     },
   },
   {
+    title: "Owner",
+    dataIndex: "ownerData",
+    key: "ownerData",
+    className: "order-table-common-cell-customization",
+    render: (data) => (
+      <span>
+        {data?.firstName} {data?.lastName}
+      </span>
+    ),
+  },
+  {
     title: "Created By",
     dataIndex: "userData",
     key: "userData",

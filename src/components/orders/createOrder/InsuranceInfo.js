@@ -35,6 +35,8 @@ import {
   MAX_UPLOAD_DOCUMENTS_PER_CATEGORY,
   SUCCESS_TEXT_ONLY,
   ERROR_TEXT_ONLY,
+  SELECT_AT_LIST_INSURANCE_CARD_FILE,
+  SELECT_AT_LIST_SECONDARY_INSURANCE_FILE,
 } from '@/utils/constant.util';
 import { FiUpload } from 'react-icons/fi';
 import { BiTrash } from 'react-icons/bi';
@@ -59,6 +61,8 @@ import {
   setTab1FormData,
   setInsuranceInfoCreated,
   resetSearchPatientData,
+  resetOrderStateToInitialState,
+  setPrimaryStartValue,
 } from '@/store/orderSlice';
 import { useRouter } from 'next/router';
 import OrderModal from './OrderModal';
@@ -73,6 +77,7 @@ import {
   fileLengthCheck,
   replaceNullWithEmptyString,
 } from '@/utils/commonFunctions';
+import DisplayFileSize from './DisplayFileSize';
 
 const InsuranceInfo = () => {
   const router = useRouter();
@@ -109,6 +114,10 @@ const InsuranceInfo = () => {
     (state) => state.allOrdersData.medicalUploadedFilesById
   );
 
+  const patientDocsFilesById = useSelector(
+    (state) => state.allOrdersData.patientDocsFilesById
+  );
+
   // Handling Internal State for FormData
   const tab3FormData = useSelector(
     (state) => state.createOrderTabs.tab3FormData
@@ -118,6 +127,14 @@ const InsuranceInfo = () => {
   const patientAllUploadedFilesData = useSelector(
     (state) => state.allOrdersData.patientAllUploadedFilesData
   );
+
+  const insuranceInfoId = useSelector(
+    (state) => state.allOrdersData.insuranceInfoId
+  );
+
+  const primaryStartValue = useSelector((state) => {
+    state.allOrdersData.primaryStartValue;
+  });
 
   const [formData] = Form.useForm();
   const formValues = Form.useWatch([], formData);
@@ -132,7 +149,9 @@ const InsuranceInfo = () => {
   const [modalText, setModalText] = useState(ARE_YOU_SURE_WANT_TO_CANCEL_ORDER);
   const [isDraftModal, setIsDraftModal] = useState(false);
   const [startValue, setStartValue] = useState(null);
+  const [endValue, setEndValue] = useState(null);
   const [secondaryStartValue, setSecondaryStartValue] = useState(null);
+  const [secondaryEndValue, setSecondaryEndValue] = useState(null);
 
   const handleLoBChange = (value) => {
     if (!value || value?.trim() === '') {
@@ -143,11 +162,28 @@ const InsuranceInfo = () => {
     }
   };
 
-  const handleSecondaryInsuranceChecked = () => {
-    setIsSecondaryInsurance(!isSecondaryInsurance);
+  const handleSecondaryInsuranceChecked = (checked) => {
+    setIsSecondaryInsurance(checked);
+  };
+
+  const handleAllFileUploaded = () => {
+    switch (true) {
+      case patientAllUploadedFilesData?.insuranceCardCopyFiles?.length < 1:
+        return SELECT_AT_LIST_INSURANCE_CARD_FILE;
+      case isSecondaryInsurance &&
+        patientAllUploadedFilesData?.secondaryInsuranceFiles?.length < 1:
+        return SELECT_AT_LIST_SECONDARY_INSURANCE_FILE;
+      default:
+        return false;
+    }
   };
 
   const handleSubmitTab3Data = (values) => {
+    const isAllFileUploaded = handleAllFileUploaded();
+    if (isAllFileUploaded) {
+      message.error(isAllFileUploaded);
+      return;
+    }
     let traceChanges = false;
     const patientId = patientDemographicsData?.id;
     values.patientId = patientId;
@@ -158,7 +194,7 @@ const InsuranceInfo = () => {
       DATE_FORMAT_STARTING_FROM_YEAR
     );
     values.secondaryInsurance = isSecondaryInsurance ? 'Yes' : 'No';
-    values.medicareId = values?.medicareId ? values?.medicareId : 1232;
+    values.medicareId = values?.medicareId ? values?.medicareId : '';
     if (isSecondaryInsurance) {
       values.secondaryStartDate = dayjs(values.secondaryStartDate).format(
         DATE_FORMAT_STARTING_FROM_YEAR
@@ -170,7 +206,7 @@ const InsuranceInfo = () => {
 
     if (
       searchResponse ||
-      (insuranceInfoData && Object.keys(insuranceInfoData).length > 0)
+      (insuranceInfoData && Object.keys(insuranceInfoData)?.length > 0)
     ) {
       const insuranceInfoUnfreezed = { ...insuranceInfoData };
 
@@ -204,9 +240,19 @@ const InsuranceInfo = () => {
       traceChanges = commonKeys.some(
         (key) => updatedFreezedData[key] != updatedFormDataValues[key]
       );
+      // If no common keys exist, consider it as a change
+      if (commonKeys.length < 1) {
+        traceChanges = true;
+      }
     }
 
     if (createNewInsuranceInfo || traceChanges) {
+      if (insuranceInfoId) {
+        values.insuranceId = insuranceInfoId;
+      }
+      if (orderId) {
+        values.orderId = orderId;
+      }
       dispatch(postInsuranceInfoData(values)).then((res) => {
         if (res?.payload?.status) {
           message.success(res?.payload?.message);
@@ -223,6 +269,7 @@ const InsuranceInfo = () => {
   };
 
   const customRequest = (file, category) => {
+    setLoading(true);
     const { id = 1 } = patientDemographicsData;
     const matchingCategory = MEDICAL_AND_INSURANCE_FILE_UPLOAD_CATEGORIES.find(
       (cat) => cat.value === category
@@ -237,9 +284,11 @@ const InsuranceInfo = () => {
         message[res?.payload?.status ? SUCCESS_TEXT_ONLY : ERROR_TEXT_ONLY](
           res?.payload?.message
         );
+        setLoading(false);
       });
     } else {
       message.error(ERROR_MESSAGE_FOR_MAX_UPLOAD_DOCS);
+      setLoading(false);
     }
   };
 
@@ -248,17 +297,38 @@ const InsuranceInfo = () => {
       () => {
         setSubmittable(true);
       },
-      () => {
-        setSubmittable(false);
+      (e) => {
+        if (e.outOfDate === true) {
+          setSubmittable(true);
+        } else {
+          setSubmittable(false);
+        }
+        // TODO WIll remove once QA is completed
+        // if (!isSecondaryInsurance) {
+        //   setSubmittable(true);
+        // }
       }
     );
     const initialValues = formData.getFieldsValue();
-    initialValues.secondaryInsurance = isSecondaryInsurance ? true : false;
+    initialValues.secondaryInsurance =
+      isSecondaryInsurance === true || isSecondaryInsurance === 'Yes'
+        ? 'Yes'
+        : 'No';
+    if (isSecondaryInsurance === 'No' || isSecondaryInsurance === false) {
+      setIsSecondaryInsurance(false);
+    } else {
+      setIsSecondaryInsurance(true);
+    }
     const payload = { ...tab3FormData, ...initialValues };
     dispatch(setTab3FormData(payload));
   }, [formValues, isSecondaryInsurance]);
 
   const saveOrderAsDraft = async () => {
+    const isAllFileUploaded = handleAllFileUploaded();
+    if (isAllFileUploaded) {
+      message.error(isAllFileUploaded);
+      return;
+    }
     let traceChanges = false;
     const { id: patientId } = patientDemographicsData;
     const { id: historyId } = medicalHistoryOnly;
@@ -267,7 +337,7 @@ const InsuranceInfo = () => {
     setLoading(true);
     const newValues = {
       ...tab3FormData,
-      secondaryInsurance: isSecondaryInsurance ? true : false,
+      secondaryInsurance: isSecondaryInsurance ? 'Yes' : 'No',
       patientId,
       primaryStartDate: dayjs(tab3FormData?.primaryStartDate?.$d).format(
         DATE_FORMAT_STARTING_FROM_YEAR
@@ -276,13 +346,17 @@ const InsuranceInfo = () => {
         DATE_FORMAT_STARTING_FROM_YEAR
       ),
       secondaryStartDate:
-        dayjs(tab3FormData?.secondaryStartDate?.$d).format(
-          DATE_FORMAT_STARTING_FROM_YEAR
-        ) || '',
+        isSecondaryInsurance && tab3FormData?.secondaryStartDate?.$d
+          ? dayjs(tab3FormData?.secondaryStartDate?.$d).format(
+              DATE_FORMAT_STARTING_FROM_YEAR
+            )
+          : null,
       secondaryEndDate:
-        dayjs(tab3FormData?.secondaryEndDate?.$d).format(
-          DATE_FORMAT_STARTING_FROM_YEAR
-        ) || '',
+        isSecondaryInsurance && tab3FormData?.secondaryEndDate?.$d
+          ? dayjs(tab3FormData?.secondaryEndDate?.$d).format(
+              DATE_FORMAT_STARTING_FROM_YEAR
+            )
+          : null,
     };
     // here we will identify that if the user has changed any value in the form
     if (
@@ -321,8 +395,18 @@ const InsuranceInfo = () => {
       traceChanges = commonKeys.some(
         (key) => updatedFreezedData[key] != updatedFormDataValues[key]
       );
+      // If no common keys exist, consider it as a change
+      if (commonKeys.length < 1) {
+        traceChanges = true;
+      }
     }
     let insuranceId = insuranceInfoData?.id;
+    if (insuranceInfoId) {
+      newValues.insuranceId = insuranceInfoId;
+    }
+    if (orderId) {
+      newValues.orderId = orderId;
+    }
     if (createNewInsuranceInfo || traceChanges) {
       const createdInsuranceInfo = await dispatch(
         postInsuranceInfoData(newValues)
@@ -334,6 +418,7 @@ const InsuranceInfo = () => {
       }
       if (!createdInsuranceInfo?.payload?.status) {
         message.error(createdInsuranceInfo?.payload?.message);
+        setLoading(false);
         return;
       }
     }
@@ -346,6 +431,7 @@ const InsuranceInfo = () => {
         recordId,
         insuranceId: insuranceId,
         uploadFiles: medicalUploadedFilesById,
+        orderAuthDocuments: patientDocsFilesById,
       };
       order = await dispatch(updateOrderData({ orderId, payload }));
     } else {
@@ -355,11 +441,10 @@ const InsuranceInfo = () => {
           patientId,
           historyId,
           recordId,
-          insuranceId: createdInsuranceInfo?.payload?.data?.insuranceInfo
-            ? createdInsuranceInfo?.payload?.data?.insuranceInfo?.id
-            : createdInsuranceInfo?.payload?.data?.id,
+          insuranceId: insuranceId,
           currentStatus: ORDER_STATUS.draft,
           uploadFiles: medicalUploadedFilesById,
+          orderAuthDocuments: patientDocsFilesById,
         })
       );
     }
@@ -368,6 +453,7 @@ const InsuranceInfo = () => {
       dispatch(resetCreateOrderDataBacktoInitialState());
       dispatch(setTab1FormData({}));
       dispatch(resetSearchPatientData());
+      dispatch(resetOrderStateToInitialState());
       message.success(order?.payload?.message);
       router.push('/order-management');
       setLoading(false);
@@ -400,6 +486,7 @@ const InsuranceInfo = () => {
     dispatch(resetCreateOrderDataBacktoInitialState());
     dispatch(setTab1FormData({}));
     dispatch(resetSearchPatientData());
+    dispatch(resetOrderStateToInitialState());
     router.push('/order-management');
   };
   const handleCancel = () => {
@@ -410,29 +497,81 @@ const InsuranceInfo = () => {
     setStartValue(date);
   };
 
+  const handleEndDateChange = (date) => {
+    setEndValue(date);
+  };
+
+  const disabledStartDate = (current) => {
+    let endDate = endValue
+      ? endValue.startOf('day')
+      : dayjs(
+          insuranceInfoData?.primaryEndDate
+            ? insuranceInfoData?.primaryEndDate
+            : null
+        ).startOf('day');
+    // Disable dates after the selected end date
+    return endDate ? current && current > endDate.startOf('day') : false;
+  };
+
   const disabledEndDate = (current) => {
+    let startDate = startValue
+      ? startValue.startOf('day')
+      : dayjs(
+          insuranceInfoData?.primaryStartDate
+            ? insuranceInfoData?.primaryStartDate
+            : null
+        ).startOf('day');
     // Disable dates before the selected start date
-    return startValue ? current && current < startValue.startOf('day') : false;
+    return startDate ? current && current < startDate.startOf('day') : false;
   };
 
   const handleSecondaryStartDateChange = (date) => {
     setSecondaryStartValue(date);
   };
 
-  const disabledSecondaryEndDate = (current) => {
-    // Disable dates before the selected start date
-    return secondaryStartValue
-      ? current && current < secondaryStartValue.startOf('day')
+  const handleSecondaryEndDateChange = (date) => {
+    setSecondaryEndValue(date);
+  };
+
+  const disabledSecondaryStartDate = (current) => {
+    const secondaryEndDate = secondaryEndValue
+      ? secondaryEndValue.startOf('day')
+      : dayjs(
+          insuranceInfoData?.secondaryEndDate
+            ? insuranceInfoData?.secondaryEndDate
+            : null
+        ).startOf('day');
+    // Disable dates after the selected end date
+    return secondaryEndDate
+      ? current && current > secondaryEndDate.startOf('day')
       : false;
   };
+
+  const disabledSecondaryEndDate = (current) => {
+    const secondaryStartDate = secondaryStartValue
+      ? secondaryStartValue.startOf('day')
+      : dayjs(
+          insuranceInfoData?.secondaryStartDate
+            ? insuranceInfoData?.secondaryStartDate
+            : null
+        ).startOf('day');
+    // Disable dates before the selected start date
+    return secondaryStartDate
+      ? current && current < secondaryStartDate.startOf('day')
+      : false;
+  };
+
   useEffect(() => {
     const insuranceInfo = insuranceInfoData || {};
-
-    if (insuranceInfo) {
+    if (insuranceInfo && Object.keys(insuranceInfo)?.length > 0) {
       const formattedInsuranceInfo = {
         ...insuranceInfo,
-        primaryStartDate: dayjs(insuranceInfo?.primaryStartDate),
-        primaryEndDate: dayjs(insuranceInfo?.primaryEndDate),
+        primaryStartDate: insuranceInfo?.primaryStartDate
+          ? dayjs(insuranceInfo?.primaryStartDate)
+          : null,
+        primaryEndDate: insuranceInfo?.primaryEndDate
+          ? dayjs(insuranceInfo?.primaryEndDate)
+          : null,
         secondaryStartDate: insuranceInfo?.secondaryStartDate
           ? dayjs(insuranceInfo.secondaryStartDate)
           : null,
@@ -441,19 +580,21 @@ const InsuranceInfo = () => {
           : null,
       };
       setSelectedLoB(insuranceInfo?.lob);
-      setIsSecondaryInsurance(insuranceInfo?.secondaryInsurance);
+      setIsSecondaryInsurance(
+        insuranceInfo?.secondaryInsurance === 'Yes' ? true : false
+      );
       formData.setFieldsValue(formattedInsuranceInfo);
     }
   }, [searchResponse]);
 
   return (
-    <div className="co-insurance-info-tab-3-parent-container">
+    <div className='co-insurance-info-tab-3-parent-container'>
       {loading && <Spin fullscreen></Spin>}
       <Form
         form={formData}
-        name="create-order-insurance-info"
-        layout="vertical"
-        autoComplete="off"
+        name='create-order-insurance-info'
+        layout='vertical'
+        autoComplete='off'
         preserve={true}
         onFinish={handleSubmitTab3Data}
         initialValues={tab3FormData}
@@ -466,14 +607,15 @@ const InsuranceInfo = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Health Plan"
+              label='Health Plan'
               name={CREATE_ORDER_FORM_KEY_NAMES.healthPlan}
               rules={CREATE_ORDER_FORM_FIELD_RULES.healthPlan}
             >
               <Select
-                size="large"
+                allowClear
+                size='large'
                 options={INSURANCE_INFO_HEALTH_PLAN_OPTIONS}
-                placeholder="Select Health Plan"
+                placeholder='Select Health Plan'
               />
             </Form.Item>
           </Col>
@@ -485,14 +627,15 @@ const InsuranceInfo = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="LoB"
+              label='LoB'
               name={CREATE_ORDER_FORM_KEY_NAMES.lob}
               rules={CREATE_ORDER_FORM_FIELD_RULES.lob}
             >
               <Select
-                size="large"
+                size='large'
+                allowClear
                 options={INSURANCE_INFO_LOB_OPTIONS}
-                placeholder="Select LoB"
+                placeholder='Select LoB'
                 onChange={handleLoBChange}
               />
             </Form.Item>
@@ -505,14 +648,14 @@ const InsuranceInfo = () => {
               lg={{ span: 8 }}
             >
               <Form.Item
-                label="Medicare ID"
+                label='Medicare ID'
                 name={CREATE_ORDER_FORM_KEY_NAMES.medicareId}
                 rules={CREATE_ORDER_FORM_FIELD_RULES.medicareId}
               >
                 <Input
-                  size="large"
-                  className="co-insurance-info-tab-3-input-number"
-                  placeholder="Enter Medicare ID"
+                  size='large'
+                  className='co-insurance-info-tab-3-input-number'
+                  placeholder='Enter Medicare ID'
                 />
               </Form.Item>
             </Col>
@@ -527,14 +670,14 @@ const InsuranceInfo = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Primary Subscriber Number"
+              label='Primary Subscriber Number'
               name={CREATE_ORDER_FORM_KEY_NAMES.primarySubscriberNumber}
               rules={CREATE_ORDER_FORM_FIELD_RULES.primarySubscriberNumber}
             >
               <InputNumber
-                size="large"
-                className="co-insurance-info-tab-3-input-number"
-                placeholder="Enter Primary Subscriber Number"
+                size='large'
+                className='co-insurance-info-tab-3-input-number'
+                placeholder='Enter Primary Subscriber Number'
               />
             </Form.Item>
           </Col>
@@ -546,14 +689,14 @@ const InsuranceInfo = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Primary Group Number"
+              label='Primary Group Number'
               name={CREATE_ORDER_FORM_KEY_NAMES.primaryGroupNumber}
               rules={CREATE_ORDER_FORM_FIELD_RULES.primaryGroupNumber}
             >
               <InputNumber
-                size="large"
-                className="co-insurance-info-tab-3-input-number"
-                placeholder="Enter Primary Subscriber Number"
+                size='large'
+                className='co-insurance-info-tab-3-input-number'
+                placeholder='Enter Primary Group Number'
               />
             </Form.Item>
           </Col>
@@ -567,14 +710,14 @@ const InsuranceInfo = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Secondary Subscriber Number"
+              label='Secondary Subscriber Number'
               name={CREATE_ORDER_FORM_KEY_NAMES.secondarySubscriberNumber}
               rules={CREATE_ORDER_FORM_FIELD_RULES.secondarySubscriberNumber}
             >
               <InputNumber
-                size="large"
-                className="co-insurance-info-tab-3-input-number"
-                placeholder="Enter Secondary Subscriber Number"
+                size='large'
+                className='co-insurance-info-tab-3-input-number'
+                placeholder='Enter Secondary Subscriber Number'
               />
             </Form.Item>
           </Col>
@@ -586,14 +729,14 @@ const InsuranceInfo = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Secondary Group Number"
+              label='Secondary Group Number'
               name={CREATE_ORDER_FORM_KEY_NAMES.secondaryGroupNumber}
               rules={CREATE_ORDER_FORM_FIELD_RULES.secondaryGroupNumber}
             >
               <InputNumber
-                size="large"
-                className="co-insurance-info-tab-3-input-number"
-                placeholder="Enter Primary Subscriber Number"
+                size='large'
+                className='co-insurance-info-tab-3-input-number'
+                placeholder='Enter Primary Group Number'
               />
             </Form.Item>
           </Col>
@@ -607,16 +750,17 @@ const InsuranceInfo = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Primary Start Date"
+              label='Primary Start Date'
               name={CREATE_ORDER_FORM_KEY_NAMES.primaryStartDate}
               rules={CREATE_ORDER_FORM_FIELD_RULES.primaryStartDate}
             >
               <DatePicker
-                className="co-insurance-info-tab-3-datepicker"
-                size="large"
-                placeholder="Choose Primary Start Date"
+                className='co-insurance-info-tab-3-datepicker'
+                size='large'
+                placeholder='Choose Primary Start Date'
                 format={DATE_FORMAT_STARTING_FROM_MONTH}
                 onChange={handleStartDateChange}
+                disabledDate={disabledStartDate}
               />
             </Form.Item>
           </Col>
@@ -628,15 +772,16 @@ const InsuranceInfo = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Primary End Date"
+              label='Primary End Date'
               name={CREATE_ORDER_FORM_KEY_NAMES.primaryEndDate}
               rules={CREATE_ORDER_FORM_FIELD_RULES.primaryEndDate}
             >
               <DatePicker
-                className="co-insurance-info-tab-3-datepicker"
-                size="large"
-                placeholder="Choose Primary End Date"
+                className='co-insurance-info-tab-3-datepicker'
+                size='large'
+                placeholder='Choose Primary End Date'
                 format={DATE_FORMAT_STARTING_FROM_MONTH}
+                onChange={handleEndDateChange}
                 disabledDate={disabledEndDate}
               />
             </Form.Item>
@@ -648,37 +793,37 @@ const InsuranceInfo = () => {
             md={{ span: 12 }}
             lg={{ span: 8 }}
           >
-            {patientAllUploadedFilesData?.insuranceCardCopyFiles?.length ===
-              5 && <label>Copy Of Insurance Card</label>}
-            {patientAllUploadedFilesData?.insuranceCardCopyFiles?.length <=
-              4 && (
-              <Form.Item label="Copy Of Insurance Card">
-                <Upload
-                  beforeUpload={beforeFileUpload}
-                  customRequest={(file) =>
-                    customRequest(
-                      file,
-                      DOCUMENTS_UPLOAD_IN_INSURANCE_COPY_CATEGORY
-                    )
-                  }
-                  listType="picture"
-                  maxCount={MAX_UPLOAD_DOCUMENTS_PER_CATEGORY}
-                  showUploadList={false}
+            <Form.Item label='Copy Of Insurance Card'>
+              <Upload
+                beforeUpload={beforeFileUpload}
+                customRequest={(file) =>
+                  customRequest(
+                    file,
+                    DOCUMENTS_UPLOAD_IN_INSURANCE_COPY_CATEGORY
+                  )
+                }
+                listType='picture'
+                maxCount={MAX_UPLOAD_DOCUMENTS_PER_CATEGORY}
+                showUploadList={false}
+                disabled={
+                  patientAllUploadedFilesData?.insuranceCardCopyFiles
+                    ?.length === MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
+                }
+              >
+                <Button
+                  size='large'
+                  className='co-tab-3-upload-btn'
+                  icon={<FiUpload />}
                   disabled={
                     patientAllUploadedFilesData?.insuranceCardCopyFiles
                       ?.length === MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
                   }
                 >
-                  <Button
-                    size="large"
-                    className="co-tab-3-upload-btn"
-                    icon={<FiUpload />}
-                  >
-                    Upload File
-                  </Button>
-                </Upload>
-              </Form.Item>
-            )}
+                  Upload File
+                </Button>
+              </Upload>
+              <DisplayFileSize className='upload-m-fs-10' />
+            </Form.Item>
           </Col>
         </Row>
 
@@ -689,7 +834,7 @@ const InsuranceInfo = () => {
               sm={{ span: 12 }}
               md={{ span: 12 }}
               lg={{ span: 8 }}
-              className="co-tab-3-single-document-container"
+              className='co-tab-3-single-document-container'
               key={elem?.id}
             >
               <UploadedImageContainer
@@ -702,16 +847,20 @@ const InsuranceInfo = () => {
           ))}
         </Row>
 
-        <Row span={24} gutter={24}>
+        <Row span={24} gutter={24} className='co-tab-3-sec-ins-mt-15'>
           <Col
             xs={{ span: 24 }}
             sm={{ span: 12 }}
             md={{ span: 12 }}
             lg={{ span: 8 }}
           >
-            <Form.Item label="Secondary Insurance">
+            <Form.Item label='Secondary Insurance'>
               <Switch
-                checked={isSecondaryInsurance}
+                checked={
+                  isSecondaryInsurance ||
+                  patientAllUploadedFilesData?.secondaryInsuranceFiles?.length >
+                    0
+                }
                 onChange={handleSecondaryInsuranceChecked}
                 disabled={
                   patientAllUploadedFilesData?.secondaryInsuranceFiles?.length >
@@ -729,16 +878,17 @@ const InsuranceInfo = () => {
                 lg={{ span: 8 }}
               >
                 <Form.Item
-                  label="Secondary Start Date"
+                  label='Secondary Start Date'
                   name={CREATE_ORDER_FORM_KEY_NAMES.secondaryStartDate}
                   rules={CREATE_ORDER_FORM_FIELD_RULES.secondaryStartDate}
                 >
                   <DatePicker
-                    className="co-insurance-info-tab-3-datepicker"
-                    size="large"
-                    placeholder="Choose Secondary Start Date"
+                    className='co-insurance-info-tab-3-datepicker'
+                    size='large'
+                    placeholder='Choose Secondary Start Date'
                     format={DATE_FORMAT_STARTING_FROM_MONTH}
                     onChange={handleSecondaryStartDateChange}
+                    disabledDate={disabledSecondaryStartDate}
                   />
                 </Form.Item>
               </Col>
@@ -750,15 +900,16 @@ const InsuranceInfo = () => {
                 lg={{ span: 8 }}
               >
                 <Form.Item
-                  label="Secondary End Date"
+                  label='Secondary End Date'
                   name={CREATE_ORDER_FORM_KEY_NAMES.secondaryEndDate}
                   rules={CREATE_ORDER_FORM_FIELD_RULES.secondaryEndDate}
                 >
                   <DatePicker
-                    className="co-insurance-info-tab-3-datepicker"
-                    size="large"
-                    placeholder="Choose Secondary End Date"
+                    className='co-insurance-info-tab-3-datepicker'
+                    size='large'
+                    placeholder='Choose Secondary End Date'
                     format={DATE_FORMAT_STARTING_FROM_MONTH}
+                    onChange={handleSecondaryEndDateChange}
                     disabledDate={disabledSecondaryEndDate}
                   />
                 </Form.Item>
@@ -769,37 +920,37 @@ const InsuranceInfo = () => {
         {isSecondaryInsurance && (
           <Row span={24} gutter={24}>
             <Col span={24}>
-              {patientAllUploadedFilesData?.secondaryInsuranceFiles?.length ===
-                5 && <label>Copy Of Secondary Insurance</label>}
-              {patientAllUploadedFilesData?.secondaryInsuranceFiles?.length <=
-                4 && (
-                <Form.Item label="Copy Of Secondary Insurance">
-                  <Upload
-                    beforeUpload={beforeFileUpload}
-                    customRequest={(file) =>
-                      customRequest(
-                        file,
-                        DOCUMENTS_UPLOAD_IN_SECONDARY_INSURANCE_CATEGORY
-                      )
-                    }
-                    listType="picture"
-                    maxCount={MAX_UPLOAD_DOCUMENTS_PER_CATEGORY}
-                    showUploadList={false}
+              <Form.Item label='Copy Of Secondary Insurance'>
+                <Upload
+                  beforeUpload={beforeFileUpload}
+                  customRequest={(file) =>
+                    customRequest(
+                      file,
+                      DOCUMENTS_UPLOAD_IN_SECONDARY_INSURANCE_CATEGORY
+                    )
+                  }
+                  listType='picture'
+                  maxCount={MAX_UPLOAD_DOCUMENTS_PER_CATEGORY}
+                  showUploadList={false}
+                  disabled={
+                    patientAllUploadedFilesData?.secondaryInsuranceFiles
+                      ?.length === MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
+                  }
+                >
+                  <Button
+                    size='large'
+                    className='co-tab-3-upload-btn'
+                    icon={<FiUpload />}
                     disabled={
                       patientAllUploadedFilesData?.secondaryInsuranceFiles
                         ?.length === MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
                     }
                   >
-                    <Button
-                      size="large"
-                      className="co-tab-3-upload-btn"
-                      icon={<FiUpload />}
-                    >
-                      Upload File
-                    </Button>
-                  </Upload>
-                </Form.Item>
-              )}
+                    Upload File
+                  </Button>
+                </Upload>
+                <DisplayFileSize className='upload-m-fs-10' />
+              </Form.Item>
             </Col>
           </Row>
         )}
@@ -811,7 +962,7 @@ const InsuranceInfo = () => {
               sm={{ span: 12 }}
               md={{ span: 12 }}
               lg={{ span: 8 }}
-              className="co-tab-3-single-document-container"
+              className='co-tab-3-single-document-container'
               key={elem?.id}
             >
               <UploadedImageContainer
@@ -824,11 +975,11 @@ const InsuranceInfo = () => {
           ))}
         </Row>
         <Form.Item>
-          <Row className="co-all-tabs-btn-container">
+          <Row className='co-all-tabs-btn-container'>
             <Col>
               <Button
-                className="co-all-tabs-cancel-btn"
-                size="large"
+                className='co-all-tabs-cancel-btn'
+                size='large'
                 onClick={() => showModal(ORDER_STATUS.cancel)}
               >
                 Cancel
@@ -837,8 +988,8 @@ const InsuranceInfo = () => {
 
             <Col>
               <Button
-                className="co-all-tabs-save-as-draft-btn"
-                size="large"
+                className='co-all-tabs-save-as-draft-btn'
+                size='large'
                 disabled={!submittable}
                 onClick={() => showModal(ORDER_STATUS.draft)}
               >
@@ -848,10 +999,9 @@ const InsuranceInfo = () => {
 
             <Col>
               <Button
-                className="co-all-tabs-next-btn"
-                size="large"
-                primaryEndDate
-                htmlType="submit"
+                className='co-all-tabs-next-btn'
+                size='large'
+                htmlType='submit'
                 disabled={!submittable}
               >
                 Next
@@ -863,9 +1013,9 @@ const InsuranceInfo = () => {
       <OrderModal
         title={
           isDraftModal ? (
-            <AiOutlineUnorderedList size={40} color="grey" />
+            <AiOutlineUnorderedList size={40} color='grey' />
           ) : (
-            <AiFillExclamationCircle color="red" size={45} />
+            <AiFillExclamationCircle color='red' size={45} />
           )
         }
         open={open}

@@ -7,6 +7,9 @@ const MedicalHistory = db.MedicalHistories;
 const MedicalRecord = db.MedicalRecords;
 const InsuranceInfo = db.InsuranceInfos;
 const Organization = db.Organizations;
+const OrderAuthDocuments = db.OrderAuthDocuments;
+const OrderPatDocuments = db.OrderPatDocuments;
+const PatDocuments = db.PatDocuments;
 
 /**
  * Checks the existence of a specific entity based on its ID.
@@ -104,7 +107,7 @@ const getOrderById = async (orderId) => {
             'preferredLanguage',
             'race',
             'address',
-            'mrn'
+            'mrn',
           ],
         },
         {
@@ -113,10 +116,11 @@ const getOrderById = async (orderId) => {
           attributes: [
             'id',
             'diagnosis',
-            'chemotherapyStatus',
+            'chemoTherapyStatus',
             'orderingProvider',
             'referringProvider',
             'pcpName',
+            'isReferringPhysician',
           ],
         },
         {
@@ -138,6 +142,7 @@ const getOrderById = async (orderId) => {
           as: 'insuranceInfo',
         },
         { model: Organization, as: 'organization' },
+        { model: db.Users, as: 'ownerData' },
       ],
     });
     return order;
@@ -170,6 +175,10 @@ const listOrders = async ({
   const whereClause = {
     organizationId: userData?.user?.organizationId,
   };
+
+  if(!filters?.status || filters?.status?.length === 0) {
+    whereClause.isDeleted = false
+  }
   if (filters) {
     // Check and add orderId filter
     if (filters?.orderId) {
@@ -177,7 +186,7 @@ const listOrders = async ({
     }
 
     // Check and add userId filter
-    if (filters?.userId) {
+    if (filters?.userId && filters?.userId !== 'all') {
       whereClause.createdBy = filters.userId;
     }
 
@@ -189,18 +198,27 @@ const listOrders = async ({
 
     // Check and add patient fields filters
     if (filters?.firstName) {
-      whereClause['$patientDemography.firstName$'] = filters.firstName;
+      whereClause['$patientDemography.firstName$'] = {
+        [Op.like]: `%${filters?.firstName}%`,
+      };
     }
     if (filters?.lastName) {
-      whereClause['$patientDemography.lastName$'] = filters.lastName;
+      whereClause['$patientDemography.lastName$'] = {
+        [Op.like]: `%${filters?.lastName}%`,
+      };
     }
     if (filters?.dob) {
-      whereClause['$patientDemography.dob$'] = filters.dob;
+      whereClause['$patientDemography.dob$'] = {
+        [Op.like]: `%${filters?.dob}%`,
+      };
     }
     if (filters?.gender) {
-      whereClause['$patientDemography.gender$'] = filters.gender;
+      whereClause['$patientDemography.gender$'] = {
+        [Op.like]: `%${filters?.gender}%`,
+      };
     }
   }
+
   const orders = await Order.findAndCountAll({
     where: whereClause,
     include: [
@@ -219,7 +237,7 @@ const listOrders = async ({
           'preferredLanguage',
           'race',
           'address',
-          'mrn'
+          'mrn',
         ],
       },
       {
@@ -228,10 +246,11 @@ const listOrders = async ({
         attributes: [
           'id',
           'diagnosis',
-          'chemotherapyStatus',
+          'chemoTherapyStatus',
           'orderingProvider',
           'referringProvider',
           'pcpName',
+          'isReferringPhysician',
         ],
       },
       {
@@ -254,15 +273,11 @@ const listOrders = async ({
       },
       { model: Organization, as: 'organization' },
       { model: db.Users, as: 'userData' },
+      { model: db.Users, as: 'ownerData' },
     ],
     offset,
     limit: pageSize,
-    order: [
-      [
-        sortBy ? sortBy : 'updatedAt',
-        sortOrder ? 'ASC' : 'DESC',
-      ],
-    ],
+    order: [[sortBy ? sortBy : 'updatedAt', sortOrder ? 'ASC' : 'DESC']],
   });
   return orders;
 };
@@ -302,7 +317,9 @@ const uploadFiles = async (order, files) => {
     },
   });
 
-  const existingIdsSet = new Set(existingDocumentIds.map((doc) => doc.patDocumentId));
+  const existingIdsSet = new Set(
+    existingDocumentIds.map((doc) => doc.patDocumentId)
+  );
 
   const newFiles = files.filter((file) => !existingIdsSet.has(file));
 
@@ -369,14 +386,26 @@ const getOrderDocuments = async (orderId) => {
 };
 
 /**
- * 
- * @param {object} order 
- * @param {array} files 
- * @returns 
- * 
+ *
+ * @param {object} order
+ * @param {array} files
+ * @returns
+ *
  */
 const createOrderAuthDocuments = async (order, files) => {
-  const mapUploadedFiles = files.map((file) => {
+  const existingDocumentIds = await db.OrderAuthDocuments.findAll({
+    attributes: ['patDocumentId'],
+    where: {
+      orderId: order.id,
+    },
+  });
+  const existingIdsSet = new Set(
+    existingDocumentIds.map((doc) => doc.patDocumentId)
+  );
+
+  const newFiles = files.filter((file) => !existingIdsSet.has(file));
+
+  const mapUploadedFiles = newFiles.map((file) => {
     return {
       orderId: order.id,
       createdBy: order.createdBy,
@@ -385,10 +414,9 @@ const createOrderAuthDocuments = async (order, files) => {
       patientId: order.patientId,
     };
   });
+
   return await db.OrderAuthDocuments.bulkCreate(mapUploadedFiles);
-}
-
-
+};
 
 /**
  * Save Order as Draft
@@ -433,6 +461,185 @@ const saveOrderAsDraft = async (orderData) => {
   }
 };
 
+/**
+ * Service function to find an order by ID
+ * @param {string} orderId - ID of the order to find
+ * @returns {Promise<Object>} - Promise resolving to the found order or null if not found
+ */
+const findOneById = async (orderId) => {
+  try {
+    const order = await Order.findOne({ where: { id: String(orderId) } });
+    return order;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Service function to find all order authorization documents by order ID and patient ID
+ * @param {string} orderId - ID of the order
+ * @param {string} patientId - ID of the patient associated with the order
+ * @returns {Promise<Array>} - Promise resolving to an array of order authorization documents
+ */
+const findAllByOrderIdAndPatientId = async (orderId, patientId) => {
+  try {
+    const orderAuthDocuments = await OrderAuthDocuments.findAll({
+      where: { orderId: orderId, patientId: patientId },
+    });
+    return orderAuthDocuments;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Service function to find all order patient documents by order ID
+ * @param {string} orderId - ID of the order
+ * @returns {Promise<Array>} - Promise resolving to an array of order patient documents
+ */
+const findAllOrderPatDocuments = async (orderId) => {
+  try {
+    const orderPatDocuments = await OrderPatDocuments.findAll({
+      where: { orderId: orderId },
+    });
+    return orderPatDocuments;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Service function to find the latest pat documents by IDs
+ * @param {Array} patDocumentIds - Array of pat document IDs to find
+ * @param {number} limit - Number of documents to limit the result
+ * @returns {Promise<Array>} - Promise resolving to an array of pat documents
+ */
+const findLatestPatDocumentsByIds = async (patDocumentIds, limit) => {
+  try {
+    const patDocuments = await PatDocuments.findAll({
+      where: { id: patDocumentIds },
+      order: [['createdAt', 'DESC']],
+      limit: limit,
+    });
+    return patDocuments;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * delete order by its id
+ * @param {string} orderId - ID of the order to delete
+ * @returns {Promise<Object>} - Promise resolving to the deleted order
+ */
+const deleteOrderById = async (orderId) => {
+  try {
+    await db.OrderAuthDocuments.destroy({ where: { orderId: orderId } });
+    await db.OrderPatDocuments.destroy({ where: { orderId: orderId } });
+    const order = await Order.destroy({ where: { id: orderId } });
+    return order;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * get draft order by patientId
+ * @param {int} patientId
+ * @returns {Promise<Object>} - Promise resolving to the deleted order
+ */
+const getOrderByPatientId = async (patientId) => {
+  const order = await Order.findOne({
+    where: { patientId: patientId, currentStatus: 'draft' },
+    order: [['updatedAt', 'DESC']],
+    include: [
+      {
+        model: PatientDemo,
+        as: 'patientDemography',
+        attributes: [
+          'id',
+          'firstName',
+          'lastName',
+          'dob',
+          'gender',
+          'primaryPhoneNumber',
+          'secondaryPhoneNumber',
+          'email',
+          'preferredLanguage',
+          'race',
+          'address',
+          'mrn',
+        ],
+      },
+      {
+        model: MedicalHistory,
+        as: 'medicalHistory',
+        attributes: [
+          'id',
+          'diagnosis',
+          'chemoTherapyStatus',
+          'orderingProvider',
+          'referringProvider',
+          'pcpName',
+          'isReferringPhysician',
+        ],
+      },
+      {
+        model: MedicalRecord,
+        as: 'medicalRecord',
+        attributes: [
+          'id',
+          'isRadiologyStatus',
+          'isPathologyStatus',
+          'isLabStatus',
+          'radiologyFacility',
+          'pathologyFacility',
+          'labFacility',
+          'isPreviousAuthorizationStatus',
+        ],
+      },
+      {
+        model: InsuranceInfo,
+        as: 'insuranceInfo',
+      },
+      { model: Organization, as: 'organization' },
+      { model: db.Users, as: 'ownerData' },
+    ],
+  });
+  return order;
+};
+
+const softDeleteOrder = async (orderId, userId) => {
+  try {
+    // Find the order
+    const order = await Order.findByPk(orderId);
+
+    // Update the soft delete columns
+    order.isDeleted = true;
+    order.deletedAt = new Date();
+    order.updatedBy = userId;
+    order.currentStatus = 'deleted';
+
+    // Save the changes
+    await order.save();
+
+    return order;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteMany = (date) => {
+  return Order.destroy({
+    where: {
+      isDeleted: true,
+      currentStatus: 'deleted',
+      deletedAt: {
+        [Op.lt]: date,
+      },
+    },
+  });
+}
 
 module.exports = {
   createOrderInfo,
@@ -443,4 +650,12 @@ module.exports = {
   getOrderDocuments,
   createOrderAuthDocuments,
   saveOrderAsDraft,
+  findOneById,
+  findAllByOrderIdAndPatientId,
+  findAllOrderPatDocuments,
+  findLatestPatDocumentsByIds,
+  deleteOrderById,
+  getOrderByPatientId,
+  softDeleteOrder,
+  deleteMany
 };

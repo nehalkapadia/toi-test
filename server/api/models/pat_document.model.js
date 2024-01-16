@@ -23,6 +23,12 @@ module.exports = (sequelize, Sequelize) => {
     documentURL: {
       type: Sequelize.STRING,
     },
+    documentSize: {
+      type: Sequelize.INTEGER,
+    },
+    documentName: {
+      type: Sequelize.STRING,
+    },
     createdBy: {
       type: Sequelize.INTEGER,
       references: {

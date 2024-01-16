@@ -33,6 +33,10 @@ import {
   NOT_SELECTED_ANY_CATEGORY_ERROR_MESSAGE,
   ORDER_MODAL_CANCEL_TEXT,
   ORDER_MODAL_OK_TEXT,
+  SELECT_AT_LIST_WRITTEN_ORDER_FILE,
+  SELECT_AT_LIST_MD_NOTES_FILE,
+  ARE_YOU_SURE_YOU_WANT_TO_SUBMIT_THE_ORDER_MESSAGE,
+  ORDER_HAS_BEEN_CANCELED,
 } from '@/utils/constant.util';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -43,13 +47,13 @@ import {
   updateOrderData,
   setTab1FormData,
   resetSearchPatientData,
-} from "@/store/orderSlice";
-import { useRouter } from "next/router";
+} from '@/store/orderSlice';
+import { useRouter } from 'next/router';
 import {
   beforeFileUpload,
   compareTwoArraysElements,
   fileLengthCheck,
-} from "@/utils/commonFunctions";
+} from '@/utils/commonFunctions';
 import {
   resetCreateOrderDataBacktoInitialState,
   setPatientDocsMdNotesCategory,
@@ -60,6 +64,8 @@ import {
   AiFillExclamationCircle,
   AiOutlineUnorderedList,
 } from 'react-icons/ai';
+import { IoIosCheckmarkCircle } from "react-icons/io"
+import DisplayFileSize from './DisplayFileSize';
 
 const PatientDocs = () => {
   const dispatch = useDispatch();
@@ -114,22 +120,11 @@ const PatientDocs = () => {
   const mdNotesCategory = useSelector(
     (state) => state.createOrderTabs.patientDocsMdNotesCategory
   );
-  const recentLabsCategory = useSelector(
-    (state) => state.createOrderTabs.patientDocsRecentLabCategory
-  );
-  const recentPathologyCategory = useSelector(
-    (state) => state.createOrderTabs.patientDocsRecentpathologyCategory
-  );
-  const imagingDetailsCategory = useSelector(
-    (state) => state.createOrderTabs.patientDocsImagingDetailsCategory
-  );
 
   const router = useRouter();
   const { orderId } = router.query;
   const [submittable, setSubmittable] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [categoryArr, setCategoryArr] = useState([]);
-  const [uploadBtn, setUploadBtn] = useState(false);
   const [isUploadBtnDisabled, setIsUploadBtnDisabled] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -137,6 +132,8 @@ const PatientDocs = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [modalText, setModalText] = useState(ARE_YOU_SURE_WANT_TO_CANCEL_ORDER);
   const [isDraftModal, setIsDraftModal] = useState(false);
+  const [isSubmitModal, setIsSubmitModal] = useState(false);
+  const [isCancelModal, setIsCancelModal] = useState(false);
   // Set this in redux-store
 
   const handleCategoryChange = (value) => {
@@ -144,6 +141,7 @@ const PatientDocs = () => {
   };
 
   const customRequest = (file) => {
+    setLoading(true);
     const { id = 1 } = patientDemographicsData;
     const matchingCategory = PATIENT_DOCUMENTS_FILE_UPLOAD_CATEGORIES.find(
       (cat) => cat.value === selectedCategory
@@ -162,13 +160,31 @@ const PatientDocs = () => {
         message[res?.payload?.status ? 'success' : 'error'](
           res?.payload?.message
         );
+        setLoading(false);
       });
     } else {
       message.error(ERROR_MESSAGE_FOR_MAX_UPLOAD_DOCS);
+      setLoading(false);
     }
   };
 
+  const handleAllFileUploaded = () => {
+    const { writtenOrdersFiles, mdNotesFiles } = patientUploadedDocsData;
+    if (writtenOrdersFiles?.length < 1) {
+      return SELECT_AT_LIST_WRITTEN_ORDER_FILE;
+    }
+    if (mdNotesFiles?.length < 1) {
+      return SELECT_AT_LIST_MD_NOTES_FILE;
+    }
+    return false;
+  };
+
   const handleCreateFinalOrder = () => {
+    const isAllFileUploaded = handleAllFileUploaded();
+    if (isAllFileUploaded) {
+      message.error(isAllFileUploaded);
+      return;
+    }
     let traceChanges;
     let traceChanges1 = false;
     let traceChanges2 = false;
@@ -202,32 +218,33 @@ const PatientDocs = () => {
       );
       traceChanges = traceChanges1 || traceChanges2;
     }
-    if(!orderId) {
+    if (!orderId) {
       if (isNewPatientCreated || traceChanges) {
         dispatch(postFinalOrderCreateData(payload)).then((res) => {
           if (res?.payload?.message) {
             dispatch(resetCreateOrderDataBacktoInitialState());
             dispatch(resetSearchPatientData());
+            dispatch(resetOrderStateToInitialState());
             message.success(res?.payload?.message);
-            router.push("/order-management");
+            router.push('/order-management');
           } else {
             message.error(res?.payload?.message);
           }
         });
       } else {
         dispatch(resetCreateOrderDataBacktoInitialState());
-        dispatch(resetOrderStateToInitialState());
         dispatch(resetSearchPatientData());
-        router.push("/order-management");
+        dispatch(resetOrderStateToInitialState());
+        router.push('/order-management');
       }
     } else {
-      dispatch(updateOrderData(payload)).then((res) => {
+      dispatch(updateOrderData({ orderId, payload })).then((res) => {
         if (res?.payload?.message) {
           dispatch(resetCreateOrderDataBacktoInitialState());
-          dispatch(resetOrderStateToInitialState());
           dispatch(resetSearchPatientData());
+          dispatch(resetOrderStateToInitialState());
           message.success(res?.payload?.message);
-          router.push("/order-management");
+          router.push('/order-management');
         } else {
           message.error(res?.payload?.message);
         }
@@ -235,6 +252,11 @@ const PatientDocs = () => {
     }
   };
   const saveOrderAsDraft = async () => {
+    const isAllFileUploaded = handleAllFileUploaded();
+    if (isAllFileUploaded) {
+      message.error(isAllFileUploaded);
+      return;
+    }
     const { id: patientId } = patientDemographicsData;
     const { id: historyId } = medicalHistoryOnly;
     const { id: recordId } = medicalRecordOnly;
@@ -262,6 +284,7 @@ const PatientDocs = () => {
       dispatch(resetCreateOrderDataBacktoInitialState());
       dispatch(setTab1FormData({}));
       dispatch(resetSearchPatientData());
+      dispatch(resetOrderStateToInitialState());
       message.success(order?.payload?.message);
       router.push('/order-management');
       setLoading(false);
@@ -311,8 +334,13 @@ const PatientDocs = () => {
       setSubmittable(true);
     }
 
-    if (selectedCategory && selectedCategory?.trim() !== "") {
+    if (
+      patientUploadedDocsData?.mdNotesFiles?.length > 0 &&
+      patientUploadedDocsData?.writtenOrdersFiles?.length > 0
+    ) {
       setSubmittable(true);
+    } else {
+      setSubmittable(false);
     }
     if (
       patientUploadedDocsData?.writtenOrdersFiles?.length ===
@@ -343,9 +371,18 @@ const PatientDocs = () => {
   const showModal = (type) => {
     if (type === ORDER_STATUS.draft) {
       setIsDraftModal(true);
+      setIsSubmitModal(false);
+      setIsCancelModal(false);
       setModalText(ARE_YOU_SURE_WANT_DRAFT_ORDER);
-    } else {
+    } else if (type === ORDER_STATUS.submitted) {
+      setIsSubmitModal(true);
       setIsDraftModal(false);
+      setIsCancelModal(false);
+      setModalText(ARE_YOU_SURE_YOU_WANT_TO_SUBMIT_THE_ORDER_MESSAGE);
+    } else if (type === ORDER_STATUS.cancel) {
+      setIsDraftModal(false);
+      setIsSubmitModal(false);
+      setIsCancelModal(true);
       setModalText(ARE_YOU_SURE_WANT_TO_CANCEL_ORDER);
     }
     setOpen(true);
@@ -356,21 +393,29 @@ const PatientDocs = () => {
       setOpen(false);
       setConfirmLoading(false);
       saveOrderAsDraft();
-      return;
+    } else if (isSubmitModal) {
+      setOpen(false);
+      setConfirmLoading(false);
+      handleCreateFinalOrder();
+    } else if (isCancelModal) {
+      setOpen(false);
+      setConfirmLoading(false);
+      dispatch(resetCreateOrderDataBacktoInitialState());
+      dispatch(setTab1FormData({}));
+      dispatch(resetSearchPatientData());
+      dispatch(resetOrderStateToInitialState());
     }
-    setOpen(false);
-    setConfirmLoading(false);
-    dispatch(resetCreateOrderDataBacktoInitialState());
-    dispatch(setTab1FormData({}));
-    dispatch(resetSearchPatientData());
     router.push('/order-management');
   };
   const handleCancel = () => {
     setOpen(false);
+    setIsCancelModal(false);
+    setIsDraftModal(false);
+    setIsSubmitModal(false);
   };
 
   return (
-    <div className="co-tab-4-patient-docs-container">
+    <div className='co-tab-4-patient-docs-container'>
       {loading && <Spin fullscreen />}
       <Row span={24} gutter={24}>
         <Col
@@ -379,25 +424,20 @@ const PatientDocs = () => {
           md={{ span: 8 }}
           lg={{ span: 8 }}
         >
-          <label className="co-tab-4-label-top-side">
+          <label className='co-tab-4-label-top-side'>
             Upload Patient Documents
           </label>
           <Select
             options={patientDocumentsUploadCategoryOptions(
               writtenOrdersCategory,
-              mdNotesCategory,
-              recentLabsCategory,
-              recentPathologyCategory,
-              imagingDetailsCategory
+              mdNotesCategory
             )}
-            size="large"
-            className="co-tab-4-file-type-select-tag"
-            placeholder="Select File Category"
+            size='large'
+            className='co-tab-4-file-type-select-tag'
+            placeholder='Select File Category'
             onChange={handleCategoryChange}
           />
-          <label className="co-tab-4-label-bottom-side">
-            JPG, PNG, PDF (max. 5 MB)
-          </label>
+          <DisplayFileSize className='co-tab-4-label-bottom-side' />
         </Col>
         <Col
           xs={{ span: 24 }}
@@ -408,15 +448,16 @@ const PatientDocs = () => {
           <Upload
             beforeUpload={beforeFileUpload}
             customRequest={customRequest}
-            listType="picture"
+            listType='picture'
             showUploadList={false}
             disabled={isUploadBtnDisabled}
           >
             <Button
-              size="large"
-              className="co-tab-4-upload-btn"
-              icon={<FiUpload className="co-tab-4-upload-btn-icon" />}
+              size='large'
+              className='co-tab-4-upload-btn'
+              icon={<FiUpload className='co-tab-4-upload-btn-icon' />}
               onClick={isUploadBtnDisabled ? handleBtnDisabled : undefined}
+              disabled={isUploadBtnDisabled}
             >
               Upload File
             </Button>
@@ -427,7 +468,7 @@ const PatientDocs = () => {
       {patientUploadedDocsData?.writtenOrdersFiles?.length > 0 && (
         <div>
           <Col>
-            <label className="co-tab-4-label-top-side">
+            <label className='co-tab-4-label-top-side'>
               Written Orders For Treatment
             </label>
           </Col>
@@ -438,12 +479,13 @@ const PatientDocs = () => {
                 sm={{ span: 12 }}
                 md={{ span: 12 }}
                 lg={{ span: 8 }}
-                className="co-tab-4-parent-container-of-uploaded-file"
+                className='co-tab-4-parent-container-of-uploaded-file'
                 key={elem?.id}
               >
                 <UploadedImageContainer
                   data={{
                     ...elem,
+                    isAuth: true,
                     category: DOCUMENTS_UPLOAD_IN_WRITTEN_ORDERS_CATEGORY,
                   }}
                 />
@@ -456,7 +498,7 @@ const PatientDocs = () => {
       {patientUploadedDocsData?.mdNotesFiles?.length > 0 && (
         <div>
           <Col>
-            <label className="co-tab-4-label-top-side">MD Notes</label>
+            <label className='co-tab-4-label-top-side'>MD Notes</label>
           </Col>
           <Row span={24} gutter={24}>
             {patientUploadedDocsData?.mdNotesFiles?.map((elem) => (
@@ -465,12 +507,13 @@ const PatientDocs = () => {
                 sm={{ span: 12 }}
                 md={{ span: 12 }}
                 lg={{ span: 8 }}
-                className="co-tab-4-parent-container-of-uploaded-file"
+                className='co-tab-4-parent-container-of-uploaded-file'
                 key={elem?.id}
               >
                 <UploadedImageContainer
                   data={{
                     ...elem,
+                    isAuth: true,
                     category: DOCUMENTS_UPLOAD_IN_MD_NOTES_CATEGORY,
                   }}
                 />
@@ -480,11 +523,11 @@ const PatientDocs = () => {
         </div>
       )}
 
-      <Row className="co-all-tabs-btn-container">
+      <Row className='co-all-tabs-btn-container'>
         <Col>
           <Button
-            className="co-all-tabs-cancel-btn"
-            size="large"
+            className='co-all-tabs-cancel-btn'
+            size='large'
             onClick={() => showModal(ORDER_STATUS.cancel)}
           >
             Cancel
@@ -493,8 +536,8 @@ const PatientDocs = () => {
 
         <Col>
           <Button
-            className="co-all-tabs-save-as-draft-btn"
-            size="large"
+            className='co-all-tabs-save-as-draft-btn'
+            size='large'
             disabled={!submittable}
             onClick={() => showModal(ORDER_STATUS.draft)}
           >
@@ -504,11 +547,11 @@ const PatientDocs = () => {
 
         <Col>
           <Button
-            className="co-all-tabs-next-btn"
-            size="large"
-            htmlType="submit"
+            className='co-all-tabs-next-btn'
+            size='large'
+            htmlType='submit'
             disabled={!submittable}
-            onClick={handleCreateFinalOrder}
+            onClick={() => showModal(ORDER_STATUS.submitted)}
           >
             Submit
           </Button>
@@ -517,9 +560,13 @@ const PatientDocs = () => {
       <OrderModal
         title={
           isDraftModal ? (
-            <AiOutlineUnorderedList size={40} color="grey" />
+            <AiOutlineUnorderedList color='grey' size={49} />
+          ) : isCancelModal ? (
+            <AiFillExclamationCircle color='red' size={49} />
+          ) : isSubmitModal ? (
+            <IoIosCheckmarkCircle color='green' size={49} />
           ) : (
-            <AiFillExclamationCircle color="red" size={45} />
+            ''
           )
         }
         open={open}

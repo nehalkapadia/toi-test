@@ -6,10 +6,17 @@ import { useDispatch } from 'react-redux';
 import { TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
 import { getUsersFunc } from '@/store/userTableDataSlice';
 
-const UserFilters = ({ onClose, page, organizationID }) => {
+const UserFilters = ({
+  onClose,
+  page,
+  setPage,
+  organizationID,
+  filterParams,
+  setFilterparams,
+  isClearable,
+  setIsClearable,
+}) => {
   const dispatch = useDispatch();
-  const [isClearable, setIsClearable] = useState(false);
-  const [filterParams, setFilterparams] = useState({});
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -88,10 +95,11 @@ const UserFilters = ({ onClose, page, organizationID }) => {
   };
 
   const handleFilterFunc = () => {
+    setPage(1)
     dispatch(
       getUsersFunc({
         filters: filterParams,
-        page: page,
+        page: 1,
         perPage: TOTAL_ITEMS_PER_PAGE,
         organizationId: organizationID,
       })
@@ -147,61 +155,61 @@ const UserFilters = ({ onClose, page, organizationID }) => {
   };
 
   return (
-    <div className="all-user-filter-element-container">
-      <Col className="each-filter-form-elem-single-at-user-mgt">
+    <div className='all-user-filter-element-container'>
+      <Col className='each-filter-form-elem-single-at-user-mgt'>
         <label>First Name</label>
         <Input
-          size="large"
+          size='large'
           value={firstName}
           onChange={handleFilterByFirstName}
-          placeholder="Enter First Name"
+          placeholder='Enter First Name'
         />
       </Col>
 
-      <Col className="each-filter-form-elem-single-at-user-mgt">
+      <Col className='each-filter-form-elem-single-at-user-mgt'>
         <label>Last Name</label>
         <Input
-          size="large"
+          size='large'
           value={lastName}
           onChange={handleFilterByLastName}
-          placeholder="Enter Last Name"
+          placeholder='Enter Last Name'
         />
       </Col>
 
-      <Col className="each-filter-form-elem-single-at-user-mgt">
+      <Col className='each-filter-form-elem-single-at-user-mgt'>
         <label>Email Id</label>
         <Input
-          size="large"
-          placeholder="Enter Email Id"
+          size='large'
+          placeholder='Enter Email Id'
           value={email}
           onChange={handleFilterByEmail}
         />
       </Col>
 
-      <Col className="each-filter-form-elem-single-at-user-mgt">
+      <Col className='each-filter-form-elem-single-at-user-mgt'>
         <label>Status</label>
         <Select
-          size="large"
-          placeholder="Select Any Status"
+          size='large'
+          placeholder='Select Any Status'
           value={isActive}
           options={ORGANIZATION_STATUS_SELECT_OPTIONS}
           onChange={handleFilterByStatus}
         />
       </Col>
 
-      <Row className="user-filter-btn-container">
+      <Row className='user-filter-btn-container'>
         <Button
-          size="large"
-          className="close-filter-btn-drawer-at-user"
+          size='large'
+          className='close-filter-btn-drawer-at-user'
           onClick={isClearable ? handleClearFilters : onFilterClose}
         >
           {isClearable ? 'Clear' : 'Close'}
         </Button>
 
         <Button
-          size="large"
+          size='large'
           disabled={!isClearable}
-          className="apply-filter-btn-at-user"
+          className='apply-filter-btn-at-user'
           onClick={handleFilterFunc}
         >
           Apply

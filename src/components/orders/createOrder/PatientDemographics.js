@@ -24,12 +24,12 @@ import {
   InputNumber,
   Modal,
   Row,
+  Select,
   Spin,
   message,
 } from 'antd';
 import {
   AiFillExclamationCircle,
-  AiOutlineDelete,
   AiOutlineSearch,
   AiOutlineUnorderedList,
 } from 'react-icons/ai';
@@ -38,9 +38,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   resetCreateOrderDataBacktoInitialState,
   setCurrentSelectedTab,
-  setDisplayPcpNumberSuccessTick,
-  setDisplayReferringSuccessTick,
-  setDisplayorderingSuccessTick,
   setInsuranceInfoTab,
   setMedicalHistoryTab,
   setPateintDocsTab,
@@ -51,14 +48,12 @@ import {
   orderSaveAsDraft,
   setTab1FormData,
   setDisplaySearchModal,
-  getValidateReferringProvider,
-  getValidateOrderingProvider,
-  getValidatePCPNumber,
   getPatientDocumentsAtEdit,
   getOrderDetailsById,
   updateOrderData,
   setSearchResponse,
   resetSearchPatientData,
+  resetOrderStateToInitialState,
 } from '@/store/orderSlice';
 import CustomTable from '@/components/customTable/CustomTable';
 import { TABLE_FOR_DISPLAYING_SEARCHED_PATIENT } from '@/utils/columns';
@@ -66,7 +61,13 @@ import { replaceMultipleSpacesWithSingleSpace } from '@/utils/patterns';
 import { useRouter } from 'next/router';
 import OrderModal from './OrderModal';
 import dayjs from 'dayjs';
-import { replaceNullWithEmptyString } from '@/utils/commonFunctions';
+import {
+  allowDigitsOnly,
+  formatPhoneNumberForInput,
+  patientDemographicsDataComparison,
+  replaceNullWithEmptyString,
+} from '@/utils/commonFunctions';
+import { GENDER_OPTIONS } from '@/utils/options';
 
 const PatientDemographics = () => {
   const router = useRouter();
@@ -80,6 +81,7 @@ const PatientDemographics = () => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [modalText, setModalText] = useState(ARE_YOU_SURE_WANT_TO_CANCEL_ORDER);
   const [isDraftModal, setIsDraftModal] = useState(false);
+  const [isOnChangeTurned, setIsOnChangeTurned] = useState(false);
 
   const dispatch = useDispatch();
   const tab1FormData = useSelector((state) => state.allOrdersData.tab1FormData);
@@ -94,6 +96,28 @@ const PatientDemographics = () => {
   );
   const patientDemographicsData = useSelector(
     (state) => state.allOrdersData.patientDemographicsData
+  );
+  const isNewPatientCreated = useSelector(
+    (state) => state.allOrdersData.isNewPatientCreated
+  );
+  const createHistoryOrInsurance = useSelector(
+    (state) => state.allOrdersData.createHistoryOrInsurance
+  );
+  const patientDemoId = useSelector((state) => state.allOrdersData.patientId);
+  const medicalHistoryId = useSelector(
+    (state) => state.allOrdersData.medicalHistoryId
+  );
+  const medicalRecordId = useSelector(
+    (state) => state.allOrdersData.medicalRecordId
+  );
+  const insuranceInfoId = useSelector(
+    (state) => state.allOrdersData.insuranceInfoId
+  );
+  const medicalUploadedFilesById = useSelector(
+    (state) => state.allOrdersData.medicalUploadedFilesById
+  );
+  const patientDocsFilesById = useSelector(
+    (state) => state.allOrdersData.patientDocsFilesById
   );
   const handleDisabledDate = (current) => {
     return current && current > dayjs().startOf('day');
@@ -116,7 +140,7 @@ const PatientDemographics = () => {
     ) {
       return message.info(SELECT_MANDATORY_FIELD_ERROR_MESSAGE);
     }
-    const payload = { ...initValues, dob: dateOfBirth };
+    const payload = { firstName, lastName, dob: dateOfBirth, gender, mrn };
     dispatch(searchPatientRecordData(payload))
       .then((res) => {
         if (res?.payload?.status) {
@@ -150,23 +174,26 @@ const PatientDemographics = () => {
     } = orderDetail ? order : patientSearchData || {};
 
     formData.setFieldsValue({
-      primaryPhoneNumber,
-      email,
-      secondaryPhoneNumber,
-      preferredLanguage,
-      address,
-      mrn,
-      race,
       firstName,
       lastName,
       dob: dayjs(dob),
       gender,
+      mrn,
+      primaryPhoneNumber,
+      secondaryPhoneNumber,
+      email,
+      preferredLanguage,
+      race,
+      address,
     });
+    if (patientSearchData?.id && !orderDetail) {
+      router.push(`/order-management/create?orderId=${patientSearchData?.id}`);
+    }
     dispatch(setDisplaySearchModal(false));
     dispatch(setMedicalHistoryTab(false));
     dispatch(setInsuranceInfoTab(false));
     dispatch(setPateintDocsTab(false));
-    dispatch(getPatientDocumentsAtEdit(patientId));
+    dispatch(getPatientDocumentsAtEdit({ patientId, orderId }));
   };
 
   const handleSubmitTab1Data = (values) => {
@@ -176,33 +203,36 @@ const PatientDemographics = () => {
     values.lastName = replaceMultipleSpacesWithSingleSpace(values.lastName);
     values.gender = replaceMultipleSpacesWithSingleSpace(values.gender);
     values.address = replaceMultipleSpacesWithSingleSpace(values.address);
-    if (!values.email) {
-      delete values.email;
-    }
-    if (searchResponse) {
-      const updatedPatientData = replaceNullWithEmptyString(
-        patientDemographicsData
-      );
-      const updatedFormValue = replaceNullWithEmptyString(values);
-      traceChanges = Object.keys({
-        ...updatedFormValue,
-        ...updatedPatientData,
-      }).some(
-        (key) =>
-          (updatedFormValue[key] === undefined &&
-            updatedPatientData[key] === undefined) ||
-          (updatedFormValue[key] !== undefined &&
-            updatedPatientData[key] !== undefined &&
-            updatedFormValue[key] != updatedPatientData[key])
+    if (
+      searchResponse ||
+      (patientDemographicsData &&
+        Object.keys(patientDemographicsData)?.length > 0)
+    ) {
+      traceChanges = patientDemographicsDataComparison(
+        patientDemographicsData,
+        values
       );
     }
     if (!searchResponse || traceChanges) {
+      if (orderId) {
+        values.orderId = orderId;
+      }
+      if (patientDemographicsData?.id) {
+        values.patientId = patientDemographicsData?.id;
+      }
+      if (!values.email) {
+        delete values.email;
+      }
       dispatch(postPatientDemographicsData(values)).then((res) => {
         if (res?.payload?.status) {
           message.success(res?.payload?.message);
           dispatch(setMedicalHistoryTab(false));
           dispatch(setSearchResponse(true));
           dispatch(setCurrentSelectedTab('medicalHistory'));
+          if (searchResponse) {
+            dispatch(setInsuranceInfoTab(false));
+            dispatch(setPateintDocsTab(false));
+          }
         } else {
           message.info(res?.payload?.message);
         }
@@ -218,9 +248,9 @@ const PatientDemographics = () => {
   };
 
   const validateMRNNumber = (numString) => {
-    return (
-      typeof numString === 'number' && numString?.toString()?.trim()?.length > 0
-    );
+    return typeof numString === 'number'
+      ? numString?.toString()?.trim()?.length > 0
+      : numString?.trim()?.length > 0;
   };
 
   useEffect(() => {
@@ -260,7 +290,7 @@ const PatientDemographics = () => {
   }, [formValues, isSearchable]);
 
   useEffect(() => {
-    if (orderId) {
+    if (orderId && !isNewPatientCreated && createHistoryOrInsurance) {
       orderDetailsByOrderId(orderId);
     }
   }, [orderId]);
@@ -300,6 +330,15 @@ const PatientDemographics = () => {
     }
     let patientId = patientDemographicsData?.id;
     if (!searchResponse || traceChanges) {
+      if (!newValues.email) {
+        delete newValues.email;
+      }
+      if (orderId) {
+        newValues.orderId = orderId;
+      }
+      if (patientDemographicsData?.id) {
+        newValues.patientId = patientDemographicsData?.id;
+      }
       const patient = await dispatch(postPatientDemographicsData(newValues));
 
       if (patient?.payload?.status) {
@@ -313,15 +352,25 @@ const PatientDemographics = () => {
     let order;
     if (orderId) {
       const payload = {
-        patientId: patientId,
+        patientId: patientId ? patientId : patientDemoId,
+        historyId: medicalHistoryId ? medicalHistoryId : null,
+        insuranceId: insuranceInfoId ? insuranceInfoId : null,
+        recordId: medicalRecordId ? medicalRecordId : null,
+        uploadFiles: medicalUploadedFilesById,
+        orderAuthDocuments: patientDocsFilesById,
       };
       order = await dispatch(updateOrderData({ orderId, payload }));
     } else {
       order = await dispatch(
         orderSaveAsDraft({
           caseId: CASE_ID,
-          patientId: patientId,
+          patientId: patientId ? patientId : patientDemoId,
+          historyId: medicalHistoryId ? medicalHistoryId : null,
+          insuranceId: insuranceInfoId ? insuranceInfoId : null,
+          recordId: medicalRecordId ? medicalRecordId : null,
           currentStatus: ORDER_STATUS.draft,
+          uploadFiles: medicalUploadedFilesById,
+          orderAuthDocuments: patientDocsFilesById,
         })
       );
     }
@@ -330,6 +379,7 @@ const PatientDemographics = () => {
       dispatch(resetCreateOrderDataBacktoInitialState());
       dispatch(setTab1FormData({}));
       dispatch(resetSearchPatientData());
+      dispatch(resetOrderStateToInitialState());
       message.success(order?.payload?.message);
       setLoading(false);
       router.push('/order-management');
@@ -361,24 +411,60 @@ const PatientDemographics = () => {
     dispatch(resetCreateOrderDataBacktoInitialState());
     dispatch(setTab1FormData({}));
     dispatch(resetSearchPatientData());
+    dispatch(resetOrderStateToInitialState());
     router.push('/order-management');
   };
   const handleCancel = () => {
     setOpen(false);
   };
 
+  const onValuesChange = (changedValues, allValues) => {
+    if (
+      searchResponse ||
+      (patientDemographicsData &&
+        Object.keys(patientDemographicsData)?.length > 0)
+    ) {
+      const keys = Object.keys(changedValues);
+      const changedKey = keys[0];
+      changedKey === CREATE_ORDER_FORM_KEY_NAMES.dob
+        ? (changedValues.dob = dayjs(changedValues.dob).format(
+            DATE_FORMAT_STARTING_FROM_YEAR
+          ))
+        : '';
+      const updatedPatientData = replaceNullWithEmptyString(
+        patientDemographicsData
+      );
+      const updatedChangedValues = replaceNullWithEmptyString(changedValues);
+      const traceChanges =
+        updatedPatientData[changedKey] != updatedChangedValues[changedKey];
+      setIsOnChangeTurned(traceChanges);
+    }
+  };
+
+  useEffect(() => {
+    if (isOnChangeTurned && Object.keys(patientDemographicsData)?.length > 0) {
+      dispatch(setMedicalHistoryTab(true));
+      dispatch(setInsuranceInfoTab(true));
+      dispatch(setPateintDocsTab(true));
+    } else {
+      dispatch(setMedicalHistoryTab(false));
+      dispatch(setInsuranceInfoTab(false));
+      dispatch(setPateintDocsTab(false));
+    }
+  }, [isOnChangeTurned]);
+
   return (
-    <div className="create-order-patient-demographics-container">
+    <div className='create-order-patient-demographics-container'>
       {loading && <Spin fullscreen></Spin>}
       <Form
         form={formData}
-        name="create-order-patient-demographics"
-        layout="vertical"
-        autoComplete="off"
+        name='create-order-patient-demographics'
+        layout='vertical'
+        autoComplete='off'
         preserve={true}
         onFinish={handleSubmitTab1Data}
-        // onValuesChange={handleFormValuesChange}
         initialValues={tab1FormData}
+        onValuesChange={onValuesChange}
       >
         <Row span={24} gutter={24}>
           <Col
@@ -388,12 +474,11 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="First Name"
+              label='First Name'
               name={CREATE_ORDER_FORM_KEY_NAMES.firstName}
-              validateStatus="validating"
               rules={CREATE_ORDER_FORM_FIELD_RULES.firstName}
             >
-              <Input size="large" placeholder="Patient's First Name" />
+              <Input size='large' placeholder="Patient's First Name" />
             </Form.Item>
           </Col>
 
@@ -404,13 +489,11 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Last Name"
+              label='Last Name'
               name={CREATE_ORDER_FORM_KEY_NAMES.lastName}
-              validateStatus="validating"
               rules={CREATE_ORDER_FORM_FIELD_RULES.lastName}
-              // initialValue={tab1FormData?.lastName}
             >
-              <Input size="large" placeholder="Patient's Last Name" />
+              <Input size='large' placeholder="Patient's Last Name" />
             </Form.Item>
           </Col>
           <Col
@@ -420,14 +503,13 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Date Of Birth"
+              label='Date Of Birth'
               name={CREATE_ORDER_FORM_KEY_NAMES.dob}
               rules={CREATE_ORDER_FORM_FIELD_RULES.dob}
-              // initialValue={ tab1FormData.dob ? dayjs(tab1FormData?.dob) : null}
             >
               <DatePicker
-                className="co-tab1-form-item-width-manually"
-                size="large"
+                className='co-tab1-form-item-width-manually'
+                size='large'
                 placeholder="Patient's Date of Birth"
                 format={DATE_FORMAT_STARTING_FROM_MONTH}
                 disabledDate={handleDisabledDate}
@@ -442,32 +524,15 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Gender"
+              label='Gender'
               name={CREATE_ORDER_FORM_KEY_NAMES.gender}
               rules={CREATE_ORDER_FORM_FIELD_RULES.gender}
-              // initialValue={tab1FormData?.gender}
             >
-              <Input size="large" placeholder="Patient's Gender" />
-            </Form.Item>
-          </Col>
-
-          <Col
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 12 }}
-            lg={{ span: 8 }}
-          >
-            <Form.Item
-              label="MRN Number"
-              name={CREATE_ORDER_FORM_KEY_NAMES.mrn}
-              validateStatus="validating"
-              rules={CREATE_ORDER_FORM_FIELD_RULES.mrn}
-              // initialValue={tab1FormData?.mrn}
-            >
-              <InputNumber
-                size="large"
-                placeholder="Enter MRN Number"
-                className="co-tab1-form-item-width-manually"
+              {/* <Input size='large' placeholder="Patient's Gender" /> */}
+              <Select
+                size='large'
+                options={GENDER_OPTIONS}
+                placeholder='Select Gender'
               />
             </Form.Item>
           </Col>
@@ -478,15 +543,40 @@ const PatientDemographics = () => {
             md={{ span: 12 }}
             lg={{ span: 8 }}
           >
-            <Button
-              className="patient-search-btn"
-              icon={<AiOutlineSearch className="patient-search-icon" />}
-              size="large"
-              onClick={handleSearchPatient}
-              disabled={!isSearchable}
+            <Form.Item
+              label='MRN Number'
+              name={CREATE_ORDER_FORM_KEY_NAMES.mrn}
+              rules={CREATE_ORDER_FORM_FIELD_RULES.mrn}
             >
-              Search Patient
-            </Button>
+              <InputNumber
+                size='large'
+                placeholder='Enter MRN Number'
+                className='co-tab1-form-item-width-manually'
+              />
+            </Form.Item>
+          </Col>
+
+          <Col
+            xs={{ span: 24 }}
+            sm={{ span: 12 }}
+            md={{ span: 12 }}
+            lg={{ span: 8 }}
+          >
+            {!orderId && (
+              <Button
+                className={
+                  isSearchable
+                    ? 'patient-search-btn'
+                    : 'disabled-patient-search-btn'
+                }
+                icon={<AiOutlineSearch className='patient-search-icon' />}
+                size='large'
+                onClick={handleSearchPatient}
+                disabled={!isSearchable}
+              >
+                Search Patient
+              </Button>
+            )}
           </Col>
 
           <Col
@@ -496,13 +586,11 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Email"
+              label='Email'
               name={CREATE_ORDER_FORM_KEY_NAMES.email}
-              validateStatus="validating"
               rules={CREATE_ORDER_FORM_FIELD_RULES.email}
-              // initialValue={tab1FormData?.email}
             >
-              <Input size="large" placeholder="Enter Email ID" />
+              <Input size='large' placeholder='Enter Email ID' />
             </Form.Item>
           </Col>
 
@@ -513,15 +601,17 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Primary Phone Number"
+              label='Primary Phone Number'
               name={CREATE_ORDER_FORM_KEY_NAMES.primaryPhoneNumber}
               rules={CREATE_ORDER_FORM_FIELD_RULES.number}
-              // initialValue={tab1FormData?.primaryPhoneNumber}
             >
               <InputNumber
-                className="co-tab1-form-item-width-manually"
-                size="large"
-                placeholder="Primary Phone Number"
+                className='co-tab1-form-item-width-manually'
+                size='large'
+                placeholder='Primary Phone Number'
+                formatter={(value) => formatPhoneNumberForInput(value)}
+                parser={(value) => value.replace(/\D/g, '')}
+                maxLength={14}
               />
             </Form.Item>
           </Col>
@@ -533,15 +623,19 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Secondary Phone Number"
+              label='Secondary Phone Number'
               name={CREATE_ORDER_FORM_KEY_NAMES.secondaryPhoneNumber}
               rules={CREATE_ORDER_FORM_FIELD_RULES.number}
-              // initialValue={tab1FormData?.secondaryPhoneNumber}
             >
               <InputNumber
-                className="co-tab1-form-item-width-manually"
-                size="large"
-                placeholder="Secondary Phone Number"
+                step={null}
+                className='co-tab1-form-item-width-manually'
+                size='large'
+                placeholder='Secondary Phone Number'
+                onKeyDown={allowDigitsOnly}
+                formatter={(value) => formatPhoneNumberForInput(value)}
+                parser={(value) => value.replace(/\D/g, '')}
+                maxLength={14}
               />
             </Form.Item>
           </Col>
@@ -553,13 +647,12 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Preferred Language"
+              label='Preferred Language'
               name={CREATE_ORDER_FORM_KEY_NAMES.preferredLanguage}
-              validateStatus="validating"
+              validateStatus='validating'
               rules={CREATE_ORDER_FORM_FIELD_RULES.preferredLanguage}
-              // initialValue={tab1FormData?.preferredLanguage}
             >
-              <Input size="large" placeholder="Your Preferred Language" />
+              <Input size='large' placeholder='Your Preferred Language' />
             </Form.Item>
           </Col>
 
@@ -570,13 +663,12 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Race"
+              label='Race'
               name={CREATE_ORDER_FORM_KEY_NAMES.race}
-              validateStatus="validating"
+              validateStatus='validating'
               rules={CREATE_ORDER_FORM_FIELD_RULES.race}
-              // initialValue={tab1FormData?.race}
             >
-              <Input size="large" placeholder="Race" />
+              <Input size='large' placeholder='Race' />
             </Form.Item>
           </Col>
 
@@ -587,25 +679,23 @@ const PatientDemographics = () => {
             lg={{ span: 8 }}
           >
             <Form.Item
-              label="Address"
+              label='Address'
               name={CREATE_ORDER_FORM_KEY_NAMES.address}
-              validateStatus="validating"
               rules={CREATE_ORDER_FORM_FIELD_RULES.address}
-              // initialValue={tab1FormData?.address}
             >
               <TextArea
-                placeholder="Please Enter Full Address"
+                placeholder='Please Enter Full Address'
                 autoSize={{ minRows: 4, maxRows: 6 }}
               />
             </Form.Item>
           </Col>
         </Row>
         <Form.Item>
-          <Row className="co-all-tabs-btn-container">
+          <Row className='co-all-tabs-btn-container'>
             <Col>
               <Button
-                className="co-all-tabs-cancel-btn"
-                size="large"
+                className='co-all-tabs-cancel-btn'
+                size='large'
                 onClick={() => showModal(ORDER_STATUS.cancel)}
               >
                 Cancel
@@ -614,8 +704,8 @@ const PatientDemographics = () => {
 
             <Col>
               <Button
-                className="co-all-tabs-save-as-draft-btn"
-                size="large"
+                className='co-all-tabs-save-as-draft-btn'
+                size='large'
                 disabled={!submittable}
                 onClick={() => showModal(ORDER_STATUS.draft)}
               >
@@ -625,9 +715,9 @@ const PatientDemographics = () => {
 
             <Col>
               <Button
-                className="co-all-tabs-next-btn"
-                size="large"
-                htmlType="submit"
+                className='co-all-tabs-next-btn'
+                size='large'
+                htmlType='submit'
                 disabled={!submittable}
               >
                 Next
@@ -640,7 +730,7 @@ const PatientDemographics = () => {
       {/* Modal Start from here */}
       <Modal
         open={displaySearchModal}
-        title="Patient Details"
+        title='Patient Details'
         footer={false}
         closable={false}
         width={'90%'}
@@ -650,18 +740,18 @@ const PatientDemographics = () => {
           left: '50%',
           transform: 'translate(-50%, -50%)',
         }}
-        transitionName=""
+        transitionName=''
       >
         <CustomTable
-          rowKey="id"
+          rowKey='id'
           rows={[patientDemographicsData]}
           columns={TABLE_FOR_DISPLAYING_SEARCHED_PATIENT}
           pagination={false}
         />
-        <Row className="co-modal-add-btn-container">
+        <Row className='co-modal-add-btn-container'>
           <Button
-            size="large"
-            className="co-modal-add-btn"
+            size='large'
+            className='co-modal-add-btn'
             onClick={handleSearchDetailsAdd}
           >
             Add
@@ -671,9 +761,9 @@ const PatientDemographics = () => {
       <OrderModal
         title={
           isDraftModal ? (
-            <AiOutlineUnorderedList size={40} color="grey" />
+            <AiOutlineUnorderedList size={40} color='grey' />
           ) : (
-            <AiFillExclamationCircle color="red" size={45} />
+            <AiFillExclamationCircle color='red' size={45} />
           )
         }
         open={open}

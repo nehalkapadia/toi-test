@@ -1,11 +1,11 @@
-import { message } from "antd";
+import { message } from 'antd';
 import {
   ALLOWED_FILE_TYPE_FOR_UPLOAD,
   ERROR_MESSAGE_FOR_FILE_SIZE,
   ERROR_MESSAGE_FOR_UPLOADED_FILE_TYPE,
   MAX_FILE_SIZE_FOR_UPLOAD,
   MAX_UPLOAD_DOCUMENTS_PER_CATEGORY,
-} from "./constant.util";
+} from './constant.util';
 
 export const formatPhoneNumberToUSFormat = (number) => {
   if (!number) {
@@ -13,7 +13,7 @@ export const formatPhoneNumberToUSFormat = (number) => {
   }
   const numSting = number.toString();
 
-  const countryCode = "1";
+  const countryCode = '1';
   const areaCode = numSting.slice(0, 3);
   const middleNumber = numSting.slice(3, 6);
   const lastNumber = numSting.slice(6);
@@ -22,7 +22,7 @@ export const formatPhoneNumberToUSFormat = (number) => {
 };
 
 export const capitalizeWords = (inputString) => {
-  if (!inputString || inputString?.trim() === "") {
+  if (!inputString || inputString?.trim() === '') {
     return;
   }
   const resultString = inputString.replace(/\b[a-zA-Z]/g, function (match) {
@@ -35,27 +35,27 @@ export const getRoleById = (id) => {
   if (!id) {
     return;
   } else if (id === 1) {
-    return "Admin";
+    return 'Admin';
   } else if (id === 2) {
-    return "Member";
-  } else return "Not A Valid Role";
+    return 'Member';
+  } else return 'Not A Valid Role';
 };
 
 export const formatPhoneNumberForInput = (value) => {
-  if (!value || value?.toString()?.trim() === "") {
+  if (!value || value?.toString()?.trim() === '') {
     return;
   }
 
-  value = value.toString();
+  value = value?.toString();
 
-  const cleanNumber = value.replace(/\D/g, "");
+  const cleanNumber = value.replace(/\D/g, '');
 
   if (cleanNumber.length === 3) {
-    return `(${cleanNumber.slice(0, 3)})-`;
+    return `(${cleanNumber.slice(0, 3)}) `;
   } else if (cleanNumber.length === 6) {
-    return `(${cleanNumber.slice(0, 3)})-${cleanNumber.slice(3, 6)}-`;
+    return `(${cleanNumber.slice(0, 3)}) ${cleanNumber.slice(3, 6)}-`;
   } else if (cleanNumber.length === 10) {
-    return `(${cleanNumber.slice(0, 3)})-${cleanNumber.slice(
+    return `(${cleanNumber.slice(0, 3)}) ${cleanNumber.slice(
       3,
       6
     )}-${cleanNumber.slice(6, 10)}`;
@@ -80,9 +80,9 @@ export const extractFileNameFromUrl = (url) => {
   if (!url) {
     return;
   }
-  const urlParts = url.split("/");
+  const urlParts = url.split('/');
   const fileName = urlParts[urlParts.length - 1];
-  return fileName || "";
+  return fileName || '';
 };
 
 // Func for checking the length of uploaded document array in a single category
@@ -111,7 +111,9 @@ export const replaceNullWithEmptyString = (obj) => {
   }
   const result = {};
   Object.keys(obj)?.forEach((key) => {
-    result[key] = obj[key] === null ? "" : obj[key];
+    result[key] = obj[key] === null || obj[key] === 'null' ? '' : obj[key];
+    result[key] = obj[key] === undefined ? '' : obj[key];
+    result[key] = !obj[key] ? '' : obj[key];
   });
 
   return result;
@@ -144,3 +146,42 @@ export const compareTwoArraysElements = (arr1 = [], arr2 = []) => {
 
   return true;
 };
+
+export const formatFileSize = (bytes = 0) => {
+  const kilobyte = 1024;
+  const megabyte = kilobyte * 1024;
+
+  if (bytes < kilobyte) {
+    return bytes + ' B';
+  } else if (bytes < megabyte) {
+    return (bytes / kilobyte).toFixed(2) + ' KB';
+  } else {
+    return (bytes / megabyte).toFixed(2) + ' MB';
+  }
+};
+
+export const patientDemographicsDataComparison = (resData, inputValues) => {
+  const updatedResData = replaceNullWithEmptyString(resData);
+  const updatedInputValues = replaceNullWithEmptyString(inputValues);
+
+  const allKeys = Object.keys({
+    ...updatedInputValues,
+    ...updatedResData,
+  });
+
+  return allKeys.some(
+    (key) =>
+      (updatedResData[key] === undefined &&
+        updatedInputValues[key] === undefined) ||
+      (updatedResData[key] !== undefined &&
+        updatedInputValues[key] !== undefined &&
+        updatedResData[key] != updatedInputValues[key])
+  );
+};
+
+export const allowDigitsOnly = (event) => {
+  const allowedKeys = ['Tab', 'Backspace', 'ArrowLeft', 'ArrowRight'];
+    if (!/[0-9]/.test(event.key) && !allowedKeys.includes(event.key)) {
+        event.preventDefault();
+    }
+}

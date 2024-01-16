@@ -3,6 +3,7 @@ const constants = require('../utils/constants.util');
 const npiService = require('../services/npi.service');
 const { successResponse, errorResponse } = require('../utils/response.util');
 const { createLog } = require('../services/audit_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 /**
  *
@@ -18,7 +19,7 @@ exports.validate = async (req, res) => {
 
   // Fetch medical history from the external API
   try {
-    await createLog(req, 'Npis', 'Validate')
+    await createLog(formatRequest(req), 'Npis', 'Validate')
     const versionParam = process.env.NPI_VERSION;
     const apiUrl = `${process.env.NPI_API_ENDPOINT}/?version=${versionParam}&number=${npiNumber}`;
 
@@ -39,7 +40,7 @@ exports.validate = async (req, res) => {
     }
   } catch (error) {
     // Handle errors that occur during the API request and log the error message
-    await createLog(req, 'Npis', 'Validate', error)
+    await createLog(formatRequest(req), 'Npis', 'Validate', error)
     return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.INTERNAL_SERVER_ERROR));
   }
 };
@@ -55,6 +56,7 @@ exports.validate = async (req, res) => {
  */
 exports.createNpi = async (req, res) => {
   try {
+    await createLog(formatRequest(req), 'Npis', 'CREATE')
     // Extract relevant data from the request
     const reqData = req.body;
     const { npiNumber } = reqData;
@@ -74,6 +76,7 @@ exports.createNpi = async (req, res) => {
     // Respond with a success message and the created Npi
     res.status(constants.CREATED).json(successResponse(constants.NPI_CREATED, npi));
   } catch (error) {
+    await createLog(formatRequest(req), 'Npis', 'CREATE', error)
     // Handle errors and respond with an internal server error message
     res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.INTERNAL_SERVER_ERROR));
   }

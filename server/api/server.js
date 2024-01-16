@@ -10,6 +10,7 @@ require('./auth/passport-config');
 // database connection
 require('../config/db.config');
 const db = require('./models');
+const { scheduleDeleteOrderCronJob } = require('./cronjobs/order_delete');
 // db.sequelize.sync();
 
 app.use(express.json());
@@ -56,5 +57,6 @@ app.get('/api/welcome', async (req, res, next) => {
 
 // routes
 require('./routes')(app);
+scheduleDeleteOrderCronJob();
 
 module.exports = app;

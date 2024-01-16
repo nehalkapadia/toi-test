@@ -1,11 +1,13 @@
 const { successResponse, errorResponse } = require('../utils/response.util');
 const constants = require('../utils/constants.util');
 const patientService = require('../services/patient.service');
+const orderService = require('../services/order.service');
 const { getMedicalHistoryByPatientId } = require('../services/medical_history.service');
 const { getMedicalRecordByPatientId } = require('../services/medical_record.service');
 const { checkExistingInsurance } = require('../services/insurance_info.service');
 const { getOrderAuthDocumentByPatientId } = require('../services/order_auth_document.service');
 const { createLog } = require('../services/audit_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 
 /**
@@ -28,7 +30,7 @@ const { createLog } = require('../services/audit_log.service');
  */
 exports.searchPatient = async (req, res) => {
   try {
-    await createLog(req, 'PatientDemos', 'Search');
+    await createLog(formatRequest(req), 'PatientDemos', 'Search');
     // Extracting query parameters from the request object
     const { firstName, lastName, dob, gender, mrn } = req.query;
 
@@ -42,6 +44,12 @@ exports.searchPatient = async (req, res) => {
     });
 
     if (existingPatient) {
+      const order = await orderService.getOrderByPatientId(existingPatient?.id);
+      if(order) {
+        return res.status(constants.SUCCESS).json(
+          successResponse(constants.SEARCH_SUCCESS, order)
+        );
+      }
       const medicalHistoryData = await getMedicalHistoryByPatientId(existingPatient.id);
       const medicalRecordData = await getMedicalRecordByPatientId(existingPatient.id);
       const insuranceInfoData = await checkExistingInsurance(existingPatient.id);
@@ -64,7 +72,7 @@ exports.searchPatient = async (req, res) => {
       );
     }
   } catch (error) {
-    await createLog(req, 'PatientDemos', 'Search', error);
+    await createLog(formatRequest(req), 'PatientDemos', 'Search', error);
     // Handle the error and return an error response
     return res.status(constants.INTERNAL_SERVER_STATUS).json(
       errorResponse(constants.INTERNAL_SERVER_ERROR, error.message)
@@ -91,20 +99,29 @@ exports.searchPatient = async (req, res) => {
  */
 exports.createPatient = async (req, res) => {
   try {
-    await createLog(req, 'PatientDemos', 'Create');
-
+    await createLog(formatRequest(req), 'PatientDemos', 'Create');
+    const reqData = req.body;
     const userId = req?.userData?.id;
 
+    // Check if the patient already exists
+    const existingPatient = await patientService.searchOrUpdatePatient(reqData)
+
+    if (existingPatient) {
+      return res.status(constants.SUCCESS).json(
+        successResponse(constants.UPDATE_SUCCESS, existingPatient)
+      );
+    }
     if(userId) {
       req.body.createdBy = userId;
       req.body.updatedBy = userId;
     }
     // Create a new patient
+    delete reqData?.patientId;
+    delete reqData?.orderId;
     const newPatient = await patientService.createPatient(req.body);
 
     // Fetch the newly created patient with all details
     const createdPatient = await patientService.getPatientById(newPatient.id);
-
 
     // Return the detailed patient information in the response
     return res.status(constants.CREATED).json({
@@ -113,7 +130,7 @@ exports.createPatient = async (req, res) => {
       data: createdPatient,
     });
   } catch (error) {
-    await createLog(req, 'PatientDemos', 'Create', error);
+    await createLog(formatRequest(req), 'PatientDemos', 'Create', error);
     // Handle the error and return an error response
     return res.status(constants.INTERNAL_SERVER_STATUS).json({
       status: false,
@@ -144,7 +161,7 @@ exports.createPatient = async (req, res) => {
  */
 exports.updatePatient = async (req, res) => {
   try {
-    await createLog(req, 'PatientDemos', 'Update');
+    await createLog(formatRequest(req), 'PatientDemos', 'Update');
     const { id } = req.params;
     const userId = req?.userData?.id;
 
@@ -179,7 +196,7 @@ exports.updatePatient = async (req, res) => {
       successResponse(constants.UPDATE_SUCCESS, updatedPatient)
     );
   } catch (error) {
-    await createLog(req, 'PatientDemos', 'Update', error);
+    await createLog(formatRequest(req), 'PatientDemos', 'Update', error);
     // Handle the error and return an error response
     return res.status(constants.INTERNAL_SERVER_STATUS).json(
       errorResponse(constants.INTERNAL_SERVER_ERROR, error)

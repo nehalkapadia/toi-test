@@ -27,6 +27,7 @@
   margin: 0;
   font-size: 1rem;
   color: #333843;
+  letter-spacing: 0.5px;
 }
 
 .text-transform-class-om {
@@ -43,6 +44,7 @@
   margin: 0;
   font-size: 1rem;
   color: #b4332a;
+  font-weight: 600;
 }
 
 .edit-organization-input-box {
@@ -72,16 +74,13 @@
 }
 
 .org-mgt-edit-btn-for-cancel {
-  border: 1px solid #f04438;
-  color: #f04438;
   font-weight: 600;
   font-size: 14px !important;
   letter-spacing: 0.5px;
 }
 
 .org-mgt-edit-btn-for-cancel:hover {
-  color: #f04438 !important;
-  border: 1px solid #f04438 !important;
+  border: 1px solid #ddd !important;
 }
 
 .org-mgt-edit-btn-for-update {

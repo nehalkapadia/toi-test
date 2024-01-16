@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axiosInstance from "./axiosInstance";
-import { message } from "antd";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axiosInstance from './axiosInstance';
+import { message } from 'antd';
 import {
   DOCUMENTS_UPLOAD_IN_INSURANCE_COPY_CATEGORY,
   DOCUMENTS_UPLOAD_IN_LAB_STATUS_CATEGORY,
@@ -12,11 +12,11 @@ import {
   DOCUMENTS_UPLOAD_IN_SECONDARY_INSURANCE_CATEGORY,
   DOCUMENTS_UPLOAD_IN_WRITTEN_ORDERS_CATEGORY,
   MISSING_REQUIRED_FIELDS,
-} from "@/utils/constant.util";
+} from '@/utils/constant.util';
 import {
   MEDICAL_AND_INSURANCE_FILE_UPLOAD_CATEGORIES,
   PATIENT_DOCUMENTS_FILE_UPLOAD_CATEGORIES,
-} from "@/utils/constant.util";
+} from '@/utils/constant.util';
 
 const initialState = {
   // internal State of Form
@@ -29,7 +29,7 @@ const initialState = {
   getOrderDetails: {},
   detailsIsLoading: false,
   isError: false,
-  errorMessage: "",
+  errorMessage: '',
   totalCount: 0,
   getUsersListForDropdown: [],
 
@@ -39,10 +39,15 @@ const initialState = {
   displaySearchModal: false,
   isNewPatientCreated: false,
   patientDemographicsData: {}, // if record not exists we make api req and save res here
+  patientId: null,
 
   medicalHistoryAllData: {},
   medicalHistoryOnly: {},
+  diagnosisDropDownValues: [],
   medicalRecordOnly: {},
+  orderingNPIData: {},
+  referringNPIData: {},
+  pcpNPIData: {},
   medicalHistoryAndRecordDataForEdit: {},
   patientAllUploadedFilesData: {
     radiologyFiles: [],
@@ -55,8 +60,12 @@ const initialState = {
   },
   medicalUploadedFilesById: [],
   medicalFilesAtEditById: [],
+  medicalHistoryId: null,
+  medicalRecordId: null,
 
   insuranceInfoData: {},
+  insuranceInfoId: null,
+  createHistoryOrInsurance: true,
 
   patientUploadedDocsData: {
     writtenOrdersFiles: [],
@@ -82,14 +91,16 @@ const initialState = {
   lastDraftOrderData: {},
   lastUpdatedOrderData: {},
   createNewHistory: false,
-  createNewInsuranceInfo: false
+  createNewInsuranceInfo: false,
+  primaryStartValue: null,
+  diagnosisId: null,
 };
 
 export const postPatientDemographicsData = createAsyncThunk(
-  "orderManagement/postPatientDemographicsData",
+  'orderManagement/postPatientDemographicsData',
   async (payload) => {
     try {
-      const response = await axiosInstance.post("/api/patients", payload);
+      const response = await axiosInstance.post('/api/patients', payload);
       return response.data;
     } catch (err) {
       const payload = {
@@ -104,7 +115,7 @@ export const postPatientDemographicsData = createAsyncThunk(
 );
 
 export const searchPatientRecordData = createAsyncThunk(
-  "orderManagement/getPatientRecordData",
+  'orderManagement/getPatientRecordData',
   async (payload) => {
     try {
       const { firstName, lastName, dob, gender, mrn } = payload;
@@ -128,9 +139,9 @@ export const searchPatientRecordData = createAsyncThunk(
 );
 
 export const getValidateOrderingProvider = createAsyncThunk(
-  "orderManagement/getValidateOrderingProvider",
-  async ({ npiNumber, event = "" }) => {
-    if (!npiNumber || npiNumber?.toString()?.trim() === "") {
+  'orderManagement/getValidateOrderingProvider',
+  async ({ npiNumber, event = '' }) => {
+    if (!npiNumber || npiNumber?.toString()?.trim() === '') {
       return;
     }
     try {
@@ -153,9 +164,9 @@ export const getValidateOrderingProvider = createAsyncThunk(
 );
 
 export const getValidateReferringProvider = createAsyncThunk(
-  "orderManagement/getValidateReferringProvider",
-  async ({ npiNumber, event = "" }) => {
-    if (!npiNumber || npiNumber?.toString()?.trim() === "") {
+  'orderManagement/getValidateReferringProvider',
+  async ({ npiNumber, event = '' }) => {
+    if (!npiNumber || npiNumber?.toString()?.trim() === '') {
       return;
     }
     try {
@@ -178,9 +189,9 @@ export const getValidateReferringProvider = createAsyncThunk(
 );
 
 export const getValidatePCPNumber = createAsyncThunk(
-  "orderManagement/getValidatePCPNumber",
-  async ({ npiNumber, event = "" }) => {
-    if (!npiNumber || npiNumber?.toString()?.trim() === "") {
+  'orderManagement/getValidatePCPNumber',
+  async ({ npiNumber, event = '' }) => {
+    if (!npiNumber || npiNumber?.toString()?.trim() === '') {
       return;
     }
     try {
@@ -203,10 +214,10 @@ export const getValidatePCPNumber = createAsyncThunk(
 );
 
 export const postMedicalHistoryData = createAsyncThunk(
-  "orderManagement/postMedicalHostory1",
+  'orderManagement/postMedicalHostory1',
   async (payload) => {
     try {
-      const response = await axiosInstance.post("/api/medicalHistory", payload);
+      const response = await axiosInstance.post('/api/medicalHistory', payload);
       return response.data;
     } catch (err) {
       const payload = {
@@ -221,10 +232,10 @@ export const postMedicalHistoryData = createAsyncThunk(
 );
 
 export const postMedicalRecordData = createAsyncThunk(
-  "orderManagement/postMedicalHostory2",
+  'orderManagement/postMedicalHostory2',
   async (payload) => {
     try {
-      const response = await axiosInstance.post("/api/medicalRecord", payload);
+      const response = await axiosInstance.post('/api/medicalRecord', payload);
       return response.data;
     } catch (err) {
       const payload = {
@@ -239,10 +250,10 @@ export const postMedicalRecordData = createAsyncThunk(
 );
 
 export const postInsuranceInfoData = createAsyncThunk(
-  "orderManagement/postInsuranceInfo",
+  'orderManagement/postInsuranceInfo',
   async (payload) => {
     try {
-      const response = await axiosInstance.post("/api/insuranceInfo", payload);
+      const response = await axiosInstance.post('/api/insuranceInfo', payload);
       return response.data;
     } catch (err) {
       const payload = {
@@ -257,10 +268,10 @@ export const postInsuranceInfoData = createAsyncThunk(
 );
 
 export const postFinalOrderCreateData = createAsyncThunk(
-  "orderManagement/postCreateOrder",
+  'orderManagement/postCreateOrder',
   async (payload) => {
     try {
-      const response = await axiosInstance.post("/api/order", payload);
+      const response = await axiosInstance.post('/api/order', payload);
       return response.data;
     } catch (err) {
       const payload = {
@@ -275,11 +286,11 @@ export const postFinalOrderCreateData = createAsyncThunk(
 );
 
 export const orderSaveAsDraft = createAsyncThunk(
-  "orderManagement/orderSaveAsDraft",
+  'orderManagement/orderSaveAsDraft',
   async (payload) => {
     try {
       const response = await axiosInstance.post(
-        "/api/order/draft/save",
+        '/api/order/draft/save',
         payload
       );
       return response.data;
@@ -296,11 +307,11 @@ export const orderSaveAsDraft = createAsyncThunk(
 );
 
 export const getAllCreatedOrderData = createAsyncThunk(
-  "orderManagement/getAllOrderData",
+  'orderManagement/getAllOrderData',
   async (payload = {}) => {
     try {
       const { page, perPage, orderBy } = payload;
-      const response = await axiosInstance.post("/api/order/list", payload);
+      const response = await axiosInstance.post('/api/order/list', payload);
       return response.data;
     } catch (err) {
       const payload = {
@@ -315,10 +326,10 @@ export const getAllCreatedOrderData = createAsyncThunk(
 );
 
 export const getUserListBasedOnLoggedInPerson = createAsyncThunk(
-  "orderManagement/getUserListforDropdownAtOrderMgt",
+  'orderManagement/getUserListforDropdownAtOrderMgt',
   async () => {
     try {
-      const response = await axiosInstance.get("/api/organizations/user/list");
+      const response = await axiosInstance.get('/api/organizations/user/list');
       return response.data;
     } catch (err) {
       const payload = {
@@ -333,7 +344,7 @@ export const getUserListBasedOnLoggedInPerson = createAsyncThunk(
 );
 
 export const getOrderDetailsById = createAsyncThunk(
-  "orderManagement/getOrderDetails",
+  'orderManagement/getOrderDetails',
   async (id) => {
     try {
       const response = await axiosInstance.get(`/api/order/${id}`);
@@ -351,24 +362,25 @@ export const getOrderDetailsById = createAsyncThunk(
 );
 
 export const postUploadFile = createAsyncThunk(
-  "orderManagement/postUploadFile",
+  'orderManagement/postUploadFile',
   async (payload) => {
     const formData = new FormData();
-    formData.append("file", payload.file);
-    formData.append("type", payload.type);
-    formData.append("patientId", payload.patientId);
+    formData.append('file', payload.file);
+    formData.append('type', payload.type);
+    formData.append('patientId', payload.patientId);
 
     try {
       const response = await axiosInstance.post(
-        "/api/patientDocuments/upload",
+        '/api/patientDocuments/upload',
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
           },
         }
       );
       response.data.category = payload.type;
+      response.data.uploaded = true;
       return response.data;
     } catch (err) {
       const payload = {
@@ -383,13 +395,16 @@ export const postUploadFile = createAsyncThunk(
 );
 
 export const deleteUploadedFileById = createAsyncThunk(
-  "orderManagement/deleteUploadedFileById",
+  'orderManagement/deleteUploadedFileById',
   async (payload) => {
     const id = payload?.id;
-    const category = payload?.category || "";
+    const category = payload?.category || '';
+    const orderId = payload?.orderId ? payload?.orderId : '';
+    const isAuth = payload?.isAuth ? payload?.isAuth : false;
+    const uploaded = payload?.uploaded ? payload?.uploaded : false;
     try {
       const response = await axiosInstance.delete(
-        `/api/patientDocuments/${id}`
+        `/api/patientDocuments/${id}?orderId=${orderId}&isAuth=${isAuth}&uploaded=${uploaded}`
       );
       response.data.category = category;
       response.data.id = id;
@@ -407,20 +422,20 @@ export const deleteUploadedFileById = createAsyncThunk(
 );
 
 export const postPatientDocsUploadFunc = createAsyncThunk(
-  "orderManagement/postPatientDocsUploadFunc",
+  'orderManagement/postPatientDocsUploadFunc',
   async (payload) => {
     const formData = new FormData();
-    formData.append("file", payload.file);
-    formData.append("type", payload.type);
-    formData.append("patientId", payload.patientId);
+    formData.append('file', payload.file);
+    formData.append('type', payload.type);
+    formData.append('patientId', payload.patientId);
 
     try {
       const response = await axiosInstance.post(
-        "/api/patientDocuments/upload",
+        '/api/patientDocuments/upload',
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
+            'Content-Type': 'multipart/form-data',
           },
         }
       );
@@ -439,11 +454,13 @@ export const postPatientDocsUploadFunc = createAsyncThunk(
 );
 
 export const getPatientDocumentsAtEdit = createAsyncThunk(
-  "orderManagement/getPatientDocumentsAtEdit",
-  async (patientId) => {
+  'orderManagement/getPatientDocumentsAtEdit',
+  async (payload) => {
     try {
+      const patientId = payload?.patientId;
+      const orderId = payload?.orderId ? payload?.orderId : '';
       const response = await axiosInstance.get(
-        `/api/patientDocuments?patientId=${patientId}`
+        `/api/patientDocuments?patientId=${patientId}&orderId=${orderId}`
       );
       return response.data;
     } catch (err) {
@@ -459,8 +476,8 @@ export const getPatientDocumentsAtEdit = createAsyncThunk(
 );
 
 export const updateOrderData = createAsyncThunk(
-  "orderManagement/putUpdateOrderData",
-  async ({orderId, payload}) => {
+  'orderManagement/putUpdateOrderData',
+  async ({ orderId, payload }) => {
     try {
       const response = await axiosInstance.put(
         `/api/order/${orderId}`,
@@ -479,8 +496,72 @@ export const updateOrderData = createAsyncThunk(
   }
 );
 
+export const getDiagnosisDropDownValues = createAsyncThunk(
+  'orderManagement/getDiagnosisDropDownValues',
+  async (payload) => {
+    try {
+      const response = await axiosInstance.get(
+        `/api/diagnosis/search?ICDCode=${payload}`
+      );
+      return response.data;
+    } catch (error) {
+      const payload = {
+        status: false,
+        message: error?.response?.data?.errors
+          ? error?.response?.data?.errors[0]?.msg
+          : error?.response?.data?.message,
+      };
+      return payload;
+    }
+  }
+);
+
+export const deleteOrderById = createAsyncThunk(
+  'orderManagement/deleteOrderById',
+  async (payload) => {
+    try {
+      const response = await axiosInstance.post(`/api/order/soft/delete/${payload}`);
+      return response.data;
+    } catch (error) {
+      const payload = {
+        status: false,
+        message: error?.response?.data?.errors
+          ? error?.response?.data?.errors[0]?.msg
+          : error?.response?.data?.message,
+      };
+      return payload;
+    }
+  }
+);
+
+export const postRegisterNPIDataAfterValidate = createAsyncThunk(
+  'orderManagement/postRegisterNPIDataAfterValidate',
+  async (payload) => {
+    try {
+      const newPayload = {
+        ...payload,
+        sole_proprietor: payload?.sole_proprietor === 'NO' ? false : true,
+        npiNumber: payload?.npiNumber?.toString()?.trim(),
+      };
+      const response = await axiosInstance.post(
+        '/api/npiRegistory',
+        newPayload
+      );
+      return response.data;
+    } catch (error) {
+      const payload = {
+        status: false,
+        message: error?.response?.data?.errors
+          ? error?.response?.data?.errors[0]?.msg
+          : error?.response?.data?.message,
+      };
+      return payload;
+    }
+  }
+);
+
 const orderSlice = createSlice({
-  name: "orderManagement",
+  name: 'orderManagement',
   initialState,
   reducers: {
     setDisplayOrderingModal: (state, action) => {
@@ -542,7 +623,7 @@ const orderSlice = createSlice({
         medicalFilesAtEditById: action?.payload || [],
       };
     },
-    
+
     setPatientFilesAtEditById: (state, action) => {
       return {
         ...state,
@@ -555,7 +636,16 @@ const orderSlice = createSlice({
       return {
         ...state,
         patientRecordSearchData: {},
-        patientSearchResponse: false
+        patientSearchResponse: false,
+        createNewHistory: false,
+        createNewInsuranceInfo: false,
+        orderingResStatus: false,
+        referringResStatus: false,
+        pcpNumberResStatus: false,
+
+        loadingOrderingProvider: false,
+        orderingProviderData: {},
+        createHistoryOrInsurance: true,
       };
     },
     setSearchResponse: (state, action) => {
@@ -567,15 +657,33 @@ const orderSlice = createSlice({
     setHistoryCreated: (state, action) => {
       return {
         ...state,
-        createNewHistory: action.payload
-      }
+        createNewHistory: action.payload,
+      };
     },
     setInsuranceInfoCreated: (state, action) => {
       return {
         ...state,
-        createNewInsuranceInfo: action.payload
-      }
-    }
+        createNewInsuranceInfo: action.payload,
+      };
+    },
+    setIsNewPatientCreated: (state, action) => {
+      return {
+        ...state,
+        isNewPatientCreated: action.payload,
+      };
+    },
+    setPrimaryStartValue: (state, action) => {
+      return {
+        ...state,
+        primaryStartValue: action.payload,
+      };
+    },
+    setDiagnosisId: (state, action) => {
+      return {
+        ...state,
+        diagnosisId: action.payload,
+      };
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -586,6 +694,7 @@ const orderSlice = createSlice({
         state.createNewInsuranceInfo = true;
         state.patientDemographicsData = payload.data;
         state.isNewPatientCreated = payload?.status;
+        state.patientId = payload?.data?.id;
       })
       .addCase(postPatientDemographicsData.rejected, (state, action) => {
         state.isError(true);
@@ -594,7 +703,21 @@ const orderSlice = createSlice({
 
       // Search patient Record
       .addCase(searchPatientRecordData.pending, (state) => {
-        state.patientSearchIsLoading = true;
+        return {
+          ...state,
+          patientSearchIsLoading: true,
+          patientRecordSearchData: {},
+          patientSearchResponse: false,
+          displaySearchModal: false,
+          patientDemographicsData: {},
+          medicalHistoryOnly: {},
+          medicalRecordOnly: {},
+          insuranceInfoData: {},
+          patientId: null,
+          medicalHistoryId: null,
+          insuranceInfoId: null,
+          medicalRecordId: null,
+        };
       })
       .addCase(searchPatientRecordData.fulfilled, (state, action) => {
         const { payload } = action;
@@ -608,6 +731,10 @@ const orderSlice = createSlice({
           medicalHistoryOnly: payload?.data?.medicalHistory,
           medicalRecordOnly: payload?.data?.medicalRecord,
           insuranceInfoData: payload?.data?.insuranceInfo,
+          patientId: payload?.data?.patientDemography?.id,
+          medicalHistoryId: payload?.data?.medicalHistory?.id,
+          insuranceInfoId: payload?.data?.insuranceInfo?.id,
+          medicalRecordId: payload?.data?.medicalRecord?.id,
         };
       })
 
@@ -618,17 +745,23 @@ const orderSlice = createSlice({
       })
       //Validate Ordering Provider Data
       .addCase(getValidateOrderingProvider.pending, (state) => {
-        state.loadingOrderingProvider = true;
-        state.orderingResStatus = false;
-        state.displayOrderingModal = false;
+        return {
+          ...state,
+          loadingOrderingProvider: true,
+          orderingResStatus: false,
+          displayOrderingModal: false,
+          orderingNPIData: {},
+        };
       })
       .addCase(getValidateOrderingProvider.fulfilled, (state, action) => {
         const { payload } = action;
         state.loadingOrderingProvider = false;
         state.orderingResStatus = payload?.status;
         state.orderingProviderData = payload?.data;
-        if (payload?.event === "atCreate") {
+
+        if (payload?.event === 'atCreate') {
           state.displayOrderingModal = payload?.status;
+          state.orderingNPIData = payload?.data;
         }
       })
       .addCase(getValidateOrderingProvider.rejected, (state, action) => {
@@ -638,17 +771,22 @@ const orderSlice = createSlice({
       })
       // Validate Referring Provider Data
       .addCase(getValidateReferringProvider.pending, (state) => {
-        state.loadingReferringProvider = true;
-        state.referringResStatus = false;
-        state.displayReferringModal = false;
+        return {
+          ...state,
+          loadingReferringProvider: true,
+          referringResStatus: false,
+          displayReferringModal: false,
+          referringNPIData: {},
+        };
       })
       .addCase(getValidateReferringProvider.fulfilled, (state, action) => {
         const { payload } = action;
         state.loadingReferringProvider = false;
         state.referringResStatus = payload?.status;
         state.referringProviderData = payload?.data;
-        if (payload?.event === "atCreate") {
+        if (payload?.event === 'atCreate') {
           state.displayReferringModal = payload?.status;
+          state.referringNPIData = payload?.data;
         }
       })
       .addCase(getValidateReferringProvider.rejected, (state, action) => {
@@ -658,17 +796,22 @@ const orderSlice = createSlice({
       })
       // Validate PCP Number Data
       .addCase(getValidatePCPNumber.pending, (state) => {
-        state.loadingPcpNumber = true;
-        state.pcpNumberResStatus = false;
-        state.displayPCPNumberModal = false;
+        return {
+          ...state,
+          loadingPcpNumber: true,
+          pcpNumberResStatus: false,
+          displayPCPNumberModal: false,
+          pcpNPIData: {},
+        };
       })
       .addCase(getValidatePCPNumber.fulfilled, (state, action) => {
         const { payload } = action;
         state.loadingPcpNumber = false;
         state.pcpNumberResStatus = payload?.status;
         state.pcpNumberData = payload?.data;
-        if (payload?.event === "atCreate") {
+        if (payload?.event === 'atCreate') {
           state.displayPCPNumberModal = payload?.status;
+          state.pcpNPIData = payload?.data;
         }
       })
       .addCase(getValidatePCPNumber.rejected, (state, action) => {
@@ -679,6 +822,8 @@ const orderSlice = createSlice({
       // Post Req For Medical Hostory Data
       .addCase(postMedicalHistoryData.fulfilled, (state, action) => {
         const { payload } = action;
+        state.medicalHistoryId = payload?.data?.id;
+        state.createHistoryOrInsurance = false;
         state.medicalHistoryOnly = payload?.data;
         state.medicalHistoryAllData = {
           ...state.medicalHistoryAllData,
@@ -688,6 +833,8 @@ const orderSlice = createSlice({
       .addCase(postMedicalRecordData.fulfilled, (state, action) => {
         const { payload } = action;
         state.medicalRecordOnly = payload?.data;
+        state.medicalRecordId = payload?.data?.id;
+        state.createHistoryOrInsurance = false;
         state.medicalHistoryAllData = {
           ...state.medicalHistoryAllData,
           ...payload?.data,
@@ -699,6 +846,10 @@ const orderSlice = createSlice({
         state.insuranceInfoData = payload?.data?.insuranceInfo
           ? payload?.data?.insuranceInfo
           : payload?.data;
+        state.insuranceInfoId = payload?.data?.insuranceInfo
+          ? payload?.data?.insuranceInfo?.id
+          : payload?.data?.id;
+        state.createHistoryOrInsurance = false;
       })
 
       // Final Create Order
@@ -746,8 +897,11 @@ const orderSlice = createSlice({
           medicalHistoryOnly: action?.payload?.data?.medicalHistory,
           medicalRecordOnly: action?.payload?.data?.medicalRecord,
           insuranceInfoData: action?.payload?.data?.insuranceInfo,
+          patientId: action?.payload?.data?.patientDemography?.id,
+          medicalHistoryId: action?.payload?.data?.medicalHistory?.id,
+          insuranceInfoId: action?.payload?.data?.insuranceInfo?.id,
+          medicalRecordId: action?.payload?.data?.medicalRecord?.id,
         };
-
       })
 
       // Patient's Tab-2 & Tab-3 Uploaded File Data at Time of Create Order
@@ -760,13 +914,16 @@ const orderSlice = createSlice({
           );
 
         const updatedFiles = [
-          ...patientAllUploadedFilesData[validateCategory.key],
+          ...patientAllUploadedFilesData[validateCategory?.key],
         ];
         updatedFiles.push({
           documentTypeId: payload?.data?.documentTypeId,
           documentURL: payload?.data?.documentURL,
+          documentSize: payload?.data?.documentSize,
+          documentName: payload?.data?.documentName,
           id: payload?.data?.id,
           patientId: payload?.data?.patientId,
+          uploaded: true,
         });
 
         const updatedMedicalUploadedFilesById = [
@@ -849,6 +1006,8 @@ const orderSlice = createSlice({
         updatedFiles.push({
           documentTypeId: payload?.data?.documentTypeId,
           documentURL: payload?.data?.documentURL,
+          documentSize: payload?.data?.documentSize,
+          documentName: payload?.data?.documentName,
           id: payload?.data?.id,
           patientId: payload?.data?.patientId,
         });
@@ -906,7 +1065,33 @@ const orderSlice = createSlice({
               payload?.data?.[DOCUMENTS_UPLOAD_IN_MD_NOTES_CATEGORY]
                 ?.documents || [],
           },
+          createHistoryOrInsurance: false,
         };
+      })
+      .addCase(getDiagnosisDropDownValues.fulfilled, (state, action) => {
+        const { payload } = action;
+        return {
+          ...state,
+          diagnosisDropDownValues: payload?.data?.map((item) => ({
+            id: item?.id,
+            label: `${item?.ICDCode} - ${item?.description}`,
+            value: `${item?.ICDCode} - ${item?.description}`,
+          })),
+        };
+      })
+      .addCase(deleteOrderById.fulfilled, (state, action) => {
+        const { payload } = action;
+        return {
+          ...state,
+          getAllOrders: state.getAllOrders.filter(
+            (item) => item?.id !== payload?.data?.id
+          ),
+          totalOrderCount: state.totalOrderCount - 1,
+        };
+      })
+      .addCase(getOrderDetailsById.rejected, (state, action) => {
+        state.isError = true;
+        state.errorMessage = action.error.message;
       });
   },
 });
@@ -930,6 +1115,9 @@ export const {
   resetSearchPatientData,
   setSearchResponse,
   setHistoryCreated,
-  setInsuranceInfoCreated
+  setInsuranceInfoCreated,
+  setIsNewPatientCreated,
+  setPrimaryStartValue,
+  setDiagnosisId,
 } = orderSlice.actions;
 export const allOrdersDataReducer = orderSlice.reducer;

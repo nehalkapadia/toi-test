@@ -116,6 +116,16 @@
   letter-spacing: 0.3px;
 }
 
+.order-mgt-table-status-deleted {
+  color: red;
+  background: lightgoldenrodyellow;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+}
+
 /* Antd Internal CSS Overriding */
 .ant-drawer-header-title {
   flex-direction: row-reverse;

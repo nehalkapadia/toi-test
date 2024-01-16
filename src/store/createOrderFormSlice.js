@@ -1,12 +1,12 @@
-const { createSlice } = require("@reduxjs/toolkit");
+const { createSlice } = require('@reduxjs/toolkit');
 
 const initialState = {
   medicalHistoryTab: true,
   insuranceInfoTab: true,
   pateintDocsTab: true,
   isPatientExist: false,
-  currentSelectedTab: "patientDemographics",
-  searchPatientResMessage: "",
+  currentSelectedTab: 'patientDemographics',
+  searchPatientResMessage: '',
   tab2FormData: {},
   tab3FormData: {},
   tab4FormData: {},
@@ -14,12 +14,14 @@ const initialState = {
   displayReferringSuccessTick: false,
   displayPcpNumberSuccessTick: false,
 
+  diagnosisSearchedValue: '',
+
   patientDocsWrittenOrderCategory: false,
   patientDocsMdNotesCategory: false,
 };
 
 const createOrderFormDataSlice = createSlice({
-  name: "createOrderForm",
+  name: 'createOrderForm',
   initialState,
   reducers: {
     setMedicalHistoryTab: (state, action) => {
@@ -33,7 +35,13 @@ const createOrderFormDataSlice = createSlice({
     },
 
     setTab2FormData: (state, action) => {
-      state.tab2FormData = action.payload;
+      return {
+        ...state,
+        tab2FormData: {
+          ...state.tab2FormData,
+          ...action.payload,
+        },
+      };
     },
     setTab3FormData: (state, action) => {
       state.tab3FormData = action.payload;
@@ -59,6 +67,12 @@ const createOrderFormDataSlice = createSlice({
     setPatientDocsMdNotesCategory: (state, action) => {
       state.patientDocsMdNotesCategory = action.payload;
     },
+    setDiagnosisSearchedValue: (state, action) => {
+      return {
+        ...state,
+        diagnosisSearchedValue: action.payload,
+      };
+    },
     resetCreateOrderDataBacktoInitialState: () => initialState,
   },
 });
@@ -77,6 +91,7 @@ export const {
   setPatientDocsWrittenOrderCategory,
   setPatientDocsMdNotesCategory,
   resetCreateOrderDataBacktoInitialState,
+  setDiagnosisSearchedValue,
 } = createOrderFormDataSlice.actions;
 
 export const selectCreateOrderForm = (state) => state.createOrderForm;

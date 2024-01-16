@@ -37,8 +37,12 @@ const UserManagement = () => {
   const [displayFilterDrawer, setDisplayFilterDrawer] = useState(false);
   const [isEditClicked, setIsEditClicked] = useState(false);
   const [clickedColumnId, setClickedColumnId] = useState(null);
+  
+  const [filterParams, setFilterparams] = useState({});
+  const [isClearable, setIsClearable] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedOrgStatus, setSelectedOrgStatus] = useState(null);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   // Change this when user Data is Available
   const displayEmptyColumn = (columnArr) => {
@@ -103,6 +107,7 @@ const UserManagement = () => {
     ) {
       dispatch(
         getUsersFunc({
+          filters:filterParams,
           page: page,
           perPage: TOTAL_ITEMS_PER_PAGE,
           organizationId: selectedOrganization,
@@ -138,6 +143,19 @@ const UserManagement = () => {
     setIsAuth(isAuthenticated);
   }, [isAuthenticated, userRole]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 500);
+    };
+    if (typeof window !== 'undefined') {
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, []);
+
   return (
     <>
       {isAuth && userRole == 1 && (
@@ -146,12 +164,12 @@ const UserManagement = () => {
             <h3 className="user-heading-text-customization">User Management</h3>
             <Button
               size="large"
-              className="new-user-add-btn"
+              className={!selectedOrganization || !selectedOrgStatus ? "" : "new-user-add-btn"}
               icon={<FaPlus />}
               disabled={!selectedOrganization || !selectedOrgStatus}
               onClick={handleAddAndEditDrawer}
             >
-              Add Users
+              Add User
             </Button>
           </Row>
 
@@ -227,7 +245,7 @@ const UserManagement = () => {
             open={displayAddOrgDrawer}
             onClose={handleCloseDrawer}
             closable={true}
-            width={"80%"}
+            width={ isSmallScreen ? "100%" : "80%"}
             destroyOnClose={true}
             footer={false}
           >
@@ -248,7 +266,7 @@ const UserManagement = () => {
             open={displayViewDrawer}
             onClose={handleCloseDrawer}
             closable={true}
-            width={"80%"}
+            width={ isSmallScreen ? "100%" : "80%"}
             destroyOnClose={true}
             footer={false}
           >
@@ -273,7 +291,12 @@ const UserManagement = () => {
             <UserFilters
               onClose={handleCloseDrawer}
               page={page}
+              setPage={setPage}
               organizationID={selectedOrganization}
+              filterParams={filterParams}
+              setFilterparams={setFilterparams}
+              isClearable={isClearable}
+              setIsClearable={setIsClearable}
             />
           </Drawer>
         </div>

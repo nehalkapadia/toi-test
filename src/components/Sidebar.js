@@ -16,7 +16,7 @@ import {
   setDisplayReferringSuccessTick,
   setDisplayorderingSuccessTick,
 } from '@/store/createOrderFormSlice';
-import { resetSearchPatientData, setTab1FormData } from '@/store/orderSlice';
+import { resetSearchPatientData, setIsNewPatientCreated, setTab1FormData } from '@/store/orderSlice';
 
 const AppSidebar = ({ collapsed, setCollapsed }) => {
   const dispatch = useDispatch();
@@ -30,11 +30,12 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
 
   const onOrderManagementClick = () => {
     dispatch(resetCreateOrderDataBacktoInitialState());
+    dispatch(setTab1FormData({}));
+    dispatch(resetSearchPatientData());
+    dispatch(setIsNewPatientCreated(false));
     dispatch(setDisplayPcpNumberSuccessTick(false));
     dispatch(setDisplayReferringSuccessTick(false));
     dispatch(setDisplayorderingSuccessTick(false));
-    dispatch(setTab1FormData({}));
-    dispatch(resetSearchPatientData());
   };
 
   const adminItems = [

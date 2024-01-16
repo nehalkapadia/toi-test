@@ -7,7 +7,7 @@ import {
   API_RESPONSE_MESSAGES,
   TOTAL_ITEMS_PER_PAGE,
   ERROR_WHEN_CREATING_ORGANIZATION,
-  ORG_LABEL
+  ORG_LABEL,
 } from '@/utils/constant.util';
 import { replaceMultipleSpacesWithSingleSpace } from '@/utils/patterns';
 import { useDispatch } from 'react-redux';
@@ -15,7 +15,7 @@ import {
   getOrganizationsFunc,
   postOrganizationFunc,
 } from '@/store/organizationSlice';
-import { formatPhoneNumberForInput } from '@/utils/commonFunctions';
+import { allowDigitsOnly, formatPhoneNumberForInput } from '@/utils/commonFunctions';
 
 const { TextArea } = Input;
 
@@ -51,7 +51,9 @@ const AddOrganization = ({ onClose, page }) => {
         }
       });
     } catch (error) {
-      message.error(error?.message ? error?.message : ERROR_WHEN_CREATING_ORGANIZATION);
+      message.error(
+        error?.message ? error?.message : ERROR_WHEN_CREATING_ORGANIZATION
+      );
       setLoading(false);
     }
   };
@@ -70,67 +72,68 @@ const AddOrganization = ({ onClose, page }) => {
   return (
     <Form
       form={formData}
-      name="add-organization-form"
+      name='add-organization-form'
       onFinish={handleSubmitFormData}
-      autoComplete="off"
+      autoComplete='off'
       preserve={false}
-      layout="vertical"
+      layout='vertical'
     >
-      <div className="all-form-items-container-at-add-organization">
-        <Row className="single-rows-for-form-items-container">
+      <div className='all-form-items-container-at-add-organization'>
+        <Row className='single-rows-for-form-items-container'>
           <Form.Item
-            className="each-one-for-item-itself-at-org"
+            className='each-one-for-item-itself-at-org'
             name={FORM_NAME_VALUES.name}
             label={ORG_LABEL.org_name}
             rules={ORGANIZATION_FORM_FIELD_RULES.org_name}
           >
             <Input
-              size="large"
-              className="add-org-form-input-box"
-              placeholder="Please Enter Organization Name"
+              size='large'
+              className='add-org-form-input-box'
+              placeholder='Please Enter Organization'
             />
           </Form.Item>
 
           <Form.Item
-            className="each-one-for-item-itself-at-org"
+            className='each-one-for-item-itself-at-org'
             name={FORM_NAME_VALUES.email}
             label={ORG_LABEL.email}
             rules={ORGANIZATION_FORM_FIELD_RULES.org_email}
           >
             <Input
-              size="large"
-              className="add-org-form-input-box"
-              type="email"
-              placeholder="example@domain.com"
+              size='large'
+              className='add-org-form-input-box'
+              type='email'
+              placeholder='example@domain.com'
             />
           </Form.Item>
         </Row>
 
-        <Row className="single-rows-for-form-items-container">
+        <Row className='single-rows-for-form-items-container'>
           <Form.Item
-            className="each-one-for-item-itself-at-org"
+            className='each-one-for-item-itself-at-org'
             name={FORM_NAME_VALUES.domain}
             label={ORG_LABEL.domain}
             rules={ORGANIZATION_FORM_FIELD_RULES.domain}
           >
             <Input
-              size="large"
-              className="add-org-form-input-box"
-              placeholder="Please Enter Domain Name"
+              size='large'
+              className='add-org-form-input-box'
+              placeholder='Please Enter Domain Name'
             />
           </Form.Item>
 
           <Form.Item
-            className="each-one-for-item-itself-at-org"
+            className='each-one-for-item-itself-at-org'
             name={FORM_NAME_VALUES.number}
             label={ORG_LABEL.number}
             rules={ORGANIZATION_FORM_FIELD_RULES.number}
           >
             <InputNumber
-              type="tel"
-              size="large"
-              className="add-org-form-input-box add-org-number-input"
-              placeholder="Please Enter Phone Number"
+              step={null}
+              size='large'
+              className='add-org-form-input-box add-org-number-input'
+              placeholder='Please Enter Phone Number'
+              onKeyDown={allowDigitsOnly}
               formatter={(value) => formatPhoneNumberForInput(value)}
               parser={(value) => value.replace(/\D/g, '')}
               maxLength={14}
@@ -138,34 +141,34 @@ const AddOrganization = ({ onClose, page }) => {
           </Form.Item>
         </Row>
 
-        <Row className="single-rows-for-form-items-container">
+        <Row className='single-rows-for-form-items-container'>
           <Form.Item
-            className="each-one-for-item-itself-at-org"
+            className='each-one-for-item-itself-at-org'
             name={FORM_NAME_VALUES.address}
             label={ORG_LABEL.address}
           >
             <TextArea
-              className="add-org-form-input-box"
-              placeholder="Please Enter Full Address"
+              className='add-org-form-input-box'
+              placeholder='Please Enter Full Address'
               autoSize={{ minRows: 4, maxRows: 6 }}
             />
           </Form.Item>
         </Row>
 
-        <Form.Item className="parent-btn-container-at-add-org">
-          <Row className="cancel-and-add-btn-container-at-add-org">
+        <Form.Item className='parent-btn-container-at-add-org'>
+          <Row className='cancel-and-add-btn-container-at-add-org'>
             <Button
-              size="large"
-              className="org-mgt-add-btn-for-cancel"
+              size='large'
+              className='org-mgt-add-btn-for-cancel'
               onClick={onClose}
             >
-              Close
+              Cancel
             </Button>
 
             <Button
-              size="large"
-              className="org-mgt-add-btn-for-creating-org"
-              htmlType="submit"
+              size='large'
+              className='org-mgt-add-btn-for-creating-org'
+              htmlType='submit'
               disabled={!submittable}
             >
               Add

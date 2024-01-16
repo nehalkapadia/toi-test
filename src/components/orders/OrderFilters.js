@@ -1,24 +1,37 @@
-import React, { useEffect, useState } from "react";
-import "../../styles/orders/orderFilters.css";
-import { Button, Col, DatePicker, Input, InputNumber, Row, Select } from "antd";
-import { useDispatch } from "react-redux";
-import { DATE_FORMAT_STARTING_FROM_MONTH, DATE_FORMAT_STARTING_FROM_YEAR, TOTAL_ITEMS_PER_PAGE } from "@/utils/constant.util";
-import dayjs from "dayjs";
-import { getAllCreatedOrderData } from "@/store/orderSlice";
+import React, { useEffect, useState } from 'react';
+import '../../styles/orders/orderFilters.css';
+import { Button, Col, DatePicker, Input, InputNumber, Row, Select } from 'antd';
+import { useDispatch } from 'react-redux';
+import {
+  DATE_FORMAT_STARTING_FROM_MONTH,
+  DATE_FORMAT_STARTING_FROM_YEAR,
+  TOTAL_ITEMS_PER_PAGE,
+} from '@/utils/constant.util';
+import dayjs from 'dayjs';
+import { getAllCreatedOrderData } from '@/store/orderSlice';
 
-const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
+const OrderFilters = ({
+  page,
+  setPage,
+  userId,
+  Orderstatus,
+  onClose,
+  filterParams,
+  setFilterparams,
+  isClearable,
+  setIsClearable,
+}) => {
   const dispatch = useDispatch();
-  const [isClearable, setIsClearable] = useState(false);
-  const [filterParams, setFilterparams] = useState({});
-  const [orderId, setOrderId] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [gender, setGender] = useState("");
-  const [lastName, setLastName] = useState("");
+
+  const [orderId, setOrderId] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [gender, setGender] = useState('');
+  const [lastName, setLastName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState(null);
 
   const handleFilterByOrderId = (value) => {
-    if (value?.toString()?.trim() === "" || !value) {
-      setOrderId("");
+    if (value?.toString()?.trim() === '' || !value) {
+      setOrderId('');
       setFilterparams((prevFilterparams) => {
         const { orderId, ...rest } = prevFilterparams;
         return { ...rest };
@@ -35,8 +48,8 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
 
   const handleFilterByFirstName = (e) => {
     const value = e.target.value;
-    if (value?.trim() === "" || !value) {
-      setFirstName("");
+    if (value?.trim() === '' || !value) {
+      setFirstName('');
       setFilterparams((prevFilterparams) => {
         const { firstName, ...rest } = prevFilterparams;
         return { ...rest };
@@ -53,8 +66,8 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
 
   const handleFilterByLastName = (e) => {
     const value = e.target.value;
-    if (value?.trim() === "" || !value) {
-      setLastName("");
+    if (value?.trim() === '' || !value) {
+      setLastName('');
       setFilterparams((prevFilterparams) => {
         const { lastName, ...rest } = prevFilterparams;
         return { ...rest };
@@ -69,7 +82,7 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
   };
 
   const handleFilterByDateOfBirth = (_, dateString) => {
-    if (dateString === "" || !dateString) {
+    if (dateString === '' || !dateString) {
       setDateOfBirth(null);
       setFilterparams((prevFilterparams) => {
         const { dob, ...rest } = prevFilterparams;
@@ -86,8 +99,8 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
 
   const handleFilterByGender = (e) => {
     const value = e.target.value;
-    if (value?.trim() === "" || !value) {
-      setGender("");
+    if (value?.trim() === '' || !value) {
+      setGender('');
       setFilterparams((prevFilterparams) => {
         const { gender, ...rest } = prevFilterparams;
         return { ...rest };
@@ -102,16 +115,17 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
   };
 
   const handleFilterFunc = () => {
+    setPage(1)
     dispatch(
       getAllCreatedOrderData({
         filters: {
           userId,
-          status: Orderstatus[0],
+          status: Orderstatus,
           ...filterParams,
         },
-        page,
+        page: 1,
         pageSize: TOTAL_ITEMS_PER_PAGE,
-        orderBy: "updatedAt",
+        orderBy: 'updatedAt',
         ascending: false,
       })
     );
@@ -119,21 +133,21 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
 
   const handleClearFilters = () => {
     setFilterparams({});
-    setFirstName("");
-    setLastName("");
+    setFirstName('');
+    setLastName('');
     setDateOfBirth(null);
-    setGender("");
-    setOrderId("");
+    setGender('');
+    setOrderId('');
     setIsClearable(false);
     dispatch(
       getAllCreatedOrderData({
         filters: {
           userId,
-          status: Orderstatus[0],
+          status: Orderstatus,
         },
         page,
         pageSize: TOTAL_ITEMS_PER_PAGE,
-        orderBy: "updatedAt",
+        orderBy: 'updatedAt',
         ascending: false,
       })
     );
@@ -152,11 +166,11 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
         getAllCreatedOrderData({
           filters: {
             userId,
-            status: Orderstatus[0],
+            status: Orderstatus,
           },
           page,
           pageSize: TOTAL_ITEMS_PER_PAGE,
-          orderBy: "updatedAt",
+          orderBy: 'updatedAt',
           ascending: false,
         })
       );
@@ -168,78 +182,78 @@ const OrderFilters = ({ page, userId, Orderstatus, onClose }) => {
 
   useEffect(() => {
     const hasFilterValues = Object.values(filterParams).some(
-      (value) => value !== ""
+      (value) => value !== ''
     );
     setIsClearable(hasFilterValues);
   }, [filterParams]);
 
   return (
-    <div className="order-mgt-filter-element-container">
-      <Col className="each-filter-form-elem-single-at-order-mgt">
+    <div className='order-mgt-filter-element-container'>
+      <Col className='each-filter-form-elem-single-at-order-mgt'>
         <label>Order ID #</label>
         <InputNumber
-          className="input-number-at-order-mgt-filter"
-          size="large"
+          className='input-number-at-order-mgt-filter'
+          size='large'
           value={orderId}
           onChange={handleFilterByOrderId}
-          placeholder="Enter Order ID"
+          placeholder='Enter Order ID'
         />
       </Col>
-      <Col className="each-filter-form-elem-single-at-order-mgt">
+      <Col className='each-filter-form-elem-single-at-order-mgt'>
         <label>First Name</label>
         <Input
-          size="large"
+          size='large'
           value={firstName}
           onChange={handleFilterByFirstName}
-          placeholder="Enter First Name"
+          placeholder='Enter First Name'
         />
       </Col>
 
-      <Col className="each-filter-form-elem-single-at-order-mgt">
+      <Col className='each-filter-form-elem-single-at-order-mgt'>
         <label>Last Name</label>
         <Input
-          size="large"
+          size='large'
           value={lastName}
           onChange={handleFilterByLastName}
-          placeholder="Enter Last Name"
+          placeholder='Enter Last Name'
         />
       </Col>
 
-      <Col className="each-filter-form-elem-single-at-order-mgt">
+      <Col className='each-filter-form-elem-single-at-order-mgt'>
         <label>Date Of Birth</label>
         <DatePicker
-          placeholder="Select Date of Birth"
-          size="large"
+          placeholder='Select Date of Birth'
+          size='large'
           defaultValue={null}
           format={DATE_FORMAT_STARTING_FROM_MONTH}
-          value={dateOfBirth ? dayjs(dateOfBirth) : ""}
+          value={dateOfBirth ? dayjs(dateOfBirth) : ''}
           onChange={handleFilterByDateOfBirth}
         />
       </Col>
 
-      <Col className="each-filter-form-elem-single-at-order-mgt">
+      <Col className='each-filter-form-elem-single-at-order-mgt'>
         <label>Gender</label>
         <Input
-          size="large"
+          size='large'
           value={gender}
           onChange={handleFilterByGender}
-          placeholder="Enter Gender"
+          placeholder='Enter Gender'
         />
       </Col>
 
-      <Row className="order-filter-btn-container">
+      <Row className='order-filter-btn-container'>
         <Button
-          size="large"
-          className="close-filter-btn-drawer-at-order-mgt"
+          size='large'
+          className='close-filter-btn-drawer-at-order-mgt'
           onClick={isClearable ? handleClearFilters : onFilterClose}
         >
-          {isClearable ? "Clear" : "Close"}
+          {isClearable ? 'Clear' : 'Close'}
         </Button>
 
         <Button
-          size="large"
+          size='large'
           disabled={!isClearable}
-          className="apply-filter-btn-at-order-mgt"
+          className='apply-filter-btn-at-order-mgt'
           onClick={handleFilterFunc}
         >
           Apply

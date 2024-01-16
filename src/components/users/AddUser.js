@@ -233,7 +233,7 @@ const AddUser = ({
                   className="user-mgt-add-btn-for-cancel"
                   onClick={onClose}
                 >
-                  Close
+                  Cancel
                 </Button>
 
                 <Button

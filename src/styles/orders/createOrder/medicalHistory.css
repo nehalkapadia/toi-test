@@ -20,6 +20,7 @@
 
 .co-tab-2-medical-history-number-input {
   width: 100%;
+  background: #f9f9fc;
 }
 
 .co-tab-2-ordering-btn {
@@ -28,7 +29,7 @@
   font-size: 14px !important;
   font-weight: 600;
   letter-spacing: 0.5px;
-  margin: -16px 0 24px -12px;
+  margin: 0px 0 24px -12px;
 }
 
 .co-tab-2-ordering-btn:hover {

@@ -1,3 +1,4 @@
+const { Op } = require('sequelize');
 const db = require('../models');
 const MedicalHistories = db.MedicalHistories;
 
@@ -41,3 +42,35 @@ exports.getMedicalHistoryById = async (historyId) => {
     throw error;
   }
 };
+
+/**
+ * Service function to update medical history
+ * 
+ * @param {object} payload
+ * @returns {object} - Updated medical history details
+ */
+exports.updateMedicalHistory = async (payload) => {
+  if(payload?.historyId) {
+    const whereClause = {
+      historyId: payload.historyId,
+    };
+    if(payload?.orderId) {
+      whereClause.id = { [Op.ne]: payload?.orderId };
+    }
+    const order = await db.Orders.findOne({ where: whereClause });
+
+    if(order) {
+      return null;
+    }
+    const medicalHistory = await MedicalHistories.findByPk(payload?.historyId);
+
+    if(medicalHistory) {
+      delete payload?.historyId;
+      delete payload?.orderId;
+      await medicalHistory.update(payload);
+      return medicalHistory;
+    } else {
+      return null;
+    }
+  }
+}

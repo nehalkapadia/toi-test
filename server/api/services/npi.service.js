@@ -5,9 +5,9 @@ const db = require('../models');
 const Npi = db.Npis;
 
 /**
- * 
- * @param {*} npiNumber 
- * @returns 
+ *
+ * @param {*} npiNumber
+ * @returns
  * @description Check if an Npi with the given npiNumber already exists
  */
 const checkIfNpiExists = async (npiNumber) => {
@@ -19,9 +19,9 @@ const checkIfNpiExists = async (npiNumber) => {
 };
 
 /**
- * 
- * @param {*} payload 
- * @returns 
+ *
+ * @param {*} payload
+ * @returns
  * @description Create an Npi
  */
 const createNpi = async (payload) => {
@@ -29,25 +29,25 @@ const createNpi = async (payload) => {
 };
 
 /**
- * 
- * @param {*} npiNumber 
- * @param {*} newData 
- * @returns 
+ *
+ * @param {*} npiNumber
+ * @param {*} newData
+ * @returns
  * @description Update an existing Npi by npiNumber
  */
 const updateNpiByNpiNumber = async (npiNumber, newData) => {
   try {
-    // Check if the Npi with the given npiNumber exists
-    const existingNpi = await Npi.findOne({ where: { npiNumber } });
-
-    if (!existingNpi) {
-      throw new Error('Npi not found'); // Throw an error if Npi is not found
-    }
-
     // Update the existing Npi with the new data
-    const updatedNpi = await existingNpi.update(newData);
+    await Npi.update(newData, {
+      where: {
+        npiNumber,
+      },
+    });
 
-    return updatedNpi; // Return the updated Npi record
+    // get Npi details
+    const npiDetails = await Npi.findOne({ where: { npiNumber } });
+
+    return npiDetails; // Return the updated Npi record
   } catch (error) {
     throw error; // Handle the error appropriately in your controller
   }
@@ -57,5 +57,5 @@ const updateNpiByNpiNumber = async (npiNumber, newData) => {
 module.exports = {
   checkIfNpiExists,
   createNpi,
-  updateNpiByNpiNumber
+  updateNpiByNpiNumber,
 };

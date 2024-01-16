@@ -9,6 +9,7 @@ import {
   Radio,
   Row,
   Skeleton,
+  Spin,
   message,
 } from 'antd';
 import {
@@ -29,6 +30,7 @@ import {
   updateOrganizationFunc,
 } from '@/store/organizationSlice';
 import {
+  allowDigitsOnly,
   formatPhoneNumberForInput,
   formatPhoneNumberToUSFormat,
 } from '@/utils/commonFunctions';
@@ -39,6 +41,7 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
   const [formData] = Form.useForm();
   const [submittable, setSubmittable] = useState(false);
   const formValues = Form.useWatch([], formData);
+  const [loading, setLoading] = useState(false);
   const isLoading = useSelector(
     (state) => state.organizationTable.viewIsLoading
   );
@@ -49,6 +52,7 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
   const { name, email, phoneNumber, domain, address, isActive } = getOrgDetails;
 
   const submitFormData = (values) => {
+    setLoading(true)
     // const updatedBy = 4
     const payload = {
       name,
@@ -60,11 +64,14 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
       if (res?.payload?.status) {
         dispatch(getOrganizationsFunc({ page, perPage: TOTAL_ITEMS_PER_PAGE }));
         message.success(API_RESPONSE_MESSAGES.org_updated);
+        setLoading(false)
         onClose();
       } else if (res?.payload?.status === false) {
         message.error(res?.payload?.message);
+        setLoading(false)
       } else {
         message.error(API_RESPONSE_MESSAGES.err_rest_api);
+        setLoading(false)
       }
     });
   };
@@ -138,6 +145,7 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
                   size="large"
                   className="add-org-form-input-box add-org-number-input"
                   placeholder="Please Enter Phone Number"
+                  onKeyDown={allowDigitsOnly}
                   formatter={(value) => formatPhoneNumberForInput(value)}
                   parser={(value) => value.replace(/\D/g, '')}
                   maxLength={14}
@@ -271,6 +279,7 @@ const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
               )}
             </Row>
           </Form.Item>
+          {loading && <Spin fullscreen />}
         </Form>
       )}
     </>

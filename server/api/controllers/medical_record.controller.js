@@ -7,6 +7,7 @@ const { errorResponse, successResponse } = require('../utils/response.util');
 const medicalRecordService = require('../services/medical_record.service');
 const patientService = require('../services/patient.service');
 const auditLogService = require('../services/audit_log.service');
+const { formatRequest } = require('../utils/common.util');
 
 /**
  * 
@@ -19,7 +20,7 @@ const auditLogService = require('../services/audit_log.service');
  */
 exports.create = async (req, res, next) => {
   try {
-    await auditLogService.createLog(req, 'MedicalRecords', 'Create');
+    await auditLogService.createLog(formatRequest(req), 'MedicalRecords', 'Create');
     const reqData = req.body;
     const id = req?.userData?.id;
     // check if patient exist
@@ -28,18 +29,37 @@ exports.create = async (req, res, next) => {
         return res
         .status(constantsUtil.BAD_REQUEST).json(errorResponse(constantsUtil.notFound('Patient')))
     }
+
+    if (reqData?.recordId) {
+      // if medical history is exist then update
+      const isMedicalRecordExist =
+        await medicalRecordService.updateMedicalRecord(reqData);
+      if (isMedicalRecordExist) {
+        return res
+          .status(constantsUtil.SUCCESS)
+          .json(
+            successResponse(
+              constantsUtil.message('Medical Record', 'Update'),
+              isMedicalRecordExist
+            )
+          );
+      }
+    }
+
     if(id) {
         reqData.createdBy = id;
         reqData.updatedBy = id;
     }
     // create medical history
+    delete reqData?.recordId;
+    delete reqData?.orderId;
     const medicalRecord = await medicalRecordService.createMedicalRecord(reqData);
     // return response
     return res.status(constantsUtil.SUCCESS).json(successResponse(constantsUtil.message('Medical Record', 'Create'), medicalRecord));
   } catch (error) {
 
     // error response
-    await auditLogService.createLog(req, 'MedicalRecords', 'Create', error);
+    await auditLogService.createLog(formatRequest(req), 'MedicalRecords', 'Create', error);
     return res
       .status(constantsUtil.INTERNAL_SERVER_STATUS).json(errorResponse(constantsUtil.INTERNAL_SERVER_ERROR, error))
   }

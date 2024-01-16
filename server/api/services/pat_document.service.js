@@ -29,29 +29,45 @@ exports.create = async (patDocumentData) => {
  * @description Soft delete PatDocument by id
  * @access Private
  */
-exports.softDelete = async (id, orderId) => {
+exports.softDelete = async (id, orderId, isAuth) => {
     try {
       let whereClause = {
         patDocumentId: id,
       }
       if(orderId) {
         whereClause.orderId = orderId;
+        whereClause.deletedAt = null;
       }
       // Find the PatDocument by ID
-      const orderPatDocument = await db.OrderPatDocuments.findOne({
+      if(isAuth === 'false') {
+        const orderPatDocument = await db.OrderPatDocuments.findOne({
+          where: whereClause,
+        });
+        if (!orderPatDocument) {
+          // Handle the case where the PatDocument is not found
+          throw new Error(constants.PATIENT_DOCUMENT_NOT_FOUND);
+        }
+  
+        // Soft delete by setting the deletedAt field
+        await orderPatDocument.update({ deletedAt: new Date() });
+  
+        // Return the deleted PatDocument if needed
+        return orderPatDocument;
+      }
+      const orderAuthDocument = await db.OrderAuthDocuments.findOne({
         where: whereClause,
       });
-
-      if (!orderPatDocument) {
+      if (!orderAuthDocument) {
         // Handle the case where the PatDocument is not found
         throw new Error(constants.PATIENT_DOCUMENT_NOT_FOUND);
       }
 
       // Soft delete by setting the deletedAt field
-      await orderPatDocument.update({ deletedAt: new Date() });
+      await orderAuthDocument.update({ deletedAt: new Date() });
 
       // Return the deleted PatDocument if needed
-      return orderPatDocument;
+      return orderAuthDocument;
+
     } catch (error) {
       // Handle other potential errors here
       throw error;
@@ -89,16 +105,44 @@ exports.getAllDocumentTypes = async () => {
  * It orders the documents by creation date in descending order and includes document type details
  * such as ID and name in the response.
  */
-exports.getLatestDocumentsByType = async (patientId, documentTypeId, limit = 5) => {
+exports.getLatestDocumentsByType = async (patientId, documentTypeId, limit = 5, orderId) => {
   try {
-    const documents = await PatDocuments.findAll({
-      where: {
-        patientId,
-        documentTypeId,
-      },
-      order: [['createdAt', 'DESC']],
-      limit,
-    });
+    let patDocumentsId = []
+    let documents = []
+    if(orderId) {
+      const orderPatDocuments = await db.OrderPatDocuments.findAll({
+        where: {
+          orderId: orderId,
+          deletedAt: null
+        }
+      });
+      patDocumentsId = orderPatDocuments.map((orderPatDocument) => orderPatDocument.patDocumentId);
+      const orderAuthDocuments = await db.OrderAuthDocuments.findAll({
+        where: {
+          orderId: orderId,
+          deletedAt: null
+        }
+      });
+      patDocumentsId = patDocumentsId.concat(orderAuthDocuments.map((orderAuthDocument) => orderAuthDocument.patDocumentId));
+
+      documents = await PatDocuments.findAll({
+        where: {
+          id: patDocumentsId,
+          documentTypeId,
+        },
+        order: [['createdAt', 'DESC']],
+        limit,
+      });
+    } else {
+      documents = await PatDocuments.findAll({
+        where: {
+          patientId,
+          documentTypeId,
+        },
+        order: [['createdAt', 'DESC']],
+        limit,
+      });
+    }
 
     // Fetch document type details
     const documentType = await DocumentTypes.findByPk(documentTypeId);
@@ -115,3 +159,11 @@ exports.getLatestDocumentsByType = async (patientId, documentTypeId, limit = 5) 
     throw error;
   }
 };
+
+exports.delete = async (id) => { 
+  return await PatDocuments.destroy({
+    where: {
+      id: id
+    }
+  });
+}

@@ -28,19 +28,19 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
       },
       primarySubscriberNumber: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.BIGINT,
       },
       primaryGroupNumber: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.BIGINT,
       },
       secondaryInsurance: {
         type: Sequelize.STRING,
       },
       secondarySubscriberNumber: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.BIGINT,
       },
       secondaryGroupNumber: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.BIGINT,
       },
       copyOfInsuranceCard: {
         type: Sequelize.INTEGER,

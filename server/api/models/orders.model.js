@@ -56,9 +56,12 @@ module.exports = (sequelize, Sequelize) => {
       currentStatus: {
         type: Sequelize.STRING,
       },
-      salesForceSyncUp: {
-        type: Sequelize.BOOLEAN,
-        default: false,
+      ownerId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id',
+        },
       },
       createdBy: {
         type: Sequelize.INTEGER,
@@ -76,9 +79,11 @@ module.exports = (sequelize, Sequelize) => {
       },
       isDeleted: {
         type: Sequelize.BOOLEAN,
+        defaultValue: false,
       },
       deletedAt: {
         type: Sequelize.DATE,
+        allowNull: true,
       },
     },
     { timestamps: true }
@@ -93,6 +98,7 @@ module.exports = (sequelize, Sequelize) => {
   Orders.hasMany(OrderPatDocument, {
     foreignKey: 'orderId'
   })
+  Orders.belongsTo(User, { foreignKey: 'ownerId', as: 'ownerData' });
 
   return Orders;
 };

@@ -66,26 +66,26 @@ const CustomTable = (props) => {
           // width: 130,
           render: (_, record) => {
             return (
-              <div className="table-action-btn-container">
+              <div className='table-action-btn-container'>
                 {isUserAddEnabled && (
                   <Button
-                    type="link"
+                    type='link'
                     onClick={(e) => {
                       addUserFunction(e, record, onNewUserAdd);
                     }}
                   >
-                    <Image src={Create_User_Icon} alt="View" />
+                    <Image src={Create_User_Icon} alt='View' />
                   </Button>
                 )}
 
                 {isViewable && (
                   <Button
-                    type="link"
+                    type='link'
                     onClick={(e) => {
                       viewFunction(e, record, onView);
                     }}
                   >
-                    <Image src={View_Icon} alt="View" />
+                    <Image src={View_Icon} alt='View' />
                   </Button>
                 )}
 
@@ -93,32 +93,36 @@ const CustomTable = (props) => {
                   pathname !== '/order-management' &&
                   record?.name?.toLowerCase() !== 'toi' && (
                     <Button
-                      type="link"
+                      type='link'
                       onClick={(e) => editFunction(e, record, onEdit)}
                     >
-                      <Image src={Edit_Icon} alt="Edit" />
+                      <Image src={Edit_Icon} alt='Edit' />
                     </Button>
                   )}
 
                 {isEditable &&
                   pathname === '/order-management' &&
-                  record?.currentStatus?.toLowerCase() === 'draft' && (
+                  record?.currentStatus?.toLowerCase() === 'draft' &&
+                  record?.userData?.isActive && (
                     <Button
-                      type="link"
+                      type='link'
                       onClick={(e) => editFunction(e, record, onEdit)}
                     >
-                      <Image src={Edit_Icon} alt="Edit" />
+                      <Image src={Edit_Icon} alt='Edit' />
                     </Button>
                   )}
 
-                {isDeleteable && (
-                  <Button
-                    type="link"
-                    onClick={(e) => deleteFunction(e, record, onDelete)}
-                  >
-                    <Image src={Delete_Icon} alt="Delete" />
-                  </Button>
-                )}
+                {isDeleteable &&
+                  pathname === '/order-management' &&
+                  record?.currentStatus?.toLowerCase() === 'draft' &&
+                  record?.userData?.isActive && (
+                    <Button
+                      type='link'
+                      onClick={(e) => deleteFunction(e, record, onDelete)}
+                    >
+                      <Image className='red-5' src={Delete_Icon} alt='Delete' />
+                    </Button>
+                  )}
               </div>
             );
           },
@@ -129,7 +133,7 @@ const CustomTable = (props) => {
   };
 
   return (
-    <div className="custom-table-container" style={{ overflowX: 'auto' }}>
+    <div className='custom-table-container' style={{ overflowX: 'auto' }}>
       <Table
         className={props.className || ''}
         rowKey={props.rowKey || 'id'}
