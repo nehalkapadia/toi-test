@@ -64,7 +64,7 @@ const getNpiDetails = async (physicianNpiNumber) => {
 
     let firstName = npiDetails?.first_name ? npiDetails.first_name : '';
     let lastName = npiDetails?.last_name ? npiDetails.last_name : '';
-    let npiNumber = npiDetails.npiNumber;
+    let npiNumber = npiDetails?.npiNumber ? npiDetails.npiNumber : '';
 
     return { firstName, lastName, npiNumber };
 

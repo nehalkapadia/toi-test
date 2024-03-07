@@ -7,9 +7,9 @@ import { ADMIN_ROUTES, MEMBER_ROUTES } from '@/utils/auth';
 import CustomSpinner from '@/components/CustomSpinner';
 import {
   ADMIN_ROLE_NUMBER_VALUE,
+  ORDER_MANAGEMENT_ACCESS_ROLES_ARRAY,
   TITLE_MAPPING,
   TYPE_TEXT_FOR_ORDER_TYPE,
-  USER_ROLE_NUMBER_VALUE,
 } from '@/utils/constant.util';
 import { message, Badge } from 'antd';
 import { isValidOrderType } from '@/utils/commonFunctions';
@@ -31,7 +31,7 @@ function MyApp({ Component, pageProps }) {
 
   useEffect(() => {
     if (!isAuthenticated && pathname !== '/login-success') {
-      if(pathname === '/privacy-policy') {
+      if (pathname === '/privacy-policy') {
         setPageTitle(getPageTitle(pathname));
         return;
       }
@@ -40,7 +40,10 @@ function MyApp({ Component, pageProps }) {
       if (MEMBER_ROUTES.includes(pathname)) {
         router.push('/organization-management');
       }
-    } else if (isAuthenticated && userRole == USER_ROLE_NUMBER_VALUE) {
+    } else if (
+      isAuthenticated &&
+      ORDER_MANAGEMENT_ACCESS_ROLES_ARRAY?.includes(Number(userRole))
+    ) {
       if (ADMIN_ROUTES.includes(pathname)) {
         router.push('/order-management');
       } else if (pathname === '/order-management/create') {
@@ -80,8 +83,11 @@ function MyApp({ Component, pageProps }) {
     <Fragment>
       {process.env.NODE_ENV === 'development' && (
         <div className='curved-label'>
-          <Badge.Ribbon color='magenta' text="Development" className='curved-badge'>
-          </Badge.Ribbon>
+          <Badge.Ribbon
+            color='magenta'
+            text='Development'
+            className='curved-badge'
+          ></Badge.Ribbon>
         </div>
       )}
       <UniversalLayout pageTitle={pageTitle}>

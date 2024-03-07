@@ -21,7 +21,10 @@ exports.list = async (req, res, next) => {
   try {
     const userList = await userService.list();
     return res.json(
-      successResponse(constants.message(constants.userModule, 'List fetched'), userList)
+      successResponse(
+        constants.message(constants.userModule, 'List fetched'),
+        userList
+      )
     );
   } catch (error) {
     return res.json(
@@ -64,7 +67,10 @@ exports.allList = async (req, res) => {
       organizationId,
     });
     return res.json(
-      successResponse(constants.message(constants.userModule, 'List fetched'), userList)
+      successResponse(
+        constants.message(constants.userModule, 'List fetched'),
+        userList
+      )
     );
   } catch (error) {
     await auditService.createLog(formatRequest(req), 'Users', 'POST', error);
@@ -111,7 +117,6 @@ exports.detail = async (req, res) => {
 };
 
 /**
- *
  * @param {*} req
  * @param {*} res
  * @returns
@@ -136,9 +141,44 @@ exports.create = async (req, res) => {
       reqData.createdBy = id;
       reqData.updatedBy = id;
     }
+    if(reqData.orderingProvider) {
+      // Check if the orderingProvider is active in another organization
+      const orderingProviderInfo = await userService.getOrderingProviderInfo(
+        req.body.orderingProvider,
+        req.body.organizationId // Pass the organization ID
+      );
+
+      // Check if the orderingProvider is active in another organization
+      if (
+        orderingProviderInfo &&
+        orderingProviderInfo.organization &&
+        orderingProviderInfo.isActive
+      ) {
+        return res.json(
+          errorResponse(
+            constants.ORDER_PROVIDER_ALREADY_ASSOCIATED(
+              orderingProviderInfo.organization.name // Provide the organization name in the error message
+            )
+          )
+        );
+      }
+
+      // Check if the orderingProvider exists in the same organization
+      const orderingProviderExists =
+        await userService.orderingProviderExistsInOrganization(
+          req.body.orderingProvider,
+          req.body.organizationId
+        );
+
+      if (orderingProviderExists) {
+        return res.json(
+          errorResponse(constants.ORDER_PROVIDER_EXISTS_IN_SAME_ORGANIZATION)
+        );
+      }
+    }
+
     const createdUser = await userService.createUser(req.body);
     if (createdUser) {
-
       // send the user registration email
       eventEmitter.emit('SendUserRegistrationEmail', createdUser);
 
@@ -146,7 +186,7 @@ exports.create = async (req, res) => {
       reqData.action = 'Create';
       reqData.createdBy = id;
       delete reqData.updatedBy;
-      await createUserLog(reqData)
+      await createUserLog(reqData);
     }
     return res.json(
       successResponse(
@@ -166,7 +206,6 @@ exports.create = async (req, res) => {
 };
 
 /**
- *
  * @param {*} req
  * @param {*} res
  * @returns
@@ -202,13 +241,36 @@ exports.update = async (req, res) => {
     if (id) {
       reqData.updatedBy = id;
     }
+
+    // Check if the user is associated with certain organizations and orderingProvider is being updated
+    if (userDetail.orderingProvider && reqData.isActive) {
+      const isAlreadyExistOrderingProvider = await userService.getOrderingProviderInfo(
+        userDetail.orderingProvider, userDetail.organizationId
+      )
+      if (isAlreadyExistOrderingProvider) {
+        return res.json(
+          errorResponse(constants.ORDER_PROVIDER_ALREADY_ASSOCIATED(
+            isAlreadyExistOrderingProvider.organization.name // Provide the organization name in the error message
+          ))
+        );
+      }
+      const isOrderingProviderExist = await userService.checkIfActiveOrderingProviderExists(
+        userDetail
+      )
+      if (isOrderingProviderExist) {
+        return res.json(
+          errorResponse(constants.ORDER_PROVIDER_EXISTS_IN_SAME_ORGANIZATION)
+        );
+      }
+    }
+
     await userService.updateUser(req.params.id, req.body);
     if (reqData) {
       reqData.recordId = req?.params?.id;
       reqData.action = 'Update';
       reqData.createdBy = id;
       delete reqData.id;
-      await createUserLog(reqData)
+      await createUserLog(reqData);
     }
     return res.json(
       successResponse(constants.message(constants.userModule, 'Updated'))

@@ -21,7 +21,15 @@ const DisplayOrganization = ({ displayViewDrawer, columnId, onClose }) => {
   const getOrgDetails =
     useSelector((state) => state.organizationTable.getOrgDetails) || {};
 
-  const { name, email, phoneNumber, domain, address, isActive } = getOrgDetails;
+  const {
+    name,
+    email,
+    phoneNumber,
+    organizationType,
+    domain,
+    address,
+    isActive,
+  } = getOrgDetails;
 
   useEffect(() => {
     if (columnId) {
@@ -53,7 +61,7 @@ const DisplayOrganization = ({ displayViewDrawer, columnId, onClose }) => {
       destroyOnClose={true}
       footer={
         <Row className='view-org-footer-container'>
-          <Button size='large' className='view-org-close-btn' onClick={onClose}>
+          <Button size='large' className='global-close-btn-style' onClick={onClose}>
             Close
           </Button>
         </Row>
@@ -74,6 +82,21 @@ const DisplayOrganization = ({ displayViewDrawer, columnId, onClose }) => {
               <label className='column-name-lable-at-om'>Organization</label>
               <h3 className='column-value-as-heading-at-om text-transform-class-om'>
                 {name}
+              </h3>
+            </Col>
+
+            <Col
+              className='display-org-each-column-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='column-name-lable-at-om'>
+                Organization Type
+              </label>
+              <h3 className='column-value-as-heading-at-om text-transform-class-om'>
+                {organizationType}
               </h3>
             </Col>
 
@@ -123,22 +146,24 @@ const DisplayOrganization = ({ displayViewDrawer, columnId, onClose }) => {
               md={{ span: 8 }}
               lg={{ span: 6 }}
             >
-              <label className='column-name-lable-at-om'>Address</label>
-              <h3 className='column-value-as-heading-at-om text-transform-class-om'>
-                {address || ORG_MESSAGES.address_not_available}
+              <label className='column-name-lable-at-om'>Status</label>
+              <h3 className={`organization-current-${isActive}`}>
+                {isActive ? ACTIVE_STATUS : INACTIVE_STATUS}
               </h3>
             </Col>
+          </Row>
 
+          <Row span={24} gutter={24}>
             <Col
               className='display-org-each-column-gap'
               xs={{ span: 24 }}
               sm={{ span: 12 }}
-              md={{ span: 8 }}
-              lg={{ span: 6 }}
+              md={{ span: 16 }}
+              lg={{ span: 12 }}
             >
-              <label className='column-name-lable-at-om'>Status</label>
-              <h3 className={`organization-current-${isActive}`}>
-                {isActive ? ACTIVE_STATUS : INACTIVE_STATUS}
+              <label className='column-name-lable-at-om'>Address</label>
+              <h3 className='column-value-as-heading-at-om text-transform-class-om'>
+                {address || ORG_MESSAGES.address_not_available}
               </h3>
             </Col>
           </Row>

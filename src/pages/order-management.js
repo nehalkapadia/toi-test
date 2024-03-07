@@ -15,10 +15,10 @@ import {
 import CustomTable from '@/components/customTable/CustomTable';
 import {
   ARE_YOU_SURE_WANT_TO_DELETE_ORDER,
+  ORDER_MANAGEMENT_ACCESS_ROLES_ARRAY,
   ORDER_MODAL_CANCEL_TEXT,
   ORDER_MODAL_OK_TEXT,
   TOTAL_ITEMS_PER_PAGE,
-  USER_ROLE_NUMBER_VALUE,
 } from '@/utils/constant.util';
 import { FaPlus } from 'react-icons/fa6';
 import { LuSlidersHorizontal } from 'react-icons/lu';
@@ -43,6 +43,7 @@ import OrderModal from '@/components/orders/createOrder/OrderModal';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { setSelectedUserAtOrderMgt } from '@/store/authSlice';
 import OrderManagementDropdowns from '@/components/OrderManagementDropdowns';
+import { FiRefreshCcw } from 'react-icons/fi';
 
 const OrderManagement = () => {
   const router = useRouter();
@@ -110,6 +111,18 @@ const OrderManagement = () => {
     };
 
     await dispatch(getAllCreatedOrderData(payload));
+  };
+
+  const handleRefreshBtn = () => {
+    getAllOrderDataFunc(
+      selectedUser,
+      checkedOrderStatus,
+      checkedOrderTypes,
+      filterParams,
+      currentPage
+    );
+    dispatch(getUserListBasedOnLoggedInPerson());
+    dispatch(getOrderTypeList());
   };
 
   const handleCreateOrder = (item) => {
@@ -260,172 +273,184 @@ const OrderManagement = () => {
 
   return (
     <>
-      {isAuth && userRole == USER_ROLE_NUMBER_VALUE && (
-        <div>
-          <div className='order-management-parent-container'>
-            <Row className='order-mgt-first-child-container'>
-              <Col>
-                <h3 className='order-mgt-heading'>Order Management</h3>
-              </Col>
-              <Col>
-                <Dropdown
-                  menu={{ items: createOrderOptions }}
-                  trigger={['click']}
-                  placement='bottom'
-                >
-                  <Button
-                    size='large'
-                    icon={<FaPlus />}
-                    className='create-order-btn'
+      {isAuth &&
+        ORDER_MANAGEMENT_ACCESS_ROLES_ARRAY?.includes(Number(userRole)) && (
+          <div>
+            <div className='order-management-parent-container'>
+              <Row className='order-mgt-first-child-container'>
+                <Col>
+                  <h3 className='order-mgt-heading'>Order Management</h3>
+                </Col>
+                <Col>
+                  <Dropdown
+                    menu={{ items: createOrderOptions }}
+                    trigger={['click']}
+                    placement='bottom'
                   >
-                    Create Order
-                  </Button>
-                </Dropdown>
-              </Col>
-            </Row>
-
-            <Row className='order-mgt-second-child-container'>
-              <Col>
-                <Select
-                  className='order-mgt-user-select-tag'
-                  size='large'
-                  options={generateDropdownOptions(getUsersListForDropdown)}
-                  onChange={handleSelectUserChange}
-                  placeholder='Select'
-                  value={selectedUser}
-                />
-              </Col>
-
-              <Col>
-                <Row gutter={16} className='order-mgt-filters-container'>
-                  <Col>
-                    <OrderManagementDropdowns
-                      dropdownTitle={'Order Type'}
-                      dropdownOpen={isOrderTypeOpen}
-                      setDropdownOpen={setIsOrderTypeOpen}
-                      dropdownOptions={orderTypeList}
-                      ValuesArray={checkedOrderTypes}
-                      setValuesArray={setCheckedOrderTypes}
-                      setPage={setCurrentPage}
-                    />
-                  </Col>
-
-                  <Col>
-                    <OrderManagementDropdowns
-                      dropdownTitle={'Order Status'}
-                      dropdownOpen={isOrderStatusOpen}
-                      setDropdownOpen={setIsOrderStatusOpen}
-                      dropdownOptions={ORDER_MANAGEMENT_ORDER_STATUS_OPTIONS}
-                      ValuesArray={checkedOrderStatus}
-                      setValuesArray={setCheckedOrderStatus}
-                      setPage={setCurrentPage}
-                    />
-                  </Col>
-
-                  <Col>
                     <Button
                       size='large'
-                      className='order-mgt-filter-btn'
-                      icon={<LuSlidersHorizontal />}
-                      onClick={handleFilterDrawer}
+                      icon={<FaPlus />}
+                      className='global-primary-btn-style'
                     >
-                      Filters
+                      Create Order
+                    </Button>
+                  </Dropdown>
+                </Col>
+              </Row>
+
+              <Row className='order-mgt-second-child-container'>
+                <Col>
+                  <Select
+                    className='order-mgt-user-select-tag'
+                    size='large'
+                    options={generateDropdownOptions(getUsersListForDropdown)}
+                    onChange={handleSelectUserChange}
+                    placeholder='Select'
+                    value={selectedUser}
+                  />
+                </Col>
+
+                <Col>
+                  <Row gutter={16} className='order-mgt-filters-container'>
+                    <Col>
+                      <OrderManagementDropdowns
+                        dropdownTitle={'Order Type'}
+                        dropdownOpen={isOrderTypeOpen}
+                        setDropdownOpen={setIsOrderTypeOpen}
+                        dropdownOptions={orderTypeList}
+                        ValuesArray={checkedOrderTypes}
+                        setValuesArray={setCheckedOrderTypes}
+                        setPage={setCurrentPage}
+                      />
+                    </Col>
+
+                    <Col>
+                      <OrderManagementDropdowns
+                        dropdownTitle={'Order Status'}
+                        dropdownOpen={isOrderStatusOpen}
+                        setDropdownOpen={setIsOrderStatusOpen}
+                        dropdownOptions={ORDER_MANAGEMENT_ORDER_STATUS_OPTIONS}
+                        ValuesArray={checkedOrderStatus}
+                        setValuesArray={setCheckedOrderStatus}
+                        setPage={setCurrentPage}
+                      />
+                    </Col>
+
+                    <Col>
+                      <Button
+                        size='large'
+                        className='order-mgt-filter-btn'
+                        icon={<LuSlidersHorizontal />}
+                        onClick={handleFilterDrawer}
+                      >
+                        Filters
+                      </Button>
+                    </Col>
+
+                    <Col>
+                      <Button
+                        size='large'
+                        icon={<FiRefreshCcw />}
+                        className='global-primary-btn-style'
+                        onClick={handleRefreshBtn}
+                      >
+                        Refresh
+                      </Button>
+                    </Col>
+                  </Row>
+                </Col>
+              </Row>
+
+              <Row>
+                {isLoading ? (
+                  <Skeleton active paragraph={{ row: 15 }} />
+                ) : (
+                  <CustomTable
+                    rowKey='id'
+                    rows={getAllOrders}
+                    columns={TABLE_FOR_ORDER_MANAGEMENT}
+                    isViewable={true}
+                    isEditable={true}
+                    isDeleteable={true}
+                    onView={handleViewOrders}
+                    onEdit={handleEditOrders}
+                    onDelete={showModal}
+                    rowSelectionType={false}
+                    pagination={true}
+                    current={currentPage}
+                    pageSize={TOTAL_ITEMS_PER_PAGE}
+                    total={totalOrderCount}
+                    onPageChange={(page) => setCurrentPage(page)}
+                    showQuickJumper={true}
+                    scroll={{x: 800 ,y: 300}}
+                  />
+                )}
+              </Row>
+
+              {/* Drawer Start From Here */}
+
+              {/* View Order Details Drawer */}
+              <Drawer
+                title='View Order Documents'
+                placement='right'
+                open={displayViewDrawer}
+                onClose={handleCloseDrawer}
+                closable={true}
+                width={isSmallScreen ? '100%' : '80%'}
+                className='common-class-for-all-app-drawers-for-width'
+                destroyOnClose={true}
+                footer={
+                  <Col className='order-mgt-drawer-footer'>
+                    <Button
+                      size='large'
+                      className='global-close-btn-style'
+                      onClick={handleCloseDrawer}
+                    >
+                      Close
                     </Button>
                   </Col>
-                </Row>
-              </Col>
-            </Row>
+                }
+              >
+                <DisplayOrderDetails columnId={clickedColumnId} />
+              </Drawer>
 
-            <Row>
-              {isLoading ? (
-                <Skeleton active paragraph={{ row: 15 }} />
-              ) : (
-                <CustomTable
-                  rowKey='id'
-                  rows={getAllOrders}
-                  columns={TABLE_FOR_ORDER_MANAGEMENT}
-                  isViewable={true}
-                  isEditable={true}
-                  isDeleteable={true}
-                  onView={handleViewOrders}
-                  onEdit={handleEditOrders}
-                  onDelete={showModal}
-                  rowSelectionType={false}
-                  pagination={true}
-                  current={currentPage}
-                  pageSize={TOTAL_ITEMS_PER_PAGE}
-                  total={totalOrderCount}
-                  onPageChange={(page) => setCurrentPage(page)}
-                  showQuickJumper={true}
-                  scroll={{ x: 1200 }}
-                />
-              )}
-            </Row>
-
-            {/* Drawer Start From Here */}
-
-            {/* View Order Details Drawer */}
-            <Drawer
-              title='View Order Documents'
-              placement='right'
-              open={displayViewDrawer}
-              onClose={handleCloseDrawer}
-              closable={true}
-              width={isSmallScreen ? '100%' : '80%'}
-              className='common-class-for-all-app-drawers-for-width'
-              destroyOnClose={true}
-              footer={
-                <Col className='order-mgt-drawer-footer'>
-                  <Button
-                    size='large'
-                    className='order-mgt-drawer-close-btn'
-                    onClick={handleCloseDrawer}
-                  >
-                    Close
-                  </Button>
-                </Col>
-              }
-            >
-              <DisplayOrderDetails columnId={clickedColumnId} />
-            </Drawer>
-
-            {/* Filter Order Details Drawer */}
-            <Drawer
-              title='Filters'
-              placement='right'
-              open={displayFilterDrawer}
-              onClose={handleCloseDrawer}
-              closable={true}
-              width={'300px'}
-              destroyOnClose={false}
-              footer={false}
-            >
-              <OrderFilters
-                setPage={setCurrentPage}
+              {/* Filter Order Details Drawer */}
+              <Drawer
+                title='Filters'
+                placement='right'
+                open={displayFilterDrawer}
                 onClose={handleCloseDrawer}
-                userId={selectedUser}
-                Orderstatus={checkedOrderStatus}
-                filterParams={filterParams}
-                setFilterparams={setFilterparams}
-                isClearable={isClearable}
-                setIsClearable={setIsClearable}
-                checkedOrderTypes={checkedOrderTypes}
+                closable={true}
+                width={'300px'}
+                destroyOnClose={false}
+                footer={false}
+              >
+                <OrderFilters
+                  setPage={setCurrentPage}
+                  onClose={handleCloseDrawer}
+                  userId={selectedUser}
+                  Orderstatus={checkedOrderStatus}
+                  filterParams={filterParams}
+                  setFilterparams={setFilterparams}
+                  isClearable={isClearable}
+                  setIsClearable={setIsClearable}
+                  checkedOrderTypes={checkedOrderTypes}
+                />
+              </Drawer>
+              {/* Delete Order Modal */}
+              <OrderModal
+                title={<RiDeleteBinLine color='red' size={45} />}
+                open={open}
+                handleOk={handleOk}
+                confirmLoading={confirmLoading}
+                handleCancel={handleCancel}
+                modalText={ARE_YOU_SURE_WANT_TO_DELETE_ORDER}
+                okText={ORDER_MODAL_OK_TEXT}
+                cancelText={ORDER_MODAL_CANCEL_TEXT}
               />
-            </Drawer>
-            {/* Delete Order Modal */}
-            <OrderModal
-              title={<RiDeleteBinLine color='red' size={45} />}
-              open={open}
-              handleOk={handleOk}
-              confirmLoading={confirmLoading}
-              handleCancel={handleCancel}
-              modalText={ARE_YOU_SURE_WANT_TO_DELETE_ORDER}
-              okText={ORDER_MODAL_OK_TEXT}
-              cancelText={ORDER_MODAL_CANCEL_TEXT}
-            />
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </>
   );
 };

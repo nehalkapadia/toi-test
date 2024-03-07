@@ -14,6 +14,7 @@ import {
   CHEMO_ORDER_TYPE,
   DATE_FORMAT_STARTING_FROM_MONTH,
   LAB,
+  MAX_CPT_CODE_TO_BE_UPLOADED,
   NA,
   OFFICE_VISIT_ORDER_TYPE,
   PATHOLOGY,
@@ -370,6 +371,39 @@ const DisplayOrderDetails = ({ columnId }) => {
                 </Col>
               </>
             )}
+            { (orderTypeData?.name === OFFICE_VISIT_ORDER_TYPE || orderTypeData?.name === RADIATION_ORDER_TYPE) && (
+              <>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>
+                    Ordering Provider
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {medicalHistory?.orderingProvider || NA}
+                  </h3>
+                </Col>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>
+                    Ordering Provider Name
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {getProviderName(medicalHistory?.orderingProviderData) ||
+                      NA}
+                  </h3>
+                </Col>
+            </>
+          )}
           </Row>
 
           {orderTypeData?.name === CHEMO_ORDER_TYPE && (
@@ -1021,7 +1055,7 @@ const DisplayOrderDetails = ({ columnId }) => {
                 : TABLE_FOR_CPT_CODES_AT_ORDER_DETAILS_TAB
             }
             pagination={false}
-            pageSize={25}
+            pageSize={MAX_CPT_CODE_TO_BE_UPLOADED}
             scroll={{ y: 300 }}
           />
         </div>
@@ -1034,35 +1068,34 @@ const DisplayOrderDetails = ({ columnId }) => {
               {orderTypeData?.name}
             </h3>
           </Col>
-          {orderTypeData?.name === CHEMO_ORDER_TYPE &&
-            writtenOrdersFiles?.length > 0 && (
-              <Row span={24} gutter={24}>
-                <Col span={24} className='upload-documents-container-at-tab-2'>
-                  <label className='dod-tabs-label-text'>
-                    Written Orders For Treatment
-                  </label>
-                </Col>
+          {orderTypeData?.name === CHEMO_ORDER_TYPE && (
+            <Row span={24} gutter={24}>
+              <Col span={24} className='upload-documents-container-at-tab-2'>
+                <label className='dod-tabs-label-text'>
+                  Written Orders For Treatment
+                </label>
+              </Col>
 
-                {writtenOrdersFiles?.length > 0 ? (
-                  writtenOrdersFiles?.map((elem) => (
-                    <Col
-                      className='dod-tabs-for-each-row-gap'
-                      xs={{ span: 24 }}
-                      sm={{ span: 12 }}
-                      md={{ span: 8 }}
-                      lg={{ span: 8 }}
-                      key={elem?.id}
-                    >
-                      <div>
-                        <DisplayFilesContainer dataObj={elem} />
-                      </div>
-                    </Col>
-                  ))
-                ) : (
-                  <NoFileDisplay />
-                )}
-              </Row>
-            )}
+              {writtenOrdersFiles?.length > 0 ? (
+                writtenOrdersFiles?.map((elem) => (
+                  <Col
+                    className='dod-tabs-for-each-row-gap'
+                    xs={{ span: 24 }}
+                    sm={{ span: 12 }}
+                    md={{ span: 8 }}
+                    lg={{ span: 8 }}
+                    key={elem?.id}
+                  >
+                    <div>
+                      <DisplayFilesContainer dataObj={elem} />
+                    </div>
+                  </Col>
+                ))
+              ) : (
+                <NoFileDisplay />
+              )}
+            </Row>
+          )}
 
           <Row span={24} gutter={24}>
             <Col span={24} className='upload-documents-container-at-tab-2'>

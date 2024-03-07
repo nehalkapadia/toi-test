@@ -14,6 +14,7 @@ import {
   setTab2FormData,
 } from '@/store/createOrderFormSlice';
 import { resetOrderStateToInitialState } from '@/store/orderSlice';
+import { TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
 
 const CustomTable = (props) => {
   const dispatch = useDispatch();
@@ -75,7 +76,7 @@ const CustomTable = (props) => {
         {
           title: 'Actions',
           dataIndex: 'actions',
-          // width: 130,
+          width: '180px',
           render: (_, record) => {
             return (
               <div className='table-action-btn-container'>
@@ -173,7 +174,9 @@ const CustomTable = (props) => {
                   showSizeChanger: false,
                   showQuickJumper:
                     props?.showQuickJumper === false ? false : true,
-                  defaultPageSize: props.pageSize ? props.pageSize : 5,
+                  defaultPageSize: props.pageSize
+                    ? props.pageSize
+                    : TOTAL_ITEMS_PER_PAGE,
                   showTotal: (total) => `Total ${total} items`,
                   total: total,
                   current: props.current,
@@ -183,12 +186,14 @@ const CustomTable = (props) => {
                   },
                 }
               : {
-                  showSizeChanger: total > 5 ? true : false,
+                  showSizeChanger: total > TOTAL_ITEMS_PER_PAGE ? true : false,
                   showQuickJumper: true,
                   showTotal: (total) => `Total ${total} items`,
                   total: { total },
                   position: ['bottomRight'],
-                  defaultPageSize: props.pageSize ? props.pageSize : 5,
+                  defaultPageSize: props.pageSize
+                    ? props.pageSize
+                    : TOTAL_ITEMS_PER_PAGE,
                 }
             : props?.pagination
         }

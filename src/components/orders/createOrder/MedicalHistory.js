@@ -344,10 +344,6 @@ const MedicalHIstory = () => {
     dispatch(setTab2FormData(payload));
   };
 
-  const getOrderType = () => {
-    return orderType ? orderType : DEFAULT_ORDER_TYPE;
-  };
-
   const filterOrderTypeId = () => {
     const orderTypeData = orderTypeList.find(
       (item) => item?.label.toLowerCase() === orderType.toLowerCase()
@@ -677,6 +673,23 @@ const MedicalHIstory = () => {
     const commonPayload = setPayloadForTab2DataFunc({ ...conditionalData });
     const { historyPayload, recordPayload } = commonPayload;
 
+    const tab2Data = { ...tab2FormData };
+
+    if (!orderingSuccessTick) {
+      formData.setFieldValue(
+        CREATE_ORDER_FORM_KEY_NAMES.orderingProvider,
+        null
+      );
+      dispatch(setTab2FormData({ ...tab2Data, orderingProvider: null }));
+    }
+    if (!referringSuccessTick) {
+      formData.setFieldValue(
+        CREATE_ORDER_FORM_KEY_NAMES.referringProvider,
+        null
+      );
+      dispatch(setTab2FormData({ ...tab2Data, referringProvider: null }));
+    }
+
     if (
       createNewHistory ||
       traceChanges ||
@@ -872,7 +885,7 @@ const MedicalHIstory = () => {
       () => {
         if (
           orderingSuccessTick &&
-          referringSuccessTick &&
+          // referringSuccessTick &&
           orderType === CHEMO_ORDER_TYPE
         ) {
           checkForReferringPhysician(refPhysicianChecked);
@@ -1133,92 +1146,94 @@ const MedicalHIstory = () => {
           )}
         </Row>
 
-        {orderType === CHEMO_ORDER_TYPE && (
-          <Row span={24} gutter={24}>
-            <Col
-              className='co-tab-2-ordering-container'
-              xs={{ span: 24 }}
-              sm={{ span: 12 }}
-              md={{ span: 12 }}
-              lg={{ span: 8 }}
+        <Row span={24} gutter={24}>
+          <Col
+            className='co-tab-2-ordering-container'
+            xs={{ span: 24 }}
+            sm={{ span: 12 }}
+            md={{ span: 12 }}
+            lg={{ span: 8 }}
+          >
+            <Form.Item
+              label={
+                <div className='tab2-ordering-provider-lable-conatiner'>
+                  <label>Ordering Provider</label>
+                </div>
+              }
+              name={CREATE_ORDER_FORM_KEY_NAMES.orderingProvider}
+              rules={
+                orderType === CHEMO_ORDER_TYPE
+                  ? CREATE_ORDER_FORM_FIELD_RULES.orderingProvider
+                  : CREATE_ORDER_FORM_FIELD_RULES.orderingProviderOptional
+              }
             >
+              <InputNumber
+                className='co-tab-2-medical-history-number-input'
+                size='large'
+                placeholder='Enter NPI Number'
+                onChange={(value) =>
+                  handleProviderInputChange(
+                    value,
+                    setDisableOrderingBtn,
+                    orderingResStatus,
+                    orderingSuccessTick,
+                    orderingProviderData,
+                    setDisplayorderingSuccessTick
+                  )
+                }
+                maxLength={ALL_PROVIDERS_MAX_LENGTH_COUNT}
+              />
+            </Form.Item>
+            {!orderingSuccessTick && (
+              <Col>
+                <Button
+                  size='large'
+                  disabled={disableOrderingBtn}
+                  className='co-tab-2-ordering-btn'
+                  onClick={validateOrderingProvider}
+                >
+                  Validate
+                </Button>
+              </Col>
+            )}
+            {orderingSuccessTick && (
               <Form.Item
                 label={
                   <div className='tab2-ordering-provider-lable-conatiner'>
-                    <label>Ordering Provider</label>
+                    <label>Ordering Provider Name</label>
+                    <FiInfo
+                      className='info-icon-for-displaying-info'
+                      onClick={() => dispatch(setDisplayOrderingModal(true))}
+                    />
                   </div>
                 }
-                name={CREATE_ORDER_FORM_KEY_NAMES.orderingProvider}
-                rules={
-                  orderType === CHEMO_ORDER_TYPE
-                    ? CREATE_ORDER_FORM_FIELD_RULES.orderingProvider
-                    : CREATE_ORDER_FORM_FIELD_RULES.orderingProviderOptional
-                }
+                validateStatus={orderingSuccessTick && SMALL_SUCCESS}
+                hasFeedback
               >
-                <InputNumber
+                <Input
                   className='co-tab-2-medical-history-number-input'
                   size='large'
                   placeholder='Enter NPI Number'
-                  onChange={(value) =>
-                    handleProviderInputChange(
-                      value,
-                      setDisableOrderingBtn,
-                      orderingResStatus,
-                      orderingSuccessTick,
-                      orderingProviderData,
-                      setDisplayorderingSuccessTick
-                    )
+                  value={
+                    orderingProviderData && orderingProviderData?.first_name
+                      ? `${orderingProviderData?.first_name} ${orderingProviderData?.last_name}`
+                      : ''
                   }
-                  maxLength={ALL_PROVIDERS_MAX_LENGTH_COUNT}
+                  readOnly
                 />
               </Form.Item>
-              {!orderingSuccessTick && (
-                <Col>
-                  <Button
-                    size='large'
-                    disabled={disableOrderingBtn}
-                    className='co-tab-2-ordering-btn'
-                    onClick={validateOrderingProvider}
-                  >
-                    Validate
-                  </Button>
-                </Col>
-              )}
-              {orderingSuccessTick && (
-                <Form.Item
-                  label={
-                    <div className='tab2-ordering-provider-lable-conatiner'>
-                      <label>Ordering Provider Name</label>
-                      <FiInfo
-                        className='info-icon-for-displaying-info'
-                        onClick={() => dispatch(setDisplayOrderingModal(true))}
-                      />
-                    </div>
-                  }
-                  validateStatus={orderingSuccessTick && SMALL_SUCCESS}
-                  hasFeedback
-                >
-                  <Input
-                    className='co-tab-2-medical-history-number-input'
-                    size='large'
-                    placeholder='Enter NPI Number'
-                    value={
-                      orderingProviderData && orderingProviderData?.first_name
-                        ? `${orderingProviderData?.first_name} ${orderingProviderData?.last_name}`
-                        : ''
-                    }
-                    readOnly
-                  />
-                </Form.Item>
-              )}
+            )}
+            {orderType === CHEMO_ORDER_TYPE && (
               <Form.Item label='Referring Physician Is PCP'>
                 <Checkbox
                   checked={refPhysicianChecked}
                   onChange={handleChangeForRefPhysician}
                 />
               </Form.Item>
-              {isLoadingOrdering && <CustomSpinner />}
-            </Col>
+            )}
+            {isLoadingOrdering && <CustomSpinner />}
+          </Col>
+          {orderType === CHEMO_ORDER_TYPE && (
             <Col
               className='co-tab-2-referring-container'
               xs={{ span: 24 }}
@@ -1310,86 +1325,84 @@ const MedicalHIstory = () => {
               </Form.Item>
               {isLoadingReferring && <CustomSpinner />}
             </Col>
+          )}
 
-            {!refPhysicianChecked && (
-              <Col
-                xs={{ span: 24 }}
-                sm={{ span: 12 }}
-                md={{ span: 12 }}
-                lg={{ span: 8 }}
+          {!refPhysicianChecked && orderType === CHEMO_ORDER_TYPE && (
+            <Col
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 12 }}
+              lg={{ span: 8 }}
+            >
+              <Form.Item
+                label={
+                  <div className='tab2-ordering-provider-lable-conatiner'>
+                    <label>PCP Provider</label>
+                  </div>
+                }
+                name={CREATE_ORDER_FORM_KEY_NAMES.pcpNumber}
+                rules={CREATE_ORDER_FORM_FIELD_RULES.pcpNumber}
               >
+                <InputNumber
+                  className='co-tab-2-medical-history-number-input'
+                  size='large'
+                  placeholder='Enter PCP Number'
+                  onChange={(value) =>
+                    handleProviderInputChange(
+                      value,
+                      setDisbalePCPBtn,
+                      pcpNumberResStatus,
+                      pcpNumberSuccessTick,
+                      pcpNumberData,
+                      setDisplayPcpNumberSuccessTick
+                    )
+                  }
+                  maxLength={ALL_PROVIDERS_MAX_LENGTH_COUNT}
+                />
+              </Form.Item>
+              {!pcpNumberSuccessTick && (
+                <Col>
+                  <Button
+                    size='large'
+                    disabled={disbalePCPBtn}
+                    className='co-tab-2-ordering-btn'
+                    onClick={validatePCPNumber}
+                  >
+                    Validate
+                  </Button>
+                </Col>
+              )}
+              {pcpNumberSuccessTick && (
                 <Form.Item
                   label={
                     <div className='tab2-ordering-provider-lable-conatiner'>
-                      <label>PCP Provider</label>
+                      <label>PCP Provider Name</label>
+                      <FiInfo
+                        className='info-icon-for-displaying-info'
+                        onClick={() => dispatch(setDisplayPCPNumberModal(true))}
+                      />
                     </div>
                   }
-                  name={CREATE_ORDER_FORM_KEY_NAMES.pcpNumber}
-                  rules={CREATE_ORDER_FORM_FIELD_RULES.pcpNumber}
+                  validateStatus={pcpNumberSuccessTick && SMALL_SUCCESS}
+                  hasFeedback
                 >
-                  <InputNumber
+                  <Input
                     className='co-tab-2-medical-history-number-input'
                     size='large'
-                    placeholder='Enter PCP Number'
-                    onChange={(value) =>
-                      handleProviderInputChange(
-                        value,
-                        setDisbalePCPBtn,
-                        pcpNumberResStatus,
-                        pcpNumberSuccessTick,
-                        pcpNumberData,
-                        setDisplayPcpNumberSuccessTick
-                      )
+                    placeholder='Enter NPI Number'
+                    value={
+                      pcpNumberData && pcpNumberData?.first_name
+                        ? `${pcpNumberData?.first_name} ${pcpNumberData?.last_name}`
+                        : ''
                     }
-                    maxLength={ALL_PROVIDERS_MAX_LENGTH_COUNT}
+                    readOnly
                   />
                 </Form.Item>
-                {!pcpNumberSuccessTick && (
-                  <Col>
-                    <Button
-                      size='large'
-                      disabled={disbalePCPBtn}
-                      className='co-tab-2-ordering-btn'
-                      onClick={validatePCPNumber}
-                    >
-                      Validate
-                    </Button>
-                  </Col>
-                )}
-                {pcpNumberSuccessTick && (
-                  <Form.Item
-                    label={
-                      <div className='tab2-ordering-provider-lable-conatiner'>
-                        <label>PCP Provider Name</label>
-                        <FiInfo
-                          className='info-icon-for-displaying-info'
-                          onClick={() =>
-                            dispatch(setDisplayPCPNumberModal(true))
-                          }
-                        />
-                      </div>
-                    }
-                    validateStatus={pcpNumberSuccessTick && SMALL_SUCCESS}
-                    hasFeedback
-                  >
-                    <Input
-                      className='co-tab-2-medical-history-number-input'
-                      size='large'
-                      placeholder='Enter NPI Number'
-                      value={
-                        pcpNumberData && pcpNumberData?.first_name
-                          ? `${pcpNumberData?.first_name} ${pcpNumberData?.last_name}`
-                          : ''
-                      }
-                      readOnly
-                    />
-                  </Form.Item>
-                )}
-                {loadingPcpNumber && <CustomSpinner />}
-              </Col>
-            )}
-          </Row>
-        )}
+              )}
+              {loadingPcpNumber && <CustomSpinner />}
+            </Col>
+          )}
+        </Row>
 
         {orderType === CHEMO_ORDER_TYPE && (
           <Col className='tab-2-child-component-container-second'>

@@ -8,6 +8,7 @@ import '../styles/index.css';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, getProfile } from '@/store/authSlice';
+import { getRoleById } from '@/utils/commonFunctions';
 
 const AppHeader = ({ collapsed, setCollapsed }) => {
   const dispatch = useDispatch();
@@ -38,12 +39,12 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
 
   return (
     <Header className='universal-layout-header'>
-      <Row justify='space-between'>
+      <Row className='universal-layout-header-container' span={24} gutter={24}>
         <Col
-          xs={4}
-          sm={4}
-          md={6}
-          lg={6}
+          xs={{ span: 4 }}
+          sm={{ span: 4 }}
+          md={{ span: 8 }}
+          lg={{ span: 12 }}
           className='layout-header-left-side-container'
         >
           <Button
@@ -61,17 +62,19 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
           />
         </Col>
 
-        <Row className='layout-header-right-side-container' gutter={8}>
-          <Col xs={0} sm={2} className='layout-header-notification-icon'>
-            <IoNotificationsOutline />
-          </Col>
+        <Col
+          className='layout-header-right-side-container'
+          xs={{ span: 20 }}
+          sm={{ span: 20 }}
+          md={{ span: 16 }}
+          lg={{ span: 12 }}
+        >
+          <Row gutter={24}>
+            <Col className='layout-header-notification-icon'>
+              <IoNotificationsOutline />
+            </Col>
 
-          <Col>
-            <Divider type='vertical' className='divider-at-header-bar' />
-          </Col>
-
-          <Row gutter={16}>
-            <Col xs={0} sm={6} md={6}>
+            <Col>
               <Avatar
                 size='large'
                 className='user-profile-icon-at-header'
@@ -85,12 +88,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
               </Avatar>
             </Col>
 
-            <Col
-              className='dropdown-for-profile-view-details'
-              xs={24}
-              sm={15}
-              md={15}
-            >
+            <Col className='dropdown-for-profile-view-details'>
               <Dropdown
                 menu={{ items }}
                 trigger={['click']}
@@ -105,7 +103,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
                         : 'Unknown'}
                     </p>
                     <p className='customized-zero-margin-for-p-tag customized-user-role-at-header'>
-                      {user && user?.roleId === 1 ? 'Admin' : 'Member'}
+                      {getRoleById(user?.roleId)}
                     </p>
                   </Col>
                   {isOpen ? (
@@ -117,7 +115,7 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
               </Dropdown>
             </Col>
           </Row>
-        </Row>
+        </Col>
       </Row>
     </Header>
   );

@@ -8,7 +8,7 @@ const auditLogService = require("../services/audit_log.service");
 const npiService = require("../services/npi.service");
 const { getLatestDocumentsByPatientAndOrderId } = require("../services/pat_document.service");
 const { sendEmailForOrderTypes, sendWelcomeEmail } = require("./send_email");
-const { getCaMedListC, getAllJCodes } = require("../services/cpt_codes.service");
+const { getCaMedListC, getAllJCodes, getDescriptionOfNonNumericCptCode, getMedListDetailsC } = require("../services/cpt_codes.service");
 
 /**
  * @param orderData jsonObject
@@ -42,14 +42,17 @@ eventEmitter.on("SubmitOrderToSalesForce", async (orderData) => {
         // get ordering physician npi details
         orderDetails.orderingPhysician = await npiService.getNpiDetails(orderDetails.medicalHistory.orderingProvider);
 
-        // get first cpt code details for subject
-        orderDetails.subject = orderDetails?.orderDetails?.cptCodes?.[0]?.description ? orderDetails.orderDetails.cptCodes[0].description : '';
+        // get First non-numeric CPT code description
+        orderDetails.subject = await getDescriptionOfNonNumericCptCode(orderDetails.orderDetails.cptCodes);
 
         // construct ca med list parameter
         orderDetails.ca_med_list_c = await getCaMedListC(orderDetails.orderDetails.cptCodes);
 
         // construct ca med list parameter
         orderDetails.all_j_codes_c = await getAllJCodes(orderDetails.orderDetails.cptCodes);
+
+        // construct ca med list parameter
+        orderDetails.med_list_details__c = await getMedListDetailsC(orderDetails.orderDetails.cptCodes);
 
         // call create order api
         const createCaseResponse = await salesforceService.createCase(

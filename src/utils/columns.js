@@ -1,6 +1,7 @@
 import {
   customizedStringFunc,
   formatPhoneNumberToUSFormat,
+  getRoleById,
 } from './commonFunctions';
 import dayjs from 'dayjs';
 import { DATE_FORMAT_STARTING_FROM_MONTH } from './constant.util';
@@ -11,45 +12,52 @@ export const TABLE_FOR_ORGANIZATION_MANAGEMENT = [
     title: 'ID #',
     dataIndex: 'id',
     key: 'id',
+    width: '110px',
     className: 'organization-table-id-cell-text-color',
   },
   {
     title: 'Organizations',
     dataIndex: 'name',
     key: 'name',
+    width: '120px',
+    className: 'org-table-common-cell-customization',
+  },
+  {
+    title: 'Type',
+    dataIndex: 'organizationType',
+    key: 'organizationType',
+    width: '120px',
     className: 'org-table-common-cell-customization',
   },
   {
     title: 'Email Id',
     dataIndex: 'email',
     key: 'email',
+    width: '210px',
     className: 'organization-table-email-column',
+    render: (text) => {
+      return (
+        <Tooltip title={text}>
+          <span>{customizedStringFunc(text, 20) || 'NA'}</span>
+        </Tooltip>
+      );
+    },
   },
   {
     title: 'Phone Number',
     dataIndex: 'phoneNumber',
     key: 'phoneNumber',
+    width: '150px',
     className: 'org-table-common-cell-customization',
     render: (text) => {
       return <span>{formatPhoneNumberToUSFormat(text)}</span>;
     },
   },
   {
-    title: 'Address',
-    dataIndex: 'address',
-    key: 'address',
-    className: 'org-address-cell-customization',
-  },
-  {
-    title: 'Domain',
-    dataIndex: 'domain',
-    key: 'domain',
-    className: 'org-table-common-cell-customization',
-  },
-  {
     title: 'Status',
     dataIndex: 'isActive',
     key: 'isActive',
+    width: '120px',
     render: (text) => (
       <span
         className={
@@ -62,6 +70,27 @@ export const TABLE_FOR_ORGANIZATION_MANAGEMENT = [
       </span>
     ),
   },
+  {
+    title: 'Domain',
+    width: '130px',
+    dataIndex: 'domain',
+    key: 'domain',
+    className: 'org-table-common-cell-customization',
+  },
+  {
+    title: 'Address',
+    dataIndex: 'address',
+    key: 'address',
+    width: '180px',
+    className: 'org-address-cell-customization',
+    render: (text) => {
+      return (
+        <Tooltip title={text}>
+          <span>{customizedStringFunc(text, 20) || 'NA'}</span>
+        </Tooltip>
+      );
+    },
+  },
 ];
 
 export const TABLE_FOR_USER_MANAGEMENT = [
@@ -69,30 +98,52 @@ export const TABLE_FOR_USER_MANAGEMENT = [
     title: 'ID #',
     dataIndex: 'id',
     key: 'id',
+    width: '100px',
     className: 'users-table-id-cell-text-color',
   },
   {
     title: 'First Name',
     dataIndex: 'firstName',
     key: 'firstName',
+    width: '120px',
     className: 'user-table-common-cell-customization',
   },
   {
     title: 'Last Name',
     dataIndex: 'lastName',
     key: 'lastName',
+    width: '120px',
     className: 'user-table-common-cell-customization',
+  },
+  {
+    title: 'Role',
+    dataIndex: 'roleId',
+    key: 'roleId',
+    width: '130px',
+    className: 'user-table-common-cell-customization',
+    render: (text) => {
+      return <span>{getRoleById(text)}</span>;
+    },
   },
   {
     title: 'Email Id',
     dataIndex: 'email',
     key: 'email',
+    width: '210px',
     className: 'users-table-email-column',
+    render: (text) => {
+      return (
+        <Tooltip title={text}>
+          <span>{customizedStringFunc(text, 20) || 'NA'}</span>
+        </Tooltip>
+      );
+    },
   },
   {
     title: 'Status',
     dataIndex: 'isActive',
     key: 'isActive',
+    width: '120px',
     render: (text) => (
       <span
         className={
@@ -110,12 +161,14 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'Order ID #',
     dataIndex: 'id',
     key: 'id',
+    width: '100px',
     className: 'order-table-id-cell-text-color',
   },
   {
     title: 'First Name',
     dataIndex: 'firstName',
     key: 'firstName',
+    width: '120px',
     className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return <span>{record?.patientDemography?.firstName}</span>;
@@ -125,6 +178,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'Last Name',
     dataIndex: 'lastName',
     key: 'lastName',
+    width: '120px',
     className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return <span>{record?.patientDemography?.lastName}</span>;
@@ -134,6 +188,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'Member ID',
     dataIndex: 'memberId',
     key: 'memberId',
+    width: '120px',
     className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return <span>{record?.patientDemography?.hsMemberID}</span>;
@@ -143,6 +198,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'Date of Visit',
     dataIndex: 'dateOfVisit',
     key: 'dateOfVisit',
+    width: '120px',
     className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return (
@@ -160,6 +216,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'Latest Updated Date',
     dataIndex: 'updatedAt',
     key: 'updatedAt',
+    width: '160px',
     className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return (
@@ -173,6 +230,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'Created By',
     dataIndex: 'userData',
     key: 'userData',
+    width: '130px',
     className: 'order-table-common-cell-customization',
     render: (data) => (
       <span>
@@ -184,6 +242,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'Order Types',
     dataIndex: 'orderTypeData',
     key: 'orderTypeData',
+    width: '130px',
     render: (orderTypeData) => (
       <span
         className={`order-mgt-table-order-type-${orderTypeData?.name
@@ -199,6 +258,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'Order Status',
     dataIndex: 'currentStatus',
     key: 'status',
+    width: '140px',
     render: (text) => (
       <span className={`order-mgt-table-status-${text}`}>{text}</span>
     ),
@@ -207,6 +267,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'TOI Response',
     dataIndex: 'toiResponse',
     key: 'toiResponse',
+    width: '120px',
     className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return <span>{record?.toiStatus || 'NA'}</span>;
@@ -217,6 +278,7 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     title: 'Comments',
     dataIndex: 'comments',
     key: 'comments',
+    width: '160px',
     className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return (

@@ -193,6 +193,12 @@ const listOrders = async ({
   filters,
   userData,
 }) => {
+  if((!filters?.orderTypes || filters?.orderTypes?.length < 1) &&
+    userData?.user?.role?.roleName === constantsUtil.AUTH_COORDINATOR
+  )
+    {
+      filters.orderTypes = [2,3]
+    }
   // Add logic to fetch paginated and sorted orders from the database
   const offset = (page - 1) * pageSize;
   const whereClause = {

@@ -1,7 +1,6 @@
 const formData = require('form-data');
 const Mailgun = require('mailgun.js');
 const mailgun = new Mailgun(formData);
-
 const { getOrderById } = require('../services/order.service');
 const { getHtmlForEmailTemplate } = require('../emailTemplates/order_created_template');
 const { createLog } = require('../services/audit_log.service');
@@ -12,6 +11,7 @@ const { detail } = require('../services/user.service');
 const { welcomeEmailHtml } = require('../emailTemplates/welcome_template');
 const { OFFICE_VISIT_ORDER_TYPE_ID, RADIATION_ORDER_TYPE_ID, OFFICE_VISIT_ORDER_TYPE, RADIATION_ORDER_TYPE } = require('../utils/constants.util');
 const moment = require('moment');
+
 const mg = mailgun.client({ username: 'api', key: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN });
 const fromEmail = process.env.MAILGUN_FROM_EMAIL;
 
@@ -35,6 +35,7 @@ const sendEmailForOrderTypes = async (orderDetails) => {
         orderData.orgName = orgName;
         orderData.dob = moment(orderData.patientDemography.dob).format('MM/DD/YYYY');
         orderData.dateOfVisit = orderData.medicalHistory.dateOfVisit ? moment(orderData.medicalHistory.dateOfVisit).format('MM/DD/YYYY') : '';
+        orderData.orderingProvider = orderData.medicalHistory?.orderingProviderData;
 
         // get email body for office visit and radiation order type
         const emailBodyHtml = await getHtmlForEmailTemplate(orderData);
@@ -78,18 +79,6 @@ const sendEmailForOrderTypes = async (orderDetails) => {
                 "SendUserRegistrationEmail"
             );
         }
-        // send email
-        // mg.messages.create(emailParameters, (error, body) => {
-        //     // log the error if any
-        //     if (error) {
-        //         createLog(emailParameters, 'Orders', 'SendEmailForOrderTypes', error, orderId);
-        //     }
-
-        //     // log the success message
-        //     if (body) {
-        //         createLog(emailParameters, 'Orders', 'SendEmailForOrderTypes', body, orderId);
-        //     }
-        // });
     } catch (error) {
         await createLog(orderDetails, 'Orders', 'SendEmailForOrderTypes', error, orderDetails.orderId);
         throw error;
@@ -117,10 +106,6 @@ const getTheAttachmentsForOrderType = async (orderData) => {
             const fileContent = await downloadImage(documentData.documentURL);
 
             // prepare attachment data
-            // attachmentData.push(new mg.Attachment({
-            //     filename: documentData.documentName,
-            //     data: fileContent.content
-            // }))
             attachmentData.push({
                 filename: documentData.documentName,
                 data: fileContent.content
@@ -140,7 +125,8 @@ const sendWelcomeEmail = async (userData) => {
         // welcome email html
         const userName = userData.firstName + ' ' + userData.lastName;
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-        const welcomeEmailHtmlContent = await welcomeEmailHtml(userName, baseUrl);
+        const email = userData.email;
+        const welcomeEmailHtmlContent = await welcomeEmailHtml({userName, baseUrl, email});
 
         // prepare the email parameters
         const emailParameters = {
@@ -150,18 +136,6 @@ const sendWelcomeEmail = async (userData) => {
             html: welcomeEmailHtmlContent
         };
 
-        // send email
-        // mg.messages().send(emailParameters, (error, body) => {
-        //     // log the error if any
-        //     if (error) {
-        //         createLog(emailParameters, 'Users', 'SendUserRegistrationEmail', error, userData.id);
-        //     }
-
-        //     // log the success message
-        //     if (body) {
-        //         createLog(emailParameters, 'Orders', 'SendEmailForOrderTypes', body, userData.id);
-        //     }
-        // });
         const sendMessageResponse = await mg.messages.create(process.env.MAILGUN_DOMAIN, emailParameters);
         if (sendMessageResponse?.status != 200) {
             await createLog(

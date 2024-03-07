@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import '../../styles/organizations/organizationFilter.css';
 import { Button, Col, Input, InputNumber, Row, Select } from 'antd';
-import { ORGANIZATION_STATUS_SELECT_OPTIONS } from '@/utils/options';
+import {
+  ORGANIZATION_STATUS_SELECT_OPTIONS,
+  ORGANIZATION_TYPE_SELECT_OPTIONS,
+} from '@/utils/options';
 import { useDispatch } from 'react-redux';
 import { getOrganizationsFunc } from '@/store/organizationSlice';
 import { CLEAR, CLOSE, TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
@@ -20,9 +23,10 @@ const OrganizationFilters = ({
   const [phoneNumber, setPhoneNumber] = useState('');
   const [domain, setDomain] = useState('');
   const [isActive, setIsActive] = useState(null);
+  const [organizationType, setOrganizationType] = useState(null);
 
   const handleFilterByEmail = (e) => {
-    const value = e.target.value;
+    const value = e?.target?.value;
     if (value?.trim() === '' || !value) {
       setEmail('');
       setFilterParams((prevFilterparams) => {
@@ -32,7 +36,7 @@ const OrganizationFilters = ({
 
       return;
     }
-    setEmail(e.target.value);
+    setEmail(e?.target?.value);
     setFilterParams((prevFilterparams) => ({
       ...prevFilterparams,
       email: e.target.value,
@@ -61,7 +65,7 @@ const OrganizationFilters = ({
   };
 
   const handleFilterByDomain = (e) => {
-    const value = e.target.value;
+    const value = e?.target?.value;
     if (value?.trim() === '' || !value) {
       setDomain('');
       setFilterParams((prevFilterparams) => {
@@ -70,10 +74,26 @@ const OrganizationFilters = ({
       });
       return;
     }
-    setDomain(e.target.value);
+    setDomain(e?.target?.value);
     setFilterParams((prevFilterparams) => ({
       ...prevFilterparams,
       domain: e.target.value,
+    }));
+  };
+
+  const handleFilterByOrganizationType = (value) => {
+    if (value === undefined || value === null) {
+      setOrganizationType(null);
+      setFilterParams((prevFilterparams) => {
+        const { organizationType, ...rest } = prevFilterparams;
+        return { ...rest };
+      });
+      return;
+    }
+    setOrganizationType(value);
+    setFilterParams((prevFilterparams) => ({
+      ...prevFilterparams,
+      organizationType: value,
     }));
   };
 
@@ -112,6 +132,7 @@ const OrganizationFilters = ({
     setEmail('');
     setPhoneNumber('');
     setDomain('');
+    setOrganizationType(null);
     setIsActive(null);
     setIsClearable(false);
     dispatch(
@@ -135,6 +156,7 @@ const OrganizationFilters = ({
       setEmail('');
       setPhoneNumber('');
       setDomain('');
+      setOrganizationType(null);
       setIsActive(null);
     }
   }, [filterParams]);
@@ -153,7 +175,7 @@ const OrganizationFilters = ({
       <Col className='each-filter-form-elem-single-at-org'>
         <label>Phone Number</label>
         <InputNumber
-          className='org-filter-number-input-elem hide-spinner'
+          className='global-input-number-full-width'
           size='large'
           value={phoneNumber}
           placeholder='Enter Phone Number'
@@ -172,6 +194,18 @@ const OrganizationFilters = ({
       </Col>
 
       <Col className='each-filter-form-elem-single-at-org'>
+        <label>Type</label>
+        <Select
+          size='large'
+          placeholder='Select Organization Type'
+          value={organizationType}
+          options={ORGANIZATION_TYPE_SELECT_OPTIONS}
+          onChange={handleFilterByOrganizationType}
+          allowClear
+        />
+      </Col>
+
+      <Col className='each-filter-form-elem-single-at-org'>
         <label>Status</label>
         <Select
           size='large'
@@ -186,7 +220,7 @@ const OrganizationFilters = ({
       <Row className='org-filter-btn-container'>
         <Button
           size='large'
-          className='close-filter-btn-drawer-at-org'
+          className='global-close-btn-style'
           onClick={isClearable ? handleClearFilters : handleClearFilters}
         >
           {isClearable ? CLEAR : CLOSE}
@@ -195,7 +229,7 @@ const OrganizationFilters = ({
         <Button
           size='large'
           disabled={!isClearable}
-          className='apply-filter-btn-at-org'
+          className='global-primary-btn-style'
           onClick={handleFilterFunc}
         >
           Apply

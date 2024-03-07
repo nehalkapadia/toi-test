@@ -11,6 +11,7 @@ import {
   Radio,
   Drawer,
   Skeleton,
+  Select,
 } from 'antd';
 import {
   FORM_NAME_VALUES,
@@ -33,6 +34,7 @@ import {
 } from '@/store/organizationSlice';
 import { formatPhoneNumberForInput } from '@/utils/commonFunctions';
 import CustomSpinner from '../CustomSpinner';
+import { ORGANIZATION_TYPE_SELECT_OPTIONS } from '@/utils/options';
 
 const { TextArea } = Input;
 
@@ -153,7 +155,7 @@ const AddOrganization = ({
         <Row className='cancel-and-add-btn-container-at-add-org'>
           <Button
             size='large'
-            className='org-mgt-add-btn-for-cancel'
+            className='global-cancel-btn-style'
             onClick={onClose}
           >
             Cancel
@@ -161,7 +163,7 @@ const AddOrganization = ({
 
           <Button
             size='large'
-            className='org-mgt-add-btn-for-creating-org'
+            className='global-primary-btn-style'
             onClick={handleSubmitFormData}
             disabled={!submittable}
           >
@@ -190,8 +192,10 @@ const AddOrganization = ({
                 md={{ span: 12 }}
                 lg={{ span: 12 }}
               >
-                <label className='edit-org-label-tag'>Organization</label>
-                <h3 className='edit-org-heading-tag'>{getOrgDetails?.name}</h3>
+                <label>
+                  <span className='lable-asterick'>*</span> Organization Name
+                </label>
+                <h3 className='heading-inside-form-element'>{getOrgDetails?.name}</h3>
               </Col>
             ) : (
               <Col
@@ -217,6 +221,28 @@ const AddOrganization = ({
               lg={{ span: 12 }}
             >
               <Form.Item
+                name={FORM_NAME_VALUES.organizationType}
+                label={ORG_LABEL.organizationType}
+                rules={ORGANIZATION_FORM_FIELD_RULES.organizationType}
+              >
+                <Select
+                  size='large'
+                  placeholder='Select Organization Type'
+                  options={ORGANIZATION_TYPE_SELECT_OPTIONS}
+                  disabled={isEditClicked}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row span={24} gutter={24}>
+            <Col
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 12 }}
+              lg={{ span: 12 }}
+            >
+              <Form.Item
                 name={FORM_NAME_VALUES.email}
                 label={ORG_LABEL.email}
                 rules={ORGANIZATION_FORM_FIELD_RULES.org_email}
@@ -225,6 +251,28 @@ const AddOrganization = ({
                   size='large'
                   type='email'
                   placeholder='example@domain.com'
+                />
+              </Form.Item>
+            </Col>
+
+            <Col
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 12 }}
+              lg={{ span: 12 }}
+            >
+              <Form.Item
+                name={FORM_NAME_VALUES.number}
+                label={ORG_LABEL.number}
+                rules={ORGANIZATION_FORM_FIELD_RULES.number}
+              >
+                <InputNumber
+                  size='large'
+                  className='global-input-number-full-width'
+                  placeholder='Please Enter Phone Number'
+                  formatter={(value) => formatPhoneNumberForInput(value)}
+                  parser={(value) => value.replace(/\D/g, '')}
+                  maxLength={14}
                 />
               </Form.Item>
             </Col>
@@ -243,28 +291,6 @@ const AddOrganization = ({
                 rules={ORGANIZATION_FORM_FIELD_RULES.domain}
               >
                 <Input size='large' placeholder='Please Enter Domain Name' />
-              </Form.Item>
-            </Col>
-
-            <Col
-              xs={{ span: 24 }}
-              sm={{ span: 12 }}
-              md={{ span: 12 }}
-              lg={{ span: 12 }}
-            >
-              <Form.Item
-                name={FORM_NAME_VALUES.number}
-                label={ORG_LABEL.number}
-                rules={ORGANIZATION_FORM_FIELD_RULES.number}
-              >
-                <InputNumber
-                  size='large'
-                  className='add-org-number-input hide-spinner'
-                  placeholder='Please Enter Phone Number'
-                  formatter={(value) => formatPhoneNumberForInput(value)}
-                  parser={(value) => value.replace(/\D/g, '')}
-                  maxLength={14}
-                />
               </Form.Item>
             </Col>
           </Row>

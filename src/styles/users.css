@@ -10,26 +10,22 @@
   align-items: center;
 }
 
+.user-mgt-org-type-display {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 22px;
+  letter-spacing: 0.5px;
+  margin: 6px 0 0 12px;
+  text-transform: capitalize;
+  color: #34657f;
+}
+
 .user-heading-text-customization {
   font-size: 1.5rem;
   font-weight: 500;
   line-height: 32px;
   letter-spacing: 0.5px;
   margin: 0;
-}
-
-.new-user-add-btn {
-  display: flex;
-  align-items: center;
-  background-color: #34657f;
-  color: #fff;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  line-height: 20px;
-}
-
-.new-user-add-btn:hover {
-  color: #fff !important;
 }
 
 .users-child-container-second {
@@ -46,21 +42,6 @@
 .user-mgt-select-for-organization {
   min-width: 310px;
   margin-top: 6px;
-}
-
-.user-mgt-filter-btn {
-  display: flex;
-  align-items: center;
-  color: #667085;
-  letter-spacing: 0.5px;
-  align-self: flex-end;
-}
-
-.user-mgt-filter-icon {
-  width: 15px;
-  height: 15px;
-  color: #667085;
-  margin-top: -4px;
 }
 
 .user-mgt-tag-for-status {

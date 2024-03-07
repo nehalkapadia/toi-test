@@ -12,6 +12,9 @@ import {
 
 export const ADMIN_ROLE_NUMBER_VALUE = 1;
 export const USER_ROLE_NUMBER_VALUE = 2;
+export const CO_ORDINATOR_ROLE_NUMBER_VALUE = 3;
+export const ORDERING_PROVIDER_ROLE_NUMBER_VALUE = 4;
+export const ORDER_MANAGEMENT_ACCESS_ROLES_ARRAY = [2, 3];
 
 export const FORM_NAME_VALUES = {
   domain: 'domain',
@@ -23,6 +26,9 @@ export const FORM_NAME_VALUES = {
   first_name: 'firstName',
   last_name: 'lastName',
   roleId: 'roleId',
+  organizationType: 'organizationType',
+  organization_Name: 'organizationName',
+  orderingProvider: 'orderingProvider',
 };
 
 export const ORGANIZATION_FORM_FIELD_RULES = {
@@ -43,6 +49,9 @@ export const ORGANIZATION_FORM_FIELD_RULES = {
     { required: true, message: 'Please Add Phone Number' },
     { validator: validatePhoneNumber },
   ],
+  organizationType: [
+    { required: true, message: 'Organization Type is Required' },
+  ],
 };
 
 export const API_RESPONSE_MESSAGES = {
@@ -54,19 +63,20 @@ export const API_RESPONSE_MESSAGES = {
   user_updated: 'User Updated Successfully',
 };
 
-export const TOTAL_ITEMS_PER_PAGE = 5;
+export const TOTAL_ITEMS_PER_PAGE = 20;
 export const ORG_COLUMN_FOR_USER_MGT = {
   title: 'Organization',
   dataIndex: 'name',
   key: 'name',
 };
-export const ROLE_COLUMN_FOR_USER_MGT = {
-  title: 'Role',
-  dataIndex: 'role',
-  key: 'role',
-};
 
 export const USER_FORM_FIELD_RULES = {
+  organization_Name: [
+    { required: true, message: 'Organization Name is Required' },
+  ],
+  orderingProvider: [
+    { required: true, message: 'Ordering Provider is Required' },
+  ],
   first_name: [
     { required: true, message: 'First Name is Required' },
     { validator: ValidateUserName },
@@ -79,7 +89,7 @@ export const USER_FORM_FIELD_RULES = {
     { required: true, message: 'Email is Required' },
     { validator: validateAnEmail },
   ],
-  user_role: [{ required: false, message: 'Role is Required' }],
+  user_role: [{ required: true, message: 'Role is Required' }],
 };
 
 export const CREATE_ORDER_FORM_KEY_NAMES = {
@@ -160,7 +170,7 @@ export const CREATE_ORDER_FORM_FIELD_RULES = {
     { required: false, message: 'Ordering Provider is Required' },
   ],
   referringProvider: [
-    { required: true, message: 'Referring Provider is Required' },
+    { required: false, message: 'Referring Provider is Required' },
   ],
   referringProviderOptional: [
     { required: false, message: 'Referring Provider is Required' },
@@ -258,6 +268,7 @@ export const ORG_LABEL = {
   number: 'Phone Number',
   email: 'Email ID',
   address: 'Address',
+  organizationType: 'Organization Type',
 };
 
 export const ORG_MESSAGES = {
@@ -367,8 +378,8 @@ export const MEDICAL_HISTORY_FIELDS_ONLY = {
     'dateOfVisit',
     'chemotherapyOrdered',
   ],
-  'Office Visit': ['diagnosis', 'dateOfVisit'],
-  Radiation: ['diagnosis', 'dateOfVisit'],
+  'Office Visit': ['diagnosis', 'dateOfVisit', 'orderingProvider'],
+  Radiation: ['diagnosis', 'dateOfVisit', 'orderingProvider'],
 };
 
 export const MEDICAL_RECORD__FIELDS_ONLY = {
@@ -534,3 +545,5 @@ export const MEDICAL_HISTORY_PROVIDER_TYPES = {
 };
 export const WELCOME_TO_TOI = 'The Oncology Institute of Hope & Innovation';
 export const PHYSICIAN_PORTAL = 'Physician Portal';
+export const ORGANIZATION_TYPE_SUBMITTER = 'submitter';
+export const ORGANIZATION_TYPE_REVIEWER = 'reviewer';

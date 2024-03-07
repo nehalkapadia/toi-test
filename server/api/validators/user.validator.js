@@ -22,4 +22,16 @@ exports.createUserSchema = {
     notEmpty: true,
     errorMessage: constants.cantBeEmpty("Organization Id"),
   },
+  orderingProvider: {
+    custom: {
+      options: (value, { req }) => {
+        // Check if roleId is 4 (Ordering Provider)
+        if (req.body.roleId === constants.ORDERING_PROVIDER_ROLE_ID) {
+          return value !== undefined && value !== null && value !== ''; // Validate if orderProvider is not empty
+        }
+        return true;
+      },
+      errorMessage: constants.ORDER_PROVIDER_REQUIRED_FOR_ORDERING_PROVIDER_ROLE,
+    },
+  },
 };

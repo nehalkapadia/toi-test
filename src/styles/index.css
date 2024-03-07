@@ -67,15 +67,27 @@ html body {
   padding: 0;
 }
 
+.universal-layout-header-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  margin: auto !important;
+}
+
 .layout-header-left-side-container {
   display: flex;
-  align-items: center;
-  padding: 0px 10px;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .btn-for-collapsed-or-shrink {
-  min-height: 54px;
-  min-width: 54px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50px;
+  min-width: 50px;
 }
 
 .icon-at-header-bar {
@@ -89,16 +101,13 @@ html body {
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: flex-end;
-  align-items: flex-start;
 }
 
 .layout-header-notification-icon {
   font-size: 21px;
   cursor: pointer;
-}
-
-.divider-at-header-bar {
-  height: 100%;
+  padding-right: 10px;
+  border-right: 1px solid #ddd;
 }
 
 .user-profile-icon-at-header {
@@ -117,24 +126,30 @@ html body {
 }
 
 .dropdown-for-profile-view-details {
+  padding: 0 !important;
   line-height: 21px;
-  margin-right: 20px;
 }
 
 .profile-details-at-header-bar {
   display: flex;
-  align-items: center;
+  flex-direction: row;
+  gap: 12px;
   cursor: pointer;
-  margin-top: 10px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
 .profile-details-container-header {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  padding: 0 !important;
 }
 
 .customized-zero-margin-for-p-tag {
   margin: 0;
+  padding: 0;
 }
 
 .universal-layout-content-container {
@@ -169,6 +184,63 @@ html body {
   align-items: center;
 }
 
+/* All Common CSS across the Application */
+.global-primary-btn-style {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  background-color: #34657f;
+  font-weight: 600;
+  font-size: 14px !important;
+  letter-spacing: 0.5px;
+  line-height: 20px;
+}
+
+.global-primary-btn-style:hover {
+  color: #fff !important;
+  border: 1px solid #34657f !important;
+}
+
+.global-secondary-btn-style {
+  display: flex;
+  align-items: center;
+  color: #667085;
+  font-size: 14px !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  line-height: 20px;
+}
+
+.global-cancel-btn-style {
+  border: 1px solid #f04438;
+  color: #f04438;
+  font-weight: 600;
+  font-size: 14px !important;
+  letter-spacing: 0.5px;
+  line-height: 20px;
+}
+
+.global-cancel-btn-style:hover {
+  color: #f04438 !important;
+  border: 1px solid #f04438 !important;
+}
+
+.global-close-btn-style {
+  font-weight: 600;
+  font-size: 14px !important;
+  line-height: 20px;
+  color: #344054;
+}
+
+.global-close-btn-style:hover {
+  color: #344054 !important;
+}
+
+.global-input-number-full-width {
+  width: 100%;
+}
+/* Common CSS Across the Application End Here */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 6px;
@@ -200,11 +272,9 @@ html body {
 }
 
 /* Input Number Component CSS Override */
-:where(.css-dev-only-do-not-override-zcfrx9).ant-input-number:hover
-  .ant-input-number-handler-wrap,
-:where(.css-dev-only-do-not-override-zcfrx9).ant-input-number-focused
-  .ant-input-number-handler-wrap {
-  display: none;
+.ant-input-number-handler-wrap,
+.ant-input-number-handler {
+  display: none !important;
 }
 
 /* Link Component CSS Override */
@@ -348,10 +418,6 @@ a:hover {
   color: #34657f;
 }
 
-.hide-spinner .ant-input-number-handler-wrap {
-  display: none;
-}
-
 .title-color {
   color: #34657f !important;
 }
@@ -396,6 +462,20 @@ a:hover {
   font-size: 10px !important;
   text-align: center !important;
   background-color: #34657f !important;
+}
+
+/* Organization and User management Page common CSS */
+.lable-asterick {
+  color: #ff4d4f;
+  font-size: 16px;
+}
+
+.heading-inside-form-element {
+  margin: 0 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: capitalize;
 }
 
 @media only screen and (min-width: 300px) and (max-width: 649px) {

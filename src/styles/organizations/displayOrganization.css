@@ -43,13 +43,3 @@
   justify-content: flex-end;
   padding-top: 7px;
 }
-
-.view-org-close-btn {
-  font-weight: 600;
-  font-size: 14px;
-  color: #344054;
-}
-
-.view-org-close-btn:hover {
-  color: #344054 !important;
-}

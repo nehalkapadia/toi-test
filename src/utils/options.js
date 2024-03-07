@@ -1,3 +1,8 @@
+import {
+  ORGANIZATION_TYPE_REVIEWER,
+  ORGANIZATION_TYPE_SUBMITTER,
+} from './constant.util';
+
 export const ORGANIZATION_STATUS_SELECT_OPTIONS = [
   {
     value: true,
@@ -9,16 +14,88 @@ export const ORGANIZATION_STATUS_SELECT_OPTIONS = [
   },
 ];
 
-export const ROLES_SELECT_OPTIONS_FOR_USER_ADD = [
+export const ORGANIZATION_TYPE_SELECT_OPTIONS = [
+  {
+    value: 'submitter',
+    label: 'Submitter',
+  },
+  {
+    value: 'reviewer',
+    label: 'Reviewer',
+  },
+];
+
+export const TOI_ORGANIZATION_WITH_TYPE_REVIEWER_OPTIONS = [
   {
     value: 1,
     label: 'Admin',
   },
   {
+    value: 3,
+    label: 'Auth Co-Ordinator',
+  },
+];
+
+export const ORGANIZATION_WITH_TYPE_SUBMITTER_OPTIONS = [
+  {
     value: 2,
     label: 'Member',
   },
+  {
+    value: 4,
+    label: 'Ordering Provider',
+  },
 ];
+
+export const getRoleOptionsAtAddUser = ({ type, name }) => {
+  switch (type?.toLowerCase()) {
+    case ORGANIZATION_TYPE_REVIEWER:
+      if (name?.toLowerCase() === 'toi') {
+        return TOI_ORGANIZATION_WITH_TYPE_REVIEWER_OPTIONS;
+      } else {
+        return [
+          {
+            value: 3,
+            label: 'Auth Co-Ordinator',
+          },
+        ];
+      }
+    case ORGANIZATION_TYPE_SUBMITTER:
+      return ORGANIZATION_WITH_TYPE_SUBMITTER_OPTIONS;
+    default:
+      return [];
+  }
+};
+
+export const getRoleOptionsAtFilterUser = ({ type }) => {
+  switch (type?.toLowerCase()) {
+    case ORGANIZATION_TYPE_REVIEWER:
+      return [
+        {
+          value: 1,
+          label: 'Admin',
+        },
+        {
+          value: 3,
+          label: 'Auth Co-Ordinator',
+        },
+      ];
+
+    case ORGANIZATION_TYPE_SUBMITTER:
+      return [
+        {
+          value: 2,
+          label: 'Member',
+        },
+        {
+          value: 4,
+          label: 'Ordering Provider',
+        },
+      ];
+    default:
+      return [];
+  }
+};
 
 export const DEFAULT_SELECT_VALUES_FOR_ORDER_MGT = [
   { value: 'all', label: 'All' },
@@ -143,9 +220,7 @@ export const patientDocsCategoryForOfficeVisit = (referralCategory) => {
   return patDocsCate;
 };
 
-export const patientDocsCategoryForRadiation = (
-  mdNotesCategory
-) => {
+export const patientDocsCategoryForRadiation = (mdNotesCategory) => {
   const patDocsCategory = [
     {
       value: 'md notes',

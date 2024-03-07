@@ -92,13 +92,15 @@ const ProviderDetailsModal = (props) => {
                   key={'cancelBtn'}
                   size='large'
                   onClick={() => handleCancelOfModal(providerType)}
+                  className='global-cancel-btn-style'
                 >
                   Cancel
                 </Button>,
+
                 <Button
                   key={'verifyBtn'}
                   size='large'
-                  className='co-tab-2-modal-validate-btn'
+                  className='global-primary-btn-style'
                   onClick={() => handleConfirmOfModal(providerType)}
                 >
                   Verify

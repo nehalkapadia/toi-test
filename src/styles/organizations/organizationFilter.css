@@ -10,37 +10,10 @@
   gap: 4px;
 }
 
-.org-filter-number-input-elem {
-  width: 100%;
-}
-
 .org-filter-btn-container {
   position: absolute;
   width: calc(100% - 48px);
   bottom: 0;
   justify-content: space-between;
   margin-bottom: 20px;
-}
-
-.close-filter-btn-drawer-at-org {
-  font-size: 14px !important;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.close-filter-btn-drawer-at-org:hover {
-  color: #344054 !important;
-}
-
-.apply-filter-btn-at-org {
-  background-color: #34657f;
-  color: #fff;
-  font-size: 14px !important;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.apply-filter-btn-at-org:hover {
-  color: #fff !important;
-  border: 1px solid #34657f !important;
 }

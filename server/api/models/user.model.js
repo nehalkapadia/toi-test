@@ -3,6 +3,8 @@
 module.exports = (sequelize, Sequelize) => {
   const Role = require('./roles.model')(sequelize, Sequelize);
   const Organization = require('./organization.model')(sequelize, Sequelize);
+  const NPI = require('./npi.model')(sequelize, Sequelize);
+
   const User = sequelize.define(
     'User',
     {
@@ -47,6 +49,10 @@ module.exports = (sequelize, Sequelize) => {
       loginActivity: {
         type: Sequelize.STRING,
       },
+      orderingProvider: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       createdBy: {
         type: Sequelize.INTEGER,
         defaultValue: 0,
@@ -77,5 +83,11 @@ module.exports = (sequelize, Sequelize) => {
     foreignKey: 'updatedBy',
     as: 'updateBy',
   });
+
+  User.belongsTo(NPI, {
+    foreignKey: 'orderingProvider',
+    targetKey: 'npiNumber',
+    as: 'orderingProviderData'
+  })
   return User;
 };

@@ -18,22 +18,6 @@
   letter-spacing: 0.5px;
 }
 
-.create-order-btn {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-  font-weight: 600;
-  background-color: #396571;
-  justify-content: center;
-  letter-spacing: 0.5px;
-  color: #fff;
-}
-
-.create-order-btn:hover {
-  border: 1px solid #34657f !important;
-  color: #fff !important;
-}
-
 .order-mgt-second-child-container {
   justify-content: space-between;
   align-items: center;
@@ -53,19 +37,6 @@
   align-items: center;
   color: #667085;
   letter-spacing: 0.5px;
-}
-
-.order-mgt-drawer-close-btn {
-  border: 1px solid #f04438;
-  color: #f04438;
-  font-weight: 600;
-  font-size: 14px !important;
-  letter-spacing: 0.5px;
-}
-
-.order-mgt-drawer-close-btn {
-  color: #f04438 !important;
-  border: 1px solid #f04438 !important;
 }
 
 .order-mgt-drawer-footer {

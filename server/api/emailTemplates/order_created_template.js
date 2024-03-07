@@ -457,6 +457,8 @@ const getHtmlForEmailTemplate = async (orderData) => {
                                                            <td align="left" >
                                                               <p class="f-fallback sub"><b>Diagnosis</b>: ${orderData.medicalHistory.diagnosis ? orderData.medicalHistory.diagnosis : 'NA'}</p>
                                                               <p class="f-fallback sub"><b>Date Of Visit</b>: ${orderData.dateOfVisit ? orderData.dateOfVisit : 'NA'}</p>
+                                                              <p class="f-fallback sub"><b>Ordering Provider NPI</b>: ${orderData?.orderingProvider?.npiNumber ? orderData?.orderingProvider?.npiNumber : 'NA'}</p>
+                                                              <p class="f-fallback sub"><b>Ordering Provider Name</b>: ${orderData.orderingProvider?.first_name ? orderData?.orderingProvider?.first_name + ' ' + orderData?.orderingProvider?.last_name : 'NA'}</p>
                                                            </td>
                                                         </tr>
                                                      </table>

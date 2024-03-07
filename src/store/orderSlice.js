@@ -1261,8 +1261,8 @@ const orderSlice = createSlice({
         return {
           ...state,
           cptCodeOptionsArr: payload?.data?.map((elem) => ({
-            value: elem?.id,
-            label: elem?.CPTCode,
+            value: `${elem?.id}`,
+            label: `${elem?.CPTCode} - ${elem?.Description}`,
             cptCode: elem?.CPTCode,
             description: elem?.Description,
           })),

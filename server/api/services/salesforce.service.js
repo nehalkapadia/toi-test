@@ -72,6 +72,7 @@ const createCase = async (token, instanceUrl, orderData) => {
         "CA_Status__c": DEFAULT_STATUS,
         "External_Order__c": true,
         "J_Codes__c": orderData.all_j_codes_c,
+        "Med_List_Details__c": orderData.med_list_details__c,
     }
     try {
         // call the create order api

@@ -31,4 +31,5 @@ module.exports = {
     APPROVED_STATUS: 'Approved - Response received from payers (Check attachments)',
     DENIED_STATUS: 'Denied - Response received from payers (Check attachments)',
     DEFAULT_STATUS: 'Pending Assignment',
+    NOT_MAPPED_STATUS: 'Pending UM Review (Not Managed)',
 }

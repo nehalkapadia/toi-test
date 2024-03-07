@@ -17,8 +17,8 @@ import {
 import {
   CREATE,
   EDIT,
+  ORDER_MANAGEMENT_ACCESS_ROLES_ARRAY,
   ORDER_TYPES_ARRAY,
-  USER_ROLE_NUMBER_VALUE,
 } from '@/utils/constant.util';
 
 const CreateOrder = () => {
@@ -75,7 +75,7 @@ const CreateOrder = () => {
   return (
     <>
       {isAuth &&
-        userRole == USER_ROLE_NUMBER_VALUE &&
+        ORDER_MANAGEMENT_ACCESS_ROLES_ARRAY?.includes(Number(userRole)) &&
         ORDER_TYPES_ARRAY?.includes(type) && (
           <div className='create-order-parent-component'>
             <Row className='create-order-heading-container'>
@@ -99,7 +99,7 @@ const CreateOrder = () => {
               />
             </Row>
             <div className='all-tabs-parent-container-at-co'>
-              <div className='all-tabs-form-container-at-create-order'>
+              <div>
                 {selectedTab === 'patientDemographics' && (
                   <PatientDemographics />
                 )}

@@ -15,8 +15,9 @@ const orderTypeService = require('../services/order_types.service');
  */
 exports.listOrderTypes = async (req, res) => {
   try {   
+    const userData = req.userData
     // Fetch the list of order types
-    const orderTypeList = await orderTypeService.list();
+    const orderTypeList = await orderTypeService.list({ userData });
 
     // Return the list as JSON response
     return res.status(constants.SUCCESS).json(successResponse(constants.message('Order Type', 'List fetched'), orderTypeList));

@@ -131,6 +131,12 @@ const OrderDetails = () => {
   const [cptCodeSelectOptions, setCptCodeSelectOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const renderOption = (option) => (
+    <Tooltip title={option.label} key={option.value}>
+      {option.label}
+    </Tooltip>
+  );
+
   const checkForDuplicationInCptCode = (value) => {
     const isDuplicateCptCode = cptCodeInternalDataArray?.some(
       (elem) => elem?.id === value
@@ -446,6 +452,7 @@ const OrderDetails = () => {
                   MAX_CPT_CODE_TO_BE_UPLOADED
                 }
                 dropdownStyle={{ maxHeight: 300, overflow: 'auto' }}
+                optionRender={renderOption}
               />
             </Form.Item>
 
@@ -632,8 +639,8 @@ const OrderDetails = () => {
             pagination={false}
             isDeleteable={true}
             onDelete={handleEditOfTheCptCode}
-            pageSize={25}
-            scroll={{ y: 300 }}
+            pageSize={MAX_CPT_CODE_TO_BE_UPLOADED}
+            // scroll={{ y: 300 }}
           />
         </Col>
       )}

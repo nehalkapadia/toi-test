@@ -40,14 +40,3 @@
 .close-btn-container-at-user-view {
   justify-content: flex-end;
 }
-
-.user-mgt-close-btn-at-user-view {
-  font-weight: 600;
-  font-size: 14px !important;
-  letter-spacing: 0.5px;
-  color: #344054;
-}
-
-.user-mgt-close-btn-at-user-view:hover {
-  color: #344054 !important;
-}

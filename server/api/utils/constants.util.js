@@ -178,4 +178,13 @@ module.exports = {
   SALESFORCE_RECORD_TYPE_ID: '0124T000000cZcbQAE',
   SALESFORCE_NEXT_CYCLE_NUMBER: 'x11 Cycle',
   SALESFORCE_CHEMO_AUTH_TYPE_C: 'Cycle 1',
+  ORGANIZATION_TYPE_SUBMITTER: 'submitter',
+  ORGANIZATION_TYPE_REVIEWER: 'reviewer',
+  AUTH_COORDINATOR: 'Auth Co-Ordinator',
+  ORDERING_PROVIDER: 'Ordering Provider',
+  ORDER_PROVIDER_REQUIRED_FOR_ORDERING_PROVIDER_ROLE: 'Order Provider is required for the role Ordering Provider',
+  ORDERING_PROVIDER_ROLE_ID: 4,
+  ORDER_PROVIDER_ALREADY_ASSOCIATED: (organizationName) => `Ordering Provider is already associated with ${organizationName} organization.`,
+  ORDER_PROVIDER_EXISTS_IN_SAME_ORGANIZATION: "Ordering Provider already exists in the same organization.",
+  ORDER_PROVIDER_EXIST_WITH_ANOTHER_USER: "This ordering provider is exist with some other user.", 
 };

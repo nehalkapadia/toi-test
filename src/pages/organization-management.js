@@ -18,6 +18,7 @@ import {
   ADMIN_ROLE_NUMBER_VALUE,
   TOTAL_ITEMS_PER_PAGE,
 } from '@/utils/constant.util';
+import { FiRefreshCcw } from 'react-icons/fi';
 
 const OrganizationManagement = () => {
   const dispatch = useDispatch();
@@ -96,6 +97,10 @@ const OrganizationManagement = () => {
     }
   };
 
+  const handleRefreshBtn = () => {
+    getOrganizationsData(page, filterParams, searchedValue);
+  };
+
   useEffect(() => {
     getOrganizationsData(page, filterParams, searchedValue);
   }, [searchedValue, page]);
@@ -114,7 +119,7 @@ const OrganizationManagement = () => {
             </h3>
             <Button
               size='large'
-              className='om-add-organization-btn'
+              className='global-primary-btn-style'
               icon={<FaPlus />}
               onClick={handleAddAndEditOrganizationDrawer}
             >
@@ -134,14 +139,28 @@ const OrganizationManagement = () => {
               />
             </Col>
 
-            <Button
-              className='org-mgt-filter-btn'
-              size='large'
-              icon={<LuSlidersHorizontal className='org-mgt-filter-icon' />}
-              onClick={handleFilterDrawer}
-            >
-              Filters
-            </Button>
+            <Row gutter={8}>
+              <Col>
+                <Button
+                  className='global-secondary-btn-style'
+                  size='large'
+                  icon={<LuSlidersHorizontal className='org-mgt-filter-icon' />}
+                  onClick={handleFilterDrawer}
+                >
+                  Filters
+                </Button>
+              </Col>
+              <Col>
+                <Button
+                  size='large'
+                  icon={<FiRefreshCcw />}
+                  className='global-primary-btn-style'
+                  onClick={handleRefreshBtn}
+                >
+                  Refresh
+                </Button>
+              </Col>
+            </Row>
           </Row>
 
           <Row>
@@ -162,6 +181,7 @@ const OrganizationManagement = () => {
                 pageSize={TOTAL_ITEMS_PER_PAGE}
                 total={totalCount}
                 onPageChange={(page) => setPage(page)}
+                scroll={{x: 800 ,y: 300}}
               />
             )}
           </Row>

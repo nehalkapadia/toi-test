@@ -18,20 +18,6 @@
   margin: 0;
 }
 
-.om-add-organization-btn {
-  display: flex;
-  align-items: center;
-  background-color: #34657f;
-  color: #fff;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  line-height: 20px;
-}
-
-.om-add-organization-btn:hover {
-  color: #fff !important;
-}
-
 .om-child-container-second {
   justify-content: space-between;
   gap: 16px;
@@ -46,20 +32,6 @@
 
 .om-search-bar-for-organizations {
   min-width: 310px;
-}
-
-.org-mgt-filter-btn {
-  display: flex;
-  align-items: center;
-  color: #667085;
-  letter-spacing: 0.5px;
-}
-
-.org-mgt-filter-icon {
-  width: 15px;
-  height: 15px;
-  color: #667085;
-  margin-top: -4px;
 }
 
 /* Table Column CSS */

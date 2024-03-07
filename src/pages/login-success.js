@@ -1,6 +1,10 @@
 import CustomSpinner from '@/components/CustomSpinner';
 import { loginSuccess } from '@/store/authSlice';
-import { LOGGED_IN_SUCCESSFULLY_MESSAGE } from '@/utils/constant.util';
+import {
+  ADMIN_ROLE_NUMBER_VALUE,
+  LOGGED_IN_SUCCESSFULLY_MESSAGE,
+  ORDER_MANAGEMENT_ACCESS_ROLES_ARRAY,
+} from '@/utils/constant.util';
 import { message } from 'antd';
 import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
@@ -18,20 +22,20 @@ const LoginSuccess = () => {
         localStorage.setItem('userToken', token);
         localStorage.setItem('userRole', role);
         dispatch(loginSuccess({ token, role }));
-        if (role == 1) {
+        if (role == ADMIN_ROLE_NUMBER_VALUE) {
           router.push('/organization-management');
           message.success({
             content: LOGGED_IN_SUCCESSFULLY_MESSAGE,
             duration: 3,
-            key: 'loginSuccessAdmin'
+            key: 'loginSuccessAdmin',
           });
           return;
-        } else if (role == 2) {
+        } else if (ORDER_MANAGEMENT_ACCESS_ROLES_ARRAY?.includes(Number(role))) {
           router.push('/order-management');
           message.success({
             content: LOGGED_IN_SUCCESSFULLY_MESSAGE,
             duration: 3,
-            key: 'loginSuccessMember'
+            key: 'loginSuccessMember',
           });
           return;
         }

@@ -7,7 +7,7 @@ const eventEmitter = require('../handlers/event_emitter');
 const orderStatusHistoryService = require('../services/order_status_history.service');
 const patDocumentService = require('../services/pat_document.service');
 const orderAuthDocumentService = require('../services/order_auth_document.service');
-const { APPROVED_STATUS, DENIED_STATUS } = require('../utils/order_status_mapping.util');
+const { APPROVED_STATUS, DENIED_STATUS, NOT_MAPPED_STATUS } = require('../utils/order_status_mapping.util');
 
 /**
  * Controller function to create a new order.
@@ -491,10 +491,11 @@ exports.updateOrderStatus = async (req, res) => {
         );
 
     }
+    internalStatus = typeof internalStatus != 'undefined' ? internalStatus : NOT_MAPPED_STATUS;
 
     // update order Data with params to insert in order status history table
     orderData.externalStatus = externalStatus;
-    orderData.internalStatus = internalStatus ? internalStatus : '';
+    orderData.internalStatus = internalStatus;
     orderData.comment = req.body.comment ? req.body.comment : '';
 
     // get the insert data for order status history

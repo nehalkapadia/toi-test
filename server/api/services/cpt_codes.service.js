@@ -20,6 +20,11 @@ exports.searchCPTCodeByPartialCPTCode = async (searchText) => {
               [Op.like]: `%${searchText}%`,
             },
           },
+          {
+            Description: {
+              [Op.like]: `%${searchText}%`,
+            },
+          },
         ],
       },
     });
@@ -39,15 +44,12 @@ exports.getCaMedListC = async (cptCodes) => {
 
   let caMedListC = [];
   let description;
-  let dose;
-  let frequency;
   if (cptCodes.length > 0) {
     for (let cptCode of cptCodes) {
-      description = typeof cptCode.description != 'undefined' ? cptCode.description : '';
-      dose = typeof cptCode.dose != 'undefined' ? cptCode.dose : '';
-      frequency = typeof cptCode.frequency != 'undefined' ? cptCode.frequency : '';
-
-      caMedListC.push(description + ', ' + dose + ', ' + frequency);
+      if(isNaN(cptCode.cptCode)) {
+        description = typeof cptCode.description != 'undefined' ? cptCode.description : '';
+        caMedListC.push(description);
+      }
     }
   }
 
@@ -69,4 +71,43 @@ exports.getAllJCodes = async (cptCodes) => {
   }
 
   return jCodes.join(', ');
+}
+
+/**
+ * 
+ * @param {JSON} cptCodes 
+ * @returns 
+ */
+exports.getDescriptionOfNonNumericCptCode = async (cptCodes) => {
+  for (const element of cptCodes) {
+      if (isNaN(element.cptCode)) {
+          return element.description;
+      }
+  }
+  return null; // Return null if no non-numeric cptCode is found
+}
+
+/**
+ * 
+ * @param {Array} cptCodes 
+ * @returns {String} 
+ */
+exports.getMedListDetailsC = async (cptCodes) => {
+
+  let caMedListC = [];
+  let description, frequency, cycle, dose, route;
+  
+  if (cptCodes.length > 0) {
+    for (let cptCode of cptCodes) {
+      description = typeof cptCode.description != 'undefined' ? cptCode.description : '';
+      frequency = typeof cptCode.frequency != 'undefined' ? cptCode.frequency : '';
+      cycle = typeof cptCode.cycle != 'undefined' ? cptCode.cycle : '';
+      dose = typeof cptCode.dose != 'undefined' ? cptCode.dose : '';
+      route = typeof cptCode.route != 'undefined' ? cptCode.route : '';
+
+      caMedListC.push(description + "," + dose + "," + route + "," + frequency + "," + cycle);
+    }
+  }
+
+  return caMedListC.join('; ');
 }

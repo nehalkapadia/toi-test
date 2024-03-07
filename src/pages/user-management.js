@@ -15,9 +15,11 @@ import { capitalizeWords } from '@/utils/commonFunctions';
 import {
   ADMIN_ROLE_NUMBER_VALUE,
   ORG_COLUMN_FOR_USER_MGT,
-  ROLE_COLUMN_FOR_USER_MGT,
   TOTAL_ITEMS_PER_PAGE,
 } from '@/utils/constant.util';
+import { FiRefreshCcw } from 'react-icons/fi';
+import { setDisplayorderingSuccessTick } from '@/store/createOrderFormSlice';
+import { setValidationCancelForOrdering } from '@/store/orderSlice';
 
 const UserManagement = () => {
   const dispatch = useDispatch();
@@ -32,17 +34,20 @@ const UserManagement = () => {
   const [isAuth, setIsAuth] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState('');
   const [organizationName, setOrganizationName] = useState('');
+  const [organizationType, setOrganizationType] = useState('');
   const [drawerHeadingText, setDrawerHeadingText] = useState('');
   const [displayViewDrawer, setDisplayViewDrawer] = useState(false);
   const [displayAddUserDrawer, setDisplayAddUserDrawer] = useState(false);
   const [displayFilterDrawer, setDisplayFilterDrawer] = useState(false);
   const [isEditClicked, setIsEditClicked] = useState(false);
   const [clickedColumnId, setClickedColumnId] = useState(null);
+  const [selectedRoleType, setSelectedRoleType] = useState(null);
 
   const [filterParams, setFilterparams] = useState({});
   const [isClearable, setIsClearable] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedOrgStatus, setSelectedOrgStatus] = useState(null);
+  const [providerValue, setProviderValue] = useState(null);
 
   const getAlluserDataFunc = async (page, filters, selectedOrganization) => {
     const organizationId = selectedOrganization?.toString().trim() || 'n';
@@ -60,7 +65,6 @@ const UserManagement = () => {
   const displayEmptyColumn = (columnArr) => {
     let newColumns = [...columnArr];
     newColumns.splice(1, 0, ORG_COLUMN_FOR_USER_MGT);
-    newColumns.splice(6, 0, ROLE_COLUMN_FOR_USER_MGT);
     return newColumns;
   };
 
@@ -78,11 +82,18 @@ const UserManagement = () => {
 
   const handleOrganizationChange = (value) => {
     setSelectedOrganization(value);
+    setFilterparams({});
     const org = getOrganizations.find(
       (elem) => parseInt(elem.id) === parseInt(value)
     );
     setSelectedOrgStatus(org.isActive);
+    setOrganizationName(org.name);
+    setOrganizationType(org.organizationType);
     setPage(1);
+  };
+
+  const handleRefreshBtn = () => {
+    getAlluserDataFunc(page, filterParams, selectedOrganization);
   };
 
   const handleAddAndEditDrawer = () => {
@@ -115,7 +126,11 @@ const UserManagement = () => {
     setIsEditClicked(false);
     setDisplayAddUserDrawer(false);
     setDisplayFilterDrawer(false);
+    setSelectedRoleType(null);
+    setProviderValue(null);
     dispatch(setGetUserDetails({}));
+    dispatch(setDisplayorderingSuccessTick(false));
+    dispatch(setValidationCancelForOrdering());
     if (!getUsersData || getUsersData?.length === 0) {
       getAlluserDataFunc(1, {}, selectedOrganization);
       setFilterparams({});
@@ -127,17 +142,6 @@ const UserManagement = () => {
   useEffect(() => {
     getAlluserDataFunc(page, filterParams, selectedOrganization);
   }, [page, selectedOrganization]);
-
-  useEffect(() => {
-    if (selectedOrganization) {
-      const organization = getOrganizations.find(
-        (elem) => elem.id === selectedOrganization
-      );
-      if (organization) {
-        setOrganizationName(organization.name);
-      }
-    }
-  }, [selectedOrganization]);
 
   useEffect(() => {
     dispatch(getOrganizationsFunc());
@@ -155,11 +159,7 @@ const UserManagement = () => {
             <h3 className='user-heading-text-customization'>User Management</h3>
             <Button
               size='large'
-              className={
-                !selectedOrganization || !selectedOrgStatus
-                  ? ''
-                  : 'new-user-add-btn'
-              }
+              className='global-primary-btn-style'
               icon={<FaPlus />}
               disabled={!selectedOrganization || !selectedOrgStatus}
               onClick={handleAddAndEditDrawer}
@@ -170,37 +170,60 @@ const UserManagement = () => {
 
           <Row className='users-child-container-second'>
             <Col>
-              <p className='users-mormal-text-customization'>Organization</p>
-              <Select
-                className='user-mgt-select-for-organization'
-                placeholder='Select OR Search Organization'
-                size='large'
-                options={makeOptionsForOrganizations(getOrganizations)}
-                showSearch
-                optionFilterProp='children'
-                filterOption={(input, option) =>
-                  (option?.label?.toLocaleLowerCase() ?? '').includes(
-                    input?.toLocaleLowerCase()
-                  )
-                }
-                onChange={handleOrganizationChange}
-              />
-              {selectedOrgStatus === false && (
-                <Tag className='user-mgt-tag-for-status' color='red'>
-                  Inactive
-                </Tag>
-              )}
+              <Col>
+                <p className='users-mormal-text-customization'>Organization</p>
+                <Select
+                  className='user-mgt-select-for-organization'
+                  placeholder='Select OR Search Organization'
+                  size='large'
+                  options={makeOptionsForOrganizations(getOrganizations)}
+                  showSearch
+                  optionFilterProp='children'
+                  filterOption={(input, option) =>
+                    (option?.label?.toLocaleLowerCase() ?? '').includes(
+                      input?.toLocaleLowerCase()
+                    )
+                  }
+                  onChange={handleOrganizationChange}
+                />
+                {selectedOrgStatus === false && (
+                  <Tag className='user-mgt-tag-for-status' color='red'>
+                    Inactive
+                  </Tag>
+                )}
+              </Col>
+
+              <Col>
+                <h3 className='user-mgt-org-type-display'>
+                  {organizationType}
+                </h3>
+              </Col>
             </Col>
 
-            <Button
-              className='user-mgt-filter-btn'
-              size='large'
-              icon={<LuSlidersHorizontal className='user-mgt-filter-icon' />}
-              disabled={!selectedOrganization}
-              onClick={handleFilterDrawer}
-            >
-              Filters
-            </Button>
+            <Row gutter={8}>
+              <Col>
+                <Button
+                  className='global-secondary-btn-style'
+                  size='large'
+                  icon={<LuSlidersHorizontal />}
+                  disabled={!selectedOrganization}
+                  onClick={handleFilterDrawer}
+                >
+                  Filters
+                </Button>
+              </Col>
+              <Col>
+                <Button
+                  size='large'
+                  icon={<FiRefreshCcw />}
+                  className='global-primary-btn-style'
+                  onClick={handleRefreshBtn}
+                  disabled={!selectedOrganization || !selectedOrgStatus}
+                >
+                  Refresh
+                </Button>
+              </Col>
+            </Row>
           </Row>
 
           <Row>
@@ -225,6 +248,7 @@ const UserManagement = () => {
                 pageSize={TOTAL_ITEMS_PER_PAGE}
                 total={totalCount}
                 onPageChange={(page) => setPage(page)}
+                scroll={{x: 800 ,y: 300}}
               />
             )}
           </Row>
@@ -242,6 +266,12 @@ const UserManagement = () => {
             columnId={clickedColumnId}
             drawerHeadingText={drawerHeadingText}
             displayAddUserDrawer={displayAddUserDrawer}
+            organizationType={organizationType}
+            selectedRoleType={selectedRoleType}
+            setSelectedRoleType={setSelectedRoleType}
+            providerValue={providerValue}
+            setProviderValue={setProviderValue}
+
           />
 
           {/* View User Details Drawer */}
@@ -271,6 +301,7 @@ const UserManagement = () => {
               setFilterparams={setFilterparams}
               isClearable={isClearable}
               setIsClearable={setIsClearable}
+              organizationType={organizationType}
             />
           </Drawer>
         </div>

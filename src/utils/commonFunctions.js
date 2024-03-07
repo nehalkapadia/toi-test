@@ -43,13 +43,18 @@ export const capitalizeWords = (inputString) => {
 };
 
 export const getRoleById = (id) => {
-  if (!id) {
-    return;
-  } else if (id === 1) {
-    return 'Admin';
-  } else if (id === 2) {
-    return 'Member';
-  } else return 'Not A Valid Role';
+  switch (id) {
+    case 1:
+      return 'Admin';
+    case 2:
+      return 'Member';
+    case 3:
+      return 'Auth Co-Ordinator';
+    case 4:
+      return 'Ordering Provider';
+    default:
+      return 'Not A Valid Role';
+  }
 };
 
 export const formatPhoneNumberForInput = (value) => {

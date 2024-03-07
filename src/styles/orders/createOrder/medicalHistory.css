@@ -49,13 +49,6 @@
   color: #34657f !important;
 }
 
-.medical-history-modal-customized {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
 .tab2-ordering-provider-lable-conatiner {
   display: flex;
   gap: 10px;
@@ -66,36 +59,6 @@
   font-size: 18px;
   font-weight: 500;
   color: #396571;
-  cursor: pointer;
-}
-
-.modal-title-container-with-close-icon {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
-}
-
-.tab-2-modal-title-heading-text {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.co-tab-2-modal-validate-btn {
-  color: #fff;
-  background-color: #396571;
-  font-size: 14px !important;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.co-tab-2-modal-validate-btn:hover {
-  border: 1px solid #396571 !important;
-  color: #fff !important;
-}
-
-.close-icon-for-modal {
   cursor: pointer;
 }
 

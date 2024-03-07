@@ -28,11 +28,6 @@ exports.createMedicalHistorySchema = [
     .if(validateOrderType)
     .notEmpty()
     .withMessage(constants.CANT_BE_EMPTY + ' Ordering Provider'),
-
-  body('referringProvider')
-    .if(validateOrderType)
-    .notEmpty()
-    .withMessage(constants.CANT_BE_EMPTY + ' Referring Provider'),
 ];
 
 // get medical history schema

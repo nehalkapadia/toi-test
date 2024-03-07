@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import '../../styles/users/userFilters.css';
 import { Button, Col, Input, Row, Select, message } from 'antd';
-import { ORGANIZATION_STATUS_SELECT_OPTIONS } from '@/utils/options';
+import {
+  ORGANIZATION_STATUS_SELECT_OPTIONS,
+  ORGANIZATION_WITH_TYPE_SUBMITTER_OPTIONS,
+  TOI_ORGANIZATION_WITH_TYPE_REVIEWER_OPTIONS,
+} from '@/utils/options';
 import { useDispatch } from 'react-redux';
-import { CLEAR, CLOSE, TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
+import {
+  CLEAR,
+  CLOSE,
+  ORGANIZATION_TYPE_REVIEWER,
+  ORGANIZATION_TYPE_SUBMITTER,
+  TOTAL_ITEMS_PER_PAGE,
+} from '@/utils/constant.util';
 import { getUsersFunc } from '@/store/userTableDataSlice';
 
 const UserFilters = ({
@@ -14,12 +24,14 @@ const UserFilters = ({
   setFilterparams,
   isClearable,
   setIsClearable,
+  organizationType,
 }) => {
   const dispatch = useDispatch();
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [isActive, setIsActive] = useState(null);
+  const [roleId, setRoleId] = useState(null);
 
   const handleFilterByFirstName = (e) => {
     const value = e.target.value;
@@ -77,6 +89,22 @@ const UserFilters = ({
     }));
   };
 
+  const handleFilterByRoleId = (value) => {
+    if (value === undefined || value === null) {
+      setRoleId(null);
+      setFilterparams((prevFilterparams) => {
+        const { roleId, ...rest } = prevFilterparams;
+        return { ...rest };
+      });
+      return;
+    }
+    setRoleId(value);
+    setFilterparams((prevFilterparams) => ({
+      ...prevFilterparams,
+      roleId: value,
+    }));
+  };
+
   const handleFilterByStatus = (value) => {
     if (value === undefined || value === null) {
       setIsActive(null);
@@ -116,6 +144,7 @@ const UserFilters = ({
     setEmail('');
     setFirstName('');
     setLastName('');
+    setRoleId(null);
     setIsActive(null);
     setIsClearable(false);
     dispatch(
@@ -141,6 +170,7 @@ const UserFilters = ({
       setEmail('');
       setFirstName('');
       setLastName('');
+      setRoleId(null);
       setIsActive(null);
     }
   }, [filterParams]);
@@ -178,6 +208,25 @@ const UserFilters = ({
       </Col>
 
       <Col className='each-filter-form-elem-single-at-user-mgt'>
+        <label>Role</label>
+        <Select
+          size='large'
+          placeholder='Select Any Role'
+          value={roleId}
+          options={
+            organizationType &&
+            organizationType?.toLowerCase() === ORGANIZATION_TYPE_REVIEWER
+              ? TOI_ORGANIZATION_WITH_TYPE_REVIEWER_OPTIONS
+              : organizationType?.toLowerCase() === ORGANIZATION_TYPE_SUBMITTER
+              ? ORGANIZATION_WITH_TYPE_SUBMITTER_OPTIONS
+              : []
+          }
+          onChange={handleFilterByRoleId}
+          allowClear
+        />
+      </Col>
+
+      <Col className='each-filter-form-elem-single-at-user-mgt'>
         <label>Status</label>
         <Select
           size='large'
@@ -192,7 +241,7 @@ const UserFilters = ({
       <Row className='user-filter-btn-container'>
         <Button
           size='large'
-          className='close-filter-btn-drawer-at-user'
+          className='global-close-btn-style'
           onClick={isClearable ? handleClearFilters : handleClearFilters}
         >
           {isClearable ? CLEAR : CLOSE}
@@ -201,7 +250,7 @@ const UserFilters = ({
         <Button
           size='large'
           disabled={!isClearable}
-          className='apply-filter-btn-at-user'
+          className='global-primary-btn-style'
           onClick={handleFilterFunc}
         >
           Apply
