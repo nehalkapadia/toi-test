@@ -1,48 +1,57 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axiosInstance from "./axiosInstance";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axiosInstance from './axiosInstance';
+import { handleErrorResponse } from '@/utils/commonFunctions';
 
 export const postUserFunc = createAsyncThunk(
-  "userManagement/post",
+  'userManagement/post',
   async (payload) => {
-    try{
-      const response = await axiosInstance.post("/api/users", payload);
-      return response.data; 
-    } catch(err) {
-      const payload = {
-        status: false,
-        message: err?.response?.data?.errors ? err?.response?.data?.errors[0]?.msg : err?.response?.data?.message,
-    }
-    return payload;
+    try {
+      const response = await axiosInstance.post('/api/users', payload);
+      return response.data;
+    } catch (err) {
+      return handleErrorResponse(err);
     }
   }
 );
 
 export const getUsersFunc = createAsyncThunk(
-  "userManagement/getList",
+  'userManagement/getList',
   async (payload = {}) => {
-    const response = await axiosInstance.post("/api/users/list", payload);
-    return response.data;
+    try {
+      const response = await axiosInstance.post('/api/users/list', payload);
+      return response.data;
+    } catch (err) {
+      return handleErrorResponse(err);
+    }
   }
 );
 
 export const getUserById = createAsyncThunk(
-  "userManagement/listDetails",
+  'userManagement/listDetails',
   async (id) => {
-    const response = await axiosInstance.get(`/api/users/${id}`);
-    return response.data;
+    try {
+      const response = await axiosInstance.get(`/api/users/${id}`);
+      return response.data;
+    } catch (err) {
+      return handleErrorResponse(err);
+    }
   }
 );
 
 export const updateUserFunc = createAsyncThunk(
-  "userManagement/put",
+  'userManagement/put',
   async ({ id, payload }) => {
-    const response = await axiosInstance.put(`/api/users/${id}`, payload);
-    return response.data;
+    try {
+      const response = await axiosInstance.put(`/api/users/${id}`, payload);
+      return response.data;
+    } catch (err) {
+      return handleErrorResponse(err);
+    }
   }
 );
 
 const userTableDataSlice = createSlice({
-  name: "userManagement",
+  name: 'userManagement',
   initialState: {
     getUsersData: [],
     getUserDetails: {},
@@ -51,14 +60,38 @@ const userTableDataSlice = createSlice({
     isError: false,
     errorMessage: null,
     totalCount: 0,
+    postLoading: false,
   },
-  reducers: {},
+  reducers: {
+    setGetUserDetails: (state) => {
+      return {
+        ...state,
+        getUserDetails: {},
+      };
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Post Req
+      .addCase(postUserFunc.pending, (state) => {
+        return {
+          ...state,
+          postLoading: true,
+        };
+      })
+      .addCase(postUserFunc.fulfilled, (state, action) => {
+        return {
+          ...state,
+          postLoading: false,
+        };
+      })
       .addCase(postUserFunc.rejected, (state, action) => {
-        state.isError = true;
-        state.errorMessage = action.error.message;
+        return {
+          ...state,
+          postLoading: false,
+          isError: true,
+          errorMessage: action?.error?.message,
+        };
       })
 
       // Get Req
@@ -68,44 +101,65 @@ const userTableDataSlice = createSlice({
       .addCase(getUsersFunc.fulfilled, (state, action) => {
         const { payload } = action;
         state.isLoading = false;
-        state.getUsersData = payload.data.rows;
-        state.totalCount = payload.data.count;
+        state.getUsersData = payload?.data?.rows;
+        state.totalCount = payload?.data?.count;
       })
       .addCase(getUsersFunc.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
-        state.errorMessage = action.error.message;
+        state.errorMessage = action?.error?.message;
       })
 
       // Update Request
       .addCase(updateUserFunc.pending, (state) => {
-        state.isLoading = true;
+        return {
+          ...state,
+          postLoading: true,
+        };
       })
       .addCase(updateUserFunc.fulfilled, (state) => {
-        state.isLoading = false;
+        return {
+          ...state,
+          postLoading: false,
+        };
       })
       .addCase(updateUserFunc.rejected, (state, action) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.errorMessage = action.error.message;
+        return {
+          ...state,
+          postLoading: false,
+          isError: true,
+          errorMessage: action?.error?.message,
+        };
       })
 
       // Get Organization Details for Specific ID
       .addCase(getUserById.pending, (state) => {
-        state.viewIsLoading = true;
+        return {
+          ...state,
+          viewIsLoading: true,
+          getUserDetails: {},
+        };
       })
       .addCase(getUserById.fulfilled, (state, action) => {
         const { payload } = action;
-        state.viewIsLoading = false;
-        state.getUserDetails = payload.data;
+        return {
+          ...state,
+          viewIsLoading: false,
+          getUserDetails: payload?.data,
+        };
       })
       .addCase(getUserById.rejected, (state, action) => {
-        state.viewIsLoading = false;
-        state.isError = true;
-        state.errorMessage = action.error.message;
+        return {
+          ...state,
+          viewIsLoading: false,
+          getUserDetails: {},
+          isError: true,
+          errorMessage: action?.error?.message,
+        };
       });
   },
 });
 
-export const { fetchUserTableData } = userTableDataSlice.actions;
+export const { fetchUserTableData, setGetUserDetails } =
+  userTableDataSlice.actions;
 export const userTableDataReducer = userTableDataSlice.reducer;

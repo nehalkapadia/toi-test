@@ -17,12 +17,9 @@
 
 .all-tabs-parent-container-at-co {
   padding-bottom: 24px;
-}
-
-.all-tabs-form-container-at-create-order {
-  max-height: 55vh;
+  min-height: 55vh;
+  max-height: calc(100vh - 260px);
   overflow-y: scroll;
-  
 }
 
 .co-all-tabs-btn-container {
@@ -38,6 +35,7 @@
   border-top: 1px solid #ddd;
   padding: 18px;
   gap: 16px;
+  z-index: 1000;
 }
 
 .co-all-tabs-cancel-btn {
@@ -93,6 +91,10 @@
 
 .ant-segmented.ant-segmented-lg .ant-segmented-item-label {
   color: #396571;
+}
+
+.ant-segmented {
+  background-color: #fff;
 }
 
 .ant-segmented .ant-segmented-item-selected {

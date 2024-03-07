@@ -53,9 +53,30 @@ const updateNpiByNpiNumber = async (npiNumber, newData) => {
   }
 };
 
+/**
+ * @description This function will return the first name, last name and npi number
+ * @param {int} physicianNpiNumber 
+ * @returns {Object} 
+ */
+const getNpiDetails = async (physicianNpiNumber) => {
+  try {
+    const npiDetails = await checkIfNpiExists(physicianNpiNumber);
+
+    let firstName = npiDetails?.first_name ? npiDetails.first_name : '';
+    let lastName = npiDetails?.last_name ? npiDetails.last_name : '';
+    let npiNumber = npiDetails?.npiNumber ? npiDetails.npiNumber : '';
+
+    return { firstName, lastName, npiNumber };
+
+  } catch (error) {
+    throw error;
+  }
+}
+
 // Export the functions to be used in other modules
 module.exports = {
   checkIfNpiExists,
   createNpi,
   updateNpiByNpiNumber,
+  getNpiDetails,
 };

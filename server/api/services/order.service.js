@@ -70,7 +70,8 @@ const createOrderInfo = async (orderData) => {
         await checkEntityExistence(entity.id, entity.model, entity.name);
       })
     );
-
+    orderData.createdAt = new Date();
+    orderData.updatedAt = new Date();
     // If all checks pass, create the order
     return Order.create(orderData);
   } catch (error) {
@@ -108,6 +109,7 @@ const getOrderById = async (orderId) => {
             'race',
             'address',
             'mrn',
+            'hsMemberID',
           ],
         },
         {
@@ -121,6 +123,25 @@ const getOrderById = async (orderId) => {
             'referringProvider',
             'pcpName',
             'isReferringPhysician',
+            'dateOfVisit',
+            'chemotherapyOrdered',
+          ],
+          include: [
+            {
+              model: db.Npis,
+              as: 'orderingProviderData',
+              attributes: ['npiNumber', 'first_name', 'last_name'],
+            },
+            {
+              model: db.Npis,
+              as: 'referringProviderData',
+              attributes: ['npiNumber', 'first_name', 'last_name'],
+            },
+            {
+              model: db.Npis,
+              as: 'pcpNameData',
+              attributes: ['npiNumber', 'first_name', 'last_name'],
+            },
           ],
         },
         {
@@ -143,6 +164,8 @@ const getOrderById = async (orderId) => {
         },
         { model: Organization, as: 'organization' },
         { model: db.Users, as: 'ownerData' },
+        { model: db.OrderTypes, as: 'orderTypeData' },
+        { model: db.OrderDetails, as: 'orderDetails' },
       ],
     });
     return order;
@@ -170,14 +193,20 @@ const listOrders = async ({
   filters,
   userData,
 }) => {
+  if((!filters?.orderTypes || filters?.orderTypes?.length < 1) &&
+    userData?.user?.role?.roleName === constantsUtil.AUTH_COORDINATOR
+  )
+    {
+      filters.orderTypes = [2,3]
+    }
   // Add logic to fetch paginated and sorted orders from the database
   const offset = (page - 1) * pageSize;
   const whereClause = {
     organizationId: userData?.user?.organizationId,
   };
 
-  if(!filters?.status || filters?.status?.length === 0) {
-    whereClause.isDeleted = false
+  if (!filters?.status || filters?.status?.length === 0) {
+    whereClause.isDeleted = false;
   }
   if (filters) {
     // Check and add orderId filter
@@ -193,6 +222,12 @@ const listOrders = async ({
     if (filters?.status?.length > 0) {
       whereClause.currentStatus = {
         [Op.in]: filters.status,
+      };
+    }
+
+    if (filters?.orderTypes?.length > 0) {
+      whereClause.orderTypeId = {
+        [Op.in]: filters.orderTypes,
       };
     }
 
@@ -217,6 +252,16 @@ const listOrders = async ({
         [Op.like]: `%${filters?.gender}%`,
       };
     }
+    if (filters?.hsMemberID) {
+      whereClause['$patientDemography.hsMemberID$'] = {
+        [Op.like]: `%${filters?.hsMemberID}%`,
+      };
+    }
+    if (filters?.toiStatus) {
+      whereClause.toiStatus = {
+        [Op.like]: `%${filters.toiStatus}%`,
+      };
+    }
   }
 
   const orders = await Order.findAndCountAll({
@@ -238,6 +283,7 @@ const listOrders = async ({
           'race',
           'address',
           'mrn',
+          'hsMemberID',
         ],
       },
       {
@@ -251,6 +297,8 @@ const listOrders = async ({
           'referringProvider',
           'pcpName',
           'isReferringPhysician',
+          'dateOfVisit',
+          'chemotherapyOrdered',
         ],
       },
       {
@@ -274,6 +322,20 @@ const listOrders = async ({
       { model: Organization, as: 'organization' },
       { model: db.Users, as: 'userData' },
       { model: db.Users, as: 'ownerData' },
+      { model: db.OrderTypes, as: 'orderTypeData' },
+      { model: db.OrderDetails, as: 'orderDetails' },
+      {
+        model: db.OrderStatusHistories,
+        attributes: ['id', 'comment'],
+        as: 'orderStatusHistoryData',
+        order: [['updatedAt', 'DESC']],
+        where: {
+          'comment': {
+            [Op.ne]: ''
+          }
+        },
+        limit: 1,
+      },
     ],
     offset,
     limit: pageSize,
@@ -296,7 +358,8 @@ const updateOrderInfo = async (orderId, orderData) => {
       const errorMessage = constantsUtil.notFound('Order');
       throw new Error(errorMessage);
     }
-    return order.update(orderData);
+    orderData.updatedAt = new Date();
+    return await order.update(orderData);
   } catch (error) {
     throw error;
   }
@@ -419,53 +482,11 @@ const createOrderAuthDocuments = async (order, files) => {
 };
 
 /**
- * Save Order as Draft
- *
- * @param {Object} orderData - Data for the order to be saved.
- * @returns {Object} - The saved order.
- * @throws {Error} - Throws an error if there is an issue saving the order.
- */
-const saveOrderAsDraft = async (orderData) => {
-  try {
-    // Check the existence of multiple related entities
-    const entitiesToCheck = [
-      { id: orderData.patientId, model: PatientDemo, name: 'Patient' },
-      {
-        id: orderData.historyId,
-        model: MedicalHistory,
-        name: 'MedicalHistory',
-      },
-      { id: orderData.recordId, model: MedicalRecord, name: 'MedicalRecord' },
-      {
-        id: orderData.insuranceId,
-        model: InsuranceInfo,
-        name: 'InsuranceInfo',
-      },
-      {
-        id: orderData.organizationId,
-        model: Organization,
-        name: 'Organization',
-      },
-    ];
-
-    await Promise.all(
-      entitiesToCheck.map(async (entity) => {
-        await checkEntityExistence(entity.id, entity.model, entity.name);
-      })
-    );
-
-    // If all checks pass, create the order
-    return Order.create(orderData);
-  } catch (error) {
-    throw error; // Propagate the error to be handled in the controller
-  }
-};
-
-/**
  * Service function to find an order by ID
- * @param {string} orderId - ID of the order to find
- * @returns {Promise<Object>} - Promise resolving to the found order or null if not found
+ * @param { string } orderId - ID of the order to find
+ * @returns { Promise < Object >} - Promise resolving to the found order or null if not found
  */
+
 const findOneById = async (orderId) => {
   try {
     const order = await Order.findOne({ where: { id: String(orderId) } });
@@ -548,9 +569,13 @@ const deleteOrderById = async (orderId) => {
  * @param {int} patientId
  * @returns {Promise<Object>} - Promise resolving to the deleted order
  */
-const getOrderByPatientId = async (patientId) => {
+const getOrderByPatientId = async (patientId, orderTypeId, status) => {
   const order = await Order.findOne({
-    where: { patientId: patientId, currentStatus: 'draft' },
+    where: {
+      patientId: patientId,
+      currentStatus: { [Op.in]: status },
+      orderTypeId: orderTypeId,
+    },
     order: [['updatedAt', 'DESC']],
     include: [
       {
@@ -569,6 +594,7 @@ const getOrderByPatientId = async (patientId) => {
           'race',
           'address',
           'mrn',
+          'hsMemberID',
         ],
       },
       {
@@ -582,6 +608,25 @@ const getOrderByPatientId = async (patientId) => {
           'referringProvider',
           'pcpName',
           'isReferringPhysician',
+          'dateOfVisit',
+          'chemotherapyOrdered',
+        ],
+        include: [
+          {
+            model: db.Npis,
+            as: 'orderingProviderData',
+            attributes: ['npiNumber', 'first_name', 'last_name'],
+          },
+          {
+            model: db.Npis,
+            as: 'referringProviderData',
+            attributes: ['npiNumber', 'first_name', 'last_name'],
+          },
+          {
+            model: db.Npis,
+            as: 'pcpNameData',
+            attributes: ['npiNumber', 'first_name', 'last_name'],
+          },
         ],
       },
       {
@@ -604,6 +649,8 @@ const getOrderByPatientId = async (patientId) => {
       },
       { model: Organization, as: 'organization' },
       { model: db.Users, as: 'ownerData' },
+      { model: db.OrderTypes, as: 'orderTypeData' },
+      { model: db.OrderDetails, as: 'orderDetails' },
     ],
   });
   return order;
@@ -618,7 +665,7 @@ const softDeleteOrder = async (orderId, userId) => {
     order.isDeleted = true;
     order.deletedAt = new Date();
     order.updatedBy = userId;
-    order.currentStatus = 'deleted';
+    order.currentStatus = constantsUtil.DELETED;
 
     // Save the changes
     await order.save();
@@ -633,13 +680,88 @@ const deleteMany = (date) => {
   return Order.destroy({
     where: {
       isDeleted: true,
-      currentStatus: 'deleted',
+      currentStatus: constantsUtil.DELETED,
       deletedAt: {
         [Op.lt]: date,
       },
     },
   });
-}
+};
+/**
+ * Get orders which failed to syncup with salesforce
+ *
+ * @returns {Object} - The saved order.
+ * @throws {Error} - Throws an error if there is an issue saving the order.
+ */
+const getSalesForceFailedSyncUpOrders = async () => {
+  try {
+    // get the list of failed orders
+    const ordersList = await Order.findAll({
+      attributes: ['id'],
+      where: {
+        salesForceSyncUpStatus: constantsUtil.FAILED_STATUS,
+        retry: 1,
+      },
+    });
+
+    // return the order object
+    return ordersList.map((order) => {
+      return {
+        id: order.id,
+        retry: order.retry,
+        salesForceSyncUpStatus: order.salesForceSyncUpStatus,
+      };
+    });
+  } catch (err) {
+    throw err;
+  }
+};
+
+/**
+ * Get Deleted Order details
+ * @param {int} patientId
+ * @returns {Object}
+ */
+const getDeletedOrder = async (patientId) => {
+  const submittedOrder = await Order.findOne({
+    where: {
+      patientId: patientId,
+      currentStatus: constantsUtil.SUBMITTED,
+      isDeleted: false,
+    },
+  });
+  if (submittedOrder) {
+    return false;
+  } else {
+    return await Order.findOne({
+      where: {
+        patientId: patientId,
+        isDeleted: true,
+      },
+    });
+  }
+};
+
+/**
+ * Get the order by caseId
+ * @param {string} caseId
+ * @returns {Object}
+ */
+const getOrderByCaseId = async (caseId) => {
+  return await Order.findOne({
+    attributes: [
+      'id',
+      'caseId',
+      'currentStatus',
+      'updatedAt',
+      'patientId',
+      'updatedBy',
+    ],
+    where: {
+      caseId: caseId,
+    },
+  });
+};
 
 module.exports = {
   createOrderInfo,
@@ -649,7 +771,6 @@ module.exports = {
   uploadFiles,
   getOrderDocuments,
   createOrderAuthDocuments,
-  saveOrderAsDraft,
   findOneById,
   findAllByOrderIdAndPatientId,
   findAllOrderPatDocuments,
@@ -657,5 +778,8 @@ module.exports = {
   deleteOrderById,
   getOrderByPatientId,
   softDeleteOrder,
-  deleteMany
+  deleteMany,
+  getSalesForceFailedSyncUpOrders,
+  getDeletedOrder,
+  getOrderByCaseId,
 };

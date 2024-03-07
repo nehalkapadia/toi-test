@@ -1,6 +1,7 @@
 const db = require('../models');
 const { Op } = require('sequelize');
 const User = db.Users;
+const Organization = db.Organizations;
 
 /**
  * @param {*} email
@@ -90,6 +91,16 @@ exports.allList = async ({
     whereClause.isActive = { [Op.eq]: filters?.isActive };
   }
 
+  // Add ordering provider filter if provided
+  if(filters?.orderingProvider) {
+    whereClause.orderingProvider = { [Op.eq]: filters?.orderingProvider };
+  }
+
+  // Add roleId filter if provided
+  if(filters?.roleId) {
+    whereClause.roleId = { [Op.eq]: filters?.roleId };
+  }
+
   if (!page) {
     return await User.findAndCountAll({
       where: whereClause,
@@ -142,6 +153,11 @@ exports.detail = async (id) => {
         as: 'updateBy',
         attributes: ['id', 'firstName', 'lastName', 'email'], // Specify the fields you want from the Roles model
       },
+      {
+        model: db.Npis,
+        as: 'orderingProviderData',
+        attributes: ['id', 'first_name', 'last_name', 'npiNumber'], // Specify the fields you want from the Roles model
+      },
     ],
   });
 };
@@ -175,3 +191,64 @@ exports.deleteUser = async (payload) => {
   const deleteModel = await User.findByPk(payload.id);
   return await deleteModel.update({ isActive: false });
 };
+
+/**
+ * @param {*} orderingProvider
+ * @param {*} organizationId
+ * @returns
+ * @description Check if an active user with the same orderingProvider exists in another organization
+ */
+exports.getOrderingProviderInfo = async (orderingProvider, organizationId) => {
+  const user = await User.findOne({
+    where: {
+      orderingProvider: orderingProvider,
+      isActive: true, // User should be active
+      organizationId: { [Op.ne]: organizationId } // User should be from a different organization
+    },
+    include: [{
+      model: Organization,
+      as: 'organization',
+      attributes: ['name'] // Include only organization name
+    }]
+  });
+  return user;
+};
+
+/**
+ * @param {*} orderingProvider
+ * @param {*} organizationId
+ * @returns
+ * @description  Checks if the ordering provider exists in the same organization.
+ */
+exports.orderingProviderExistsInOrganization = async (orderingProvider,organizationId ) => {
+  try {
+    const user = await User.findOne({
+      where: {
+        orderingProvider: orderingProvider,
+        organizationId: organizationId
+      }
+    });
+    return !!user; // Return true if user exists, false otherwise
+  } catch (error) {
+    throw new Error('Error checking ordering provider existence in organization: ' + error.message);
+  }
+};
+
+/**
+ * @param {*} orderingProvider
+ * @returns {Promise} A promise that resolves with the user object if found, otherwise resolves with null.
+ * @description Checks if the ordering provider exists in the same organization.
+ */
+exports.checkIfActiveOrderingProviderExists = async (payload) => {
+  try {
+    const user = await User.findOne({
+      where: {
+        orderingProvider: payload.orderingProvider,
+        isActive: true, // User should be active
+      }
+    })
+    return user;
+  } catch (error) {
+    throw new Error(error.message)
+  }
+}

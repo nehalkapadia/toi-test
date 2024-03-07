@@ -9,16 +9,6 @@ const authController = require('../controllers/auth.controller');
 // Require validators
 const { verifyToken } = require('../middlewares/auth.middleware');
 
-// Facebook login route
-router.get('/facebook', authController.facebookLogin);
-
-// Callback route after Facebook authentication
-router.get(
-  '/facebook/callback',
-  passport.authenticate('facebook', { failureRedirect: '/login' }),
-  authController.loginCallback
-);
-
 
 // Google login route
 router.get('/google', authController.googleLogin);
@@ -43,6 +33,9 @@ router.get(
 
 // Get profile
 router.get('/profile', verifyToken, authController.getProfile);
+
+// this will generate salesforce authentication tokens
+router.post('/salesforce/authenticate', authController.generateSalesforceAuthenticationToken);
 
 module.exports = router;
 

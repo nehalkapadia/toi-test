@@ -3,6 +3,7 @@ html body {
   margin: 0;
   width: calc(100% - 8px) !important;
   overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 /* Sidebar Component CSS Style */
@@ -66,15 +67,27 @@ html body {
   padding: 0;
 }
 
+.universal-layout-header-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  margin: auto !important;
+}
+
 .layout-header-left-side-container {
   display: flex;
-  align-items: center;
-  padding: 0px 10px;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .btn-for-collapsed-or-shrink {
-  min-height: 54px;
-  min-width: 54px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50px;
+  min-width: 50px;
 }
 
 .icon-at-header-bar {
@@ -88,16 +101,13 @@ html body {
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: flex-end;
-  align-items: flex-start;
 }
 
 .layout-header-notification-icon {
   font-size: 21px;
   cursor: pointer;
-}
-
-.divider-at-header-bar {
-  height: 100%;
+  padding-right: 10px;
+  border-right: 1px solid #ddd;
 }
 
 .user-profile-icon-at-header {
@@ -116,32 +126,37 @@ html body {
 }
 
 .dropdown-for-profile-view-details {
+  padding: 0 !important;
   line-height: 21px;
-  margin-right: 20px;
 }
 
 .profile-details-at-header-bar {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: row;
+  gap: 12px;
   cursor: pointer;
-  margin-top: 10px;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
 .profile-details-container-header {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  padding: 0 !important;
 }
 
 .customized-zero-margin-for-p-tag {
   margin: 0;
+  padding: 0;
 }
 
 .universal-layout-content-container {
   padding: 32px 24px;
   background: #f9f9fc;
   min-height: 88vh !important;
-  max-height: 89vh !important;
+  max-height: calc(100vh - 65px) !important;
   white-space: nowrap;
   overflow-y: auto;
 }
@@ -149,6 +164,14 @@ html body {
 .customized-user-name-at-header {
   text-transform: capitalize;
   font-weight: 600;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fa-angle-down-for-profile {
+  font-size: 16px;
 }
 
 .customized-user-role-at-header {
@@ -160,6 +183,63 @@ html body {
   justify-content: center;
   align-items: center;
 }
+
+/* All Common CSS across the Application */
+.global-primary-btn-style {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  background-color: #34657f;
+  font-weight: 600;
+  font-size: 14px !important;
+  letter-spacing: 0.5px;
+  line-height: 20px;
+}
+
+.global-primary-btn-style:hover {
+  color: #fff !important;
+  border: 1px solid #34657f !important;
+}
+
+.global-secondary-btn-style {
+  display: flex;
+  align-items: center;
+  color: #667085;
+  font-size: 14px !important;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  line-height: 20px;
+}
+
+.global-cancel-btn-style {
+  border: 1px solid #f04438;
+  color: #f04438;
+  font-weight: 600;
+  font-size: 14px !important;
+  letter-spacing: 0.5px;
+  line-height: 20px;
+}
+
+.global-cancel-btn-style:hover {
+  color: #f04438 !important;
+  border: 1px solid #f04438 !important;
+}
+
+.global-close-btn-style {
+  font-weight: 600;
+  font-size: 14px !important;
+  line-height: 20px;
+  color: #344054;
+}
+
+.global-close-btn-style:hover {
+  color: #344054 !important;
+}
+
+.global-input-number-full-width {
+  width: 100%;
+}
+/* Common CSS Across the Application End Here */
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -175,6 +255,7 @@ html body {
   background-color: #495057;
 }
 
+/* Switch Component CSS Override */
 :where(.css-dev-only-do-not-override-zcfrx9).ant-switch.ant-switch-checked {
   background: #396571;
 }
@@ -185,41 +266,18 @@ html body {
   background: #396571;
 }
 
-:where(.css-dev-only-do-not-override-zcfrx9).ant-checkbox-wrapper:not(
-    .ant-checkbox-wrapper-disabled
-  ):hover
-  .ant-checkbox-checked:not(.ant-checkbox-disabled)
-  .ant-checkbox-inner {
-  background-color: #396571;
-  border-color: transparent;
-}
-
-:where(.css-dev-only-do-not-override-zcfrx9).ant-checkbox-wrapper:not(
-    .ant-checkbox-wrapper-disabled
-  ):hover
-  .ant-checkbox-inner,
-:where(.css-dev-only-do-not-override-zcfrx9).ant-checkbox:not(
-    .ant-checkbox-disabled
-  ):hover
-  .ant-checkbox-inner {
-  border-color: #396571;
-}
-
-:where(.css-dev-only-do-not-override-zcfrx9).ant-checkbox-checked
-  .ant-checkbox-inner {
-  background-color: #396571;
-  border-color: #396571;
-}
-
 .upload-m-fs-10 {
   font-size: 10px;
   margin: 4px 0 0 3px;
 }
 
-:where(.css-dev-only-do-not-override-zcfrx9).ant-input-number:hover .ant-input-number-handler-wrap, :where(.css-dev-only-do-not-override-zcfrx9).ant-input-number-focused .ant-input-number-handler-wrap {
-  display: none;
+/* Input Number Component CSS Override */
+.ant-input-number-handler-wrap,
+.ant-input-number-handler {
+  display: none !important;
 }
 
+/* Link Component CSS Override */
 :where(.css-dev-only-do-not-override-zcfrx9) a {
   color: #396571;
   text-decoration: none;
@@ -232,6 +290,192 @@ html body {
 
 :where(.css-dev-only-do-not-override-zcfrx9) a:hover {
   color: #396571;
+}
+
+.ant-tabs {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  line-height: 1.5714285714285714;
+  list-style: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  display: flex;
+  width: 100%;
+}
+
+/* Class for making screen disabled when spinner is visible */
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: all;
+  z-index: 2001;
+}
+
+/* Radio Component CSS Override */
+:where(.css-dev-only-do-not-override-zcfrx9).ant-radio-wrapper
+  .ant-radio-checked::after {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #34657f;
+  border-radius: 50%;
+  visibility: hidden;
+  content: '';
+}
+
+:where(.css-dev-only-do-not-override-zcfrx9).ant-radio-wrapper
+  .ant-radio-checked
+  .ant-radio-inner {
+  border-color: #34657f;
+  background-color: #34657f;
+}
+
+/* Button Component CSS Override When Buttons are disabled and user hover them */
+:where(.css-dev-only-do-not-override-zcfrx9).ant-btn-default:disabled:hover {
+  color: rgba(0, 0, 0, 0.25) !important;
+}
+
+:where(.css-zcfrx9).ant-btn-primary {
+  color: #fff;
+  background-color: #34657f;
+  box-shadow: 0 2px 0 rgba(5, 145, 255, 0.1);
+}
+
+:where(.css-zcfrx9).ant-btn-primary:not(:disabled):not(
+    .ant-btn-disabled
+  ):hover {
+  color: #fff;
+  background-color: #34657f;
+}
+
+:where(.css-zcfrx9).ant-modal .ant-modal-content {
+  position: relative;
+  background-color: #ffffff;
+  background-clip: padding-box;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08),
+    0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  pointer-events: auto;
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.ant-switch-checked {
+  background-color: #34657f !important; /* Change background color when checked */
+  border-color: #34657f !important; /* Change border color when checked */
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #34657f !important; /* Change background color when checked */
+  border-color: #34657f !important;
+}
+
+.ant-checkbox-wrapper {
+  border-color: #34657f !important;
+}
+
+.ant-radio-wrapper .ant-radio-checked .ant-radio-inner {
+  border-color: #34657f !important;
+  background-color: #34657f !important;
+}
+
+.ant-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #34657f !important;
+  text-shadow: 0 0 0.25px currentcolor;
+}
+
+.ant-tabs .ant-tabs-tab:hover {
+  color: #34657f !important;
+}
+
+.ant-tabs .ant-tabs-ink-bar {
+  position: absolute !important;
+  background: #34657f !important;
+  pointer-events: none !important;
+}
+
+a {
+  color: #34657f;
+  text-decoration: none;
+  background-color: transparent;
+  outline: none;
+  cursor: pointer;
+  transition: color 0.3s;
+  -webkit-text-decoration-skip: objects;
+}
+
+a:hover {
+  color: #34657f;
+}
+
+.title-color {
+  color: #34657f !important;
+}
+
+.text-white {
+  color: white !important;
+}
+
+.p-20 {
+  padding: 20px;
+}
+
+.p-30 {
+  padding: 30px;
+}
+
+.p-40 {
+  padding: 40px;
+}
+
+.p-50 {
+  padding: 50px;
+}
+
+.privacy-policy-link {
+  color: #34657f !important;
+  text-decoration: underline !important;
+  text-align: center !important;
+}
+
+.curved-label {
+  position: fixed;
+  top: -26px;
+  left: 49px !important;
+  z-index: 9999;
+  transform: rotate(-45deg);
+}
+
+.curved-badge {
+  width: 125px !important;
+  height: 20px !important;
+  font-size: 10px !important;
+  text-align: center !important;
+  background-color: #34657f !important;
+}
+
+/* Organization and User management Page common CSS */
+.lable-asterick {
+  color: #ff4d4f;
+  font-size: 16px;
+}
+
+.heading-inside-form-element {
+  margin: 0 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: capitalize;
 }
 
 @media only screen and (min-width: 300px) and (max-width: 649px) {

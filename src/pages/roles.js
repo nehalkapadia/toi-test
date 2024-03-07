@@ -1,3 +1,4 @@
+import { ADMIN_ROLE_NUMBER_VALUE } from "@/utils/constant.util";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
@@ -9,7 +10,7 @@ const Roles = () => {
   useEffect(() => {
     setIsAuth(isAuthenticated);
   }, [isAuthenticated, userRole]);
-  return <>{isAuth && userRole == 1 && <div>roles</div>}</>;
+  return <>{isAuth && userRole == ADMIN_ROLE_NUMBER_VALUE && <div>roles</div>}</>;
 };
 
 export default Roles;

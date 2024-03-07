@@ -21,5 +21,9 @@ exports.createOrganizationSchema = {
       Option: { max: 10 },
       errorMessage: 'Please enter valid phone number',
     },
+  },
+  organizationType: {
+    notEmpty: true,
+    errorMessage: constants.cantBeEmpty("Organization Type"),
   }
 };

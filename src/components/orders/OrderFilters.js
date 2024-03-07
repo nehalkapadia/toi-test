@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import '../../styles/orders/orderFilters.css';
-import { Button, Col, DatePicker, Input, InputNumber, Row, Select } from 'antd';
+import { Button, Col, DatePicker, Input, Row, Select } from 'antd';
 import { useDispatch } from 'react-redux';
 import {
+  CLEAR,
+  CLOSE,
   DATE_FORMAT_STARTING_FROM_MONTH,
   DATE_FORMAT_STARTING_FROM_YEAR,
   TOTAL_ITEMS_PER_PAGE,
 } from '@/utils/constant.util';
 import dayjs from 'dayjs';
 import { getAllCreatedOrderData } from '@/store/orderSlice';
+import { GENDER_OPTIONS } from '@/utils/options';
+import { TOI_RESPONSE_DROPDOWN_OPTIONS_FOR_FILTER } from '@/utils/options';
 
 const OrderFilters = ({
-  page,
   setPage,
   userId,
   Orderstatus,
@@ -20,29 +23,32 @@ const OrderFilters = ({
   setFilterparams,
   isClearable,
   setIsClearable,
+  checkedOrderTypes,
 }) => {
   const dispatch = useDispatch();
 
-  const [orderId, setOrderId] = useState('');
+  const [hsMemberID, setHsMemberID] = useState('');
   const [firstName, setFirstName] = useState('');
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState(null);
   const [lastName, setLastName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState(null);
+  const [toiResponse, setToiResponse] = useState(null);
 
-  const handleFilterByOrderId = (value) => {
-    if (value?.toString()?.trim() === '' || !value) {
-      setOrderId('');
+  const handleFilterByMemberId = (e) => {
+    const value = e.target.value;
+    if (value?.trim() === '' || !value) {
+      setHsMemberID('');
       setFilterparams((prevFilterparams) => {
-        const { orderId, ...rest } = prevFilterparams;
+        const { hsMemberID, ...rest } = prevFilterparams;
         return { ...rest };
       });
       return;
     }
 
-    setOrderId(value);
+    setHsMemberID(e.target.value);
     setFilterparams((prevFilterparams) => ({
       ...prevFilterparams,
-      orderId: value,
+      hsMemberID: e.target.value,
     }));
   };
 
@@ -97,87 +103,74 @@ const OrderFilters = ({
     }));
   };
 
-  const handleFilterByGender = (e) => {
-    const value = e.target.value;
-    if (value?.trim() === '' || !value) {
-      setGender('');
+  const handleFilterByGender = (value) => {
+    if (value === undefined || value === null) {
+      setGender(null);
       setFilterparams((prevFilterparams) => {
         const { gender, ...rest } = prevFilterparams;
         return { ...rest };
       });
       return;
     }
-    setGender(e.target.value);
+    setGender(value);
     setFilterparams((prevFilterparams) => ({
       ...prevFilterparams,
-      gender: e.target.value,
+      gender: value,
     }));
   };
 
-  const handleFilterFunc = () => {
-    setPage(1)
-    dispatch(
-      getAllCreatedOrderData({
-        filters: {
-          userId,
-          status: Orderstatus,
-          ...filterParams,
-        },
-        page: 1,
-        pageSize: TOTAL_ITEMS_PER_PAGE,
-        orderBy: 'updatedAt',
-        ascending: false,
-      })
-    );
+  const handleFilterByTOIResponse = (value) => {
+    if (value === undefined || value === null) {
+      setToiResponse(null);
+      setFilterparams((prevFilterparams) => {
+        const { toiStatus: toiResponse, ...rest } = prevFilterparams;
+        return { ...rest };
+      });
+      return;
+    }
+    setToiResponse(value);
+    setFilterparams((prevFilterparams) => ({
+      ...prevFilterparams,
+      toiStatus: value,
+    }));
   };
 
-  const handleClearFilters = () => {
+  const getAllOrderDataAtFilter = async (filterParams = {}) => {
+    const payload = {
+      filters: {
+        userId,
+        status: Orderstatus,
+        orderTypes: checkedOrderTypes,
+        ...filterParams,
+      },
+      page: 1,
+      pageSize: TOTAL_ITEMS_PER_PAGE,
+      orderBy: 'updatedAt',
+      ascending: false,
+    };
+    await dispatch(getAllCreatedOrderData(payload));
+  };
+
+  const handleFilterFunc = async () => {
+    setPage(1);
+    await getAllOrderDataAtFilter(filterParams);
+  };
+
+  const handleClearFilters = (e) => {
+    const closeBtnClicked = e.target.textContent;
+    setPage(1);
     setFilterparams({});
     setFirstName('');
     setLastName('');
     setDateOfBirth(null);
-    setGender('');
-    setOrderId('');
+    setGender(null);
+    setHsMemberID('');
+    setToiResponse(null);
     setIsClearable(false);
-    dispatch(
-      getAllCreatedOrderData({
-        filters: {
-          userId,
-          status: Orderstatus,
-        },
-        page,
-        pageSize: TOTAL_ITEMS_PER_PAGE,
-        orderBy: 'updatedAt',
-        ascending: false,
-      })
-    );
-  };
-
-  const onFilterClose = () => {
-    if (!firstName && !lastName && !dateOfBirth && !gender && !orderId) {
-      setFilterparams({});
-      setGender('');
-      setOrderId('');
-      setFirstName('');
-      setLastName('');
-      setDateOfBirth('');
-      setIsClearable(false);
-      dispatch(
-        getAllCreatedOrderData({
-          filters: {
-            userId,
-            status: Orderstatus,
-          },
-          page,
-          pageSize: TOTAL_ITEMS_PER_PAGE,
-          orderBy: 'updatedAt',
-          ascending: false,
-        })
-      );
+    getAllOrderDataAtFilter({});
+    if (closeBtnClicked === CLOSE) {
       onClose();
-      return;
     }
-    onClose();
   };
 
   useEffect(() => {
@@ -185,18 +178,26 @@ const OrderFilters = ({
       (value) => value !== ''
     );
     setIsClearable(hasFilterValues);
+    if (Object.keys(filterParams)?.length === 0) {
+      setFirstName('');
+      setLastName('');
+      setDateOfBirth(null);
+      setGender(null);
+      setHsMemberID('');
+      setToiResponse(null);
+    }
   }, [filterParams]);
 
   return (
     <div className='order-mgt-filter-element-container'>
       <Col className='each-filter-form-elem-single-at-order-mgt'>
-        <label>Order ID #</label>
-        <InputNumber
+        <label>Member ID #</label>
+        <Input
           className='input-number-at-order-mgt-filter'
           size='large'
-          value={orderId}
-          onChange={handleFilterByOrderId}
-          placeholder='Enter Order ID'
+          value={hsMemberID}
+          onChange={handleFilterByMemberId}
+          placeholder='Enter Member ID'
         />
       </Col>
       <Col className='each-filter-form-elem-single-at-order-mgt'>
@@ -233,11 +234,25 @@ const OrderFilters = ({
 
       <Col className='each-filter-form-elem-single-at-order-mgt'>
         <label>Gender</label>
-        <Input
+        <Select
           size='large'
           value={gender}
           onChange={handleFilterByGender}
-          placeholder='Enter Gender'
+          placeholder='Select Gender'
+          options={GENDER_OPTIONS}
+          allowClear
+        />
+      </Col>
+
+      <Col className='each-filter-form-elem-single-at-order-mgt'>
+        <label>TOI Response</label>
+        <Select
+          size='large'
+          value={toiResponse}
+          options={TOI_RESPONSE_DROPDOWN_OPTIONS_FOR_FILTER}
+          onChange={handleFilterByTOIResponse}
+          placeholder='Enter TOI Response'
+          allowClear
         />
       </Col>
 
@@ -245,9 +260,9 @@ const OrderFilters = ({
         <Button
           size='large'
           className='close-filter-btn-drawer-at-order-mgt'
-          onClick={isClearable ? handleClearFilters : onFilterClose}
+          onClick={isClearable ? handleClearFilters : handleClearFilters}
         >
-          {isClearable ? 'Clear' : 'Close'}
+          {isClearable ? CLEAR : CLOSE}
         </Button>
 
         <Button

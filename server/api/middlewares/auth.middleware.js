@@ -11,6 +11,8 @@ const userService = require('../services/user.service');
 exports.assignToken = async (user) => {
   let payload = {
     id: user.id,
+    email: user.email,
+    roleId: user.roleId
   };
   let token = await jwt.sign(
     payload,
@@ -38,8 +40,24 @@ exports.verifyToken = async (req, res, next) => {
           : constants.JWT_SECRET_KEY
       );
       req.userData = decoded;
-      if (decoded.id) {
+
+      if (decoded.id == process.env.SALESFORCE_INTEGRATION_USER_EMAIL) {
+        console.log('Salesforce user authenticated successfully!');
+      } else if (decoded.id) {
         let user = await userService.detail(decoded.id);
+        let isEmailExist = await userService.findByEmailAndStatus(decoded.email)
+        if(!isEmailExist) {
+          return res.status(400).json({
+            status: false,
+            message: constants.USER_NOT_EXIST_OR_ACCESS,
+          });
+        }
+        if(isEmailExist?.roleId !== decoded.roleId) {
+          return res.status(400).json({
+            status: false,
+            message: constants.USER_ROLE_HAS_BEEN_CHANGED,
+          })
+        }
         if (user) {
           req.userData.user = user;
         } else {
@@ -48,7 +66,13 @@ exports.verifyToken = async (req, res, next) => {
             message: constants.USER_NOT_EXIST_OR_ACCESS,
           });
         }
+      } else {
+        return res.status(400).json({
+          status: false,
+          message: constants.USER_NOT_EXIST_OR_ACCESS,
+        });
       }
+
       next();
     }
   } catch (error) {

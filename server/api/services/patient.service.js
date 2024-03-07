@@ -40,6 +40,20 @@ async function searchPatient(criteria) {
   }
 }
 
+async function searchPatientByMemberID(memberID) {
+  try {
+    if(memberID) {
+      const existingPatient = await PatientDemos.findOne({
+        where: { hsMemberID: memberID }
+      });
+      return existingPatient;
+    }
+    return null;
+  } catch (error) {
+    throw error;
+  }
+}
+
 async function createPatient(patientData) {
   try {
     const newPatient = await PatientDemos.create(patientData);
@@ -65,6 +79,26 @@ async function updatePatient(patientId, updatedData) {
       // Handle the case where the patient doesn't exist
       return null;
     }
+  } catch (error) {
+    // Handle any errors during the database update
+    throw error;
+  }
+}
+
+
+async function updateHsPatient(updatedData) {
+  try {
+    const patient = await PatientDemos.findOne({
+      where: {
+        hsMemberID: updatedData.hsMemberID
+      },
+    });
+    if (patient) {
+      await patient.update(updatedData);
+      return patient;
+    }
+      // Handle the case where the patient doesn't exist
+      return null;
   } catch (error) {
     // Handle any errors during the database update
     throw error;
@@ -148,9 +182,11 @@ const searchOrUpdatePatient = async (payload) => {
 
 module.exports = {
   searchPatient,
+  searchPatientByMemberID,
   createPatient,
   getPatientById,
   updatePatient,
+  updateHsPatient,
   checkForDataConflict,
   isPatientExist,
   searchOrUpdatePatient

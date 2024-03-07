@@ -10,8 +10,15 @@ import DisplayOrganization from '@/components/organizations/DisplayOrganization'
 import AddOrganization from '@/components/organizations/AddOrganization';
 import OrganizationFilters from '@/components/organizations/OrganizationFilters';
 import { useDispatch, useSelector } from 'react-redux';
-import { getOrganizationsFunc } from '@/store/organizationSlice';
-import { TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
+import {
+  getOrganizationsFunc,
+  setGetorderDetailsById,
+} from '@/store/organizationSlice';
+import {
+  ADMIN_ROLE_NUMBER_VALUE,
+  TOTAL_ITEMS_PER_PAGE,
+} from '@/utils/constant.util';
+import { FiRefreshCcw } from 'react-icons/fi';
 
 const OrganizationManagement = () => {
   const dispatch = useDispatch();
@@ -33,9 +40,21 @@ const OrganizationManagement = () => {
   const [filterParams, setFilterParams] = useState({});
   const [isClearable, setIsClearable] = useState(false);
   const [page, setPage] = useState(1);
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  const getOrganizationsData = async (page, filterParams, searchedValue) => {
+    const payload = {
+      page: page,
+      perPage: TOTAL_ITEMS_PER_PAGE,
+      filters: filterParams,
+    };
+    if (searchedValue?.trim().length > 0) {
+      payload.searchText = searchedValue;
+    }
+    await dispatch(getOrganizationsFunc(payload));
+  };
 
   const handleSearchValue = (e) => {
+    setPage(1);
     setSearchedValue(e.target.value);
   };
 
@@ -45,14 +64,18 @@ const OrganizationManagement = () => {
     setDisplayViewDrawer(false);
   };
 
+  const handleAddAndEditOrganizationDrawer = () => {
+    setDisplayAddOrgDrawer(true);
+    setDrawerHeadingText('Add');
+  };
+
   const handleViewOrganizationTable = (record) => {
     setClickedColumnId(record?.id);
     setDisplayViewDrawer(true);
-    setDrawerHeadingText('View');
   };
 
   const handleEditOrganizationTable = (record) => {
-    setDisplayViewDrawer(true);
+    setDisplayAddOrgDrawer(true);
     setDrawerHeadingText('Edit');
     setIsEditClicked(true);
     setClickedColumnId(record?.id);
@@ -65,50 +88,30 @@ const OrganizationManagement = () => {
     setIsEditClicked(false);
     setDisplayAddOrgDrawer(false);
     setDisplayFilterDrawer(false);
-    getOrganizationsFunc({ page: page, perPage: TOTAL_ITEMS_PER_PAGE });
+    dispatch(setGetorderDetailsById({}));
+    if (getOrganizations?.length === 0 || !getOrganizations) {
+      getOrganizationsData(1, {}, searchedValue);
+      setFilterParams({});
+      setIsClearable(false);
+      setPage(1);
+    }
+  };
+
+  const handleRefreshBtn = () => {
+    getOrganizationsData(page, filterParams, searchedValue);
   };
 
   useEffect(() => {
-    if (searchedValue?.trim().length > 0) {
-      dispatch(
-        getOrganizationsFunc({
-          filters: filterParams,
-          searchText: searchedValue,
-          page: page,
-          perPage: TOTAL_ITEMS_PER_PAGE,
-        })
-      );
-    } else {
-      dispatch(
-        getOrganizationsFunc({
-          page: page,
-          perPage: TOTAL_ITEMS_PER_PAGE,
-          filters: filterParams,
-        })
-      );
-    }
+    getOrganizationsData(page, filterParams, searchedValue);
   }, [searchedValue, page]);
 
   useEffect(() => {
     setIsAuth(isAuthenticated);
   }, [isAuthenticated, userRole]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 500);
-    };
-    if (typeof window !== 'undefined') {
-      handleResize();
-      window.addEventListener('resize', handleResize);
-      return () => {
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, []);
-
   return (
     <>
-      {isAuth && userRole == 1 && (
+      {isAuth && userRole == ADMIN_ROLE_NUMBER_VALUE && (
         <div className='organization-management-parent-container'>
           <Row className='om-child-container-one'>
             <h3 className='om-heading-text-customization'>
@@ -116,9 +119,9 @@ const OrganizationManagement = () => {
             </h3>
             <Button
               size='large'
-              className='om-add-organization-btn'
+              className='global-primary-btn-style'
               icon={<FaPlus />}
-              onClick={() => setDisplayAddOrgDrawer(true)}
+              onClick={handleAddAndEditOrganizationDrawer}
             >
               Add Organization
             </Button>
@@ -136,14 +139,28 @@ const OrganizationManagement = () => {
               />
             </Col>
 
-            <Button
-              className='org-mgt-filter-btn'
-              size='large'
-              icon={<LuSlidersHorizontal className='org-mgt-filter-icon' />}
-              onClick={handleFilterDrawer}
-            >
-              Filters
-            </Button>
+            <Row gutter={8}>
+              <Col>
+                <Button
+                  className='global-secondary-btn-style'
+                  size='large'
+                  icon={<LuSlidersHorizontal className='org-mgt-filter-icon' />}
+                  onClick={handleFilterDrawer}
+                >
+                  Filters
+                </Button>
+              </Col>
+              <Col>
+                <Button
+                  size='large'
+                  icon={<FiRefreshCcw />}
+                  className='global-primary-btn-style'
+                  onClick={handleRefreshBtn}
+                >
+                  Refresh
+                </Button>
+              </Col>
+            </Row>
           </Row>
 
           <Row>
@@ -161,47 +178,34 @@ const OrganizationManagement = () => {
                 rowSelectionType={false}
                 pagination={true}
                 current={page}
-                pageSize={5}
+                pageSize={TOTAL_ITEMS_PER_PAGE}
                 total={totalCount}
                 onPageChange={(page) => setPage(page)}
+                scroll={{y: 300}}
               />
             )}
           </Row>
 
           {/* All Drawer start from here */}
 
-          {/* Add Organization Drawer */}
-          <Drawer
-            title='Add Organization'
-            placement='right'
-            open={displayAddOrgDrawer}
-            onClose={handleCloseDrawer}
-            closable={true}
-            width={ isSmallScreen ? '100%' : '80%'}
-            destroyOnClose={true}
-            footer={false}
-          >
-            <AddOrganization onClose={handleCloseDrawer} page={page} />
-          </Drawer>
+          {/* Add And Edit Organization Drawer */}
 
-          {/* View And Edit Organization Drawer */}
-          <Drawer
-            title={`${drawerHeadingText} Organization`}
-            placement='right'
-            open={displayViewDrawer}
+          <AddOrganization
             onClose={handleCloseDrawer}
-            closable={true}
-            width={ isSmallScreen ? '100%' : '80%'}
-            destroyOnClose={true}
-            footer={false}
-          >
-            <DisplayOrganization
-              columnId={clickedColumnId}
-              onClose={handleCloseDrawer}
-              isEditClicked={isEditClicked}
-              page={page}
-            />
-          </Drawer>
+            page={page}
+            columnId={clickedColumnId}
+            isEditClicked={isEditClicked}
+            drawerHeadingText={drawerHeadingText}
+            displayAddOrgDrawer={displayAddOrgDrawer}
+          />
+
+          {/* View Organization Drawer */}
+
+          <DisplayOrganization
+            onClose={handleCloseDrawer}
+            columnId={clickedColumnId}
+            displayViewDrawer={displayViewDrawer}
+          />
 
           {/* Filter Drawer */}
           <Drawer
@@ -216,7 +220,6 @@ const OrganizationManagement = () => {
           >
             <OrganizationFilters
               onClose={handleCloseDrawer}
-              page={page}
               setPage={setPage}
               searchText={searchedValue}
               filterParams={filterParams}

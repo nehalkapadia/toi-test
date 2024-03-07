@@ -1,288 +1,175 @@
 import React, { useEffect, useState } from 'react';
 import '../../styles/organizations/displayOrganization.css';
-import {
-  Button,
-  Col,
-  Form,
-  Input,
-  InputNumber,
-  Radio,
-  Row,
-  Skeleton,
-  Spin,
-  message,
-} from 'antd';
+import { Button, Col, Drawer, Row, Skeleton } from 'antd';
 import {
   ACTIVE_STATUS,
-  API_RESPONSE_MESSAGES,
-  CANCEL,
-  CLOSE,
-  FORM_NAME_VALUES,
   INACTIVE_STATUS,
-  ORGANIZATION_FORM_FIELD_RULES,
   ORG_MESSAGES,
-  TOTAL_ITEMS_PER_PAGE,
+  PERCENTAGE_TEXT_FOR_100,
+  PERCENTAGE_TEXT_FOR_80,
 } from '@/utils/constant.util';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  getOrganizationsById,
-  getOrganizationsFunc,
-  updateOrganizationFunc,
-} from '@/store/organizationSlice';
-import {
-  allowDigitsOnly,
-  formatPhoneNumberForInput,
-  formatPhoneNumberToUSFormat,
-} from '@/utils/commonFunctions';
-import TextArea from 'antd/es/input/TextArea';
+import { getOrganizationsById } from '@/store/organizationSlice';
+import { formatPhoneNumberToUSFormat } from '@/utils/commonFunctions';
 
-const DisplayOrganization = ({ columnId, isEditClicked, onClose, page }) => {
+const DisplayOrganization = ({ displayViewDrawer, columnId, onClose }) => {
   const dispatch = useDispatch();
-  const [formData] = Form.useForm();
-  const [submittable, setSubmittable] = useState(false);
-  const formValues = Form.useWatch([], formData);
-  const [loading, setLoading] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const isLoading = useSelector(
     (state) => state.organizationTable.viewIsLoading
   );
-  const getOrgDetails = useSelector(
-    (state) => state.organizationTable.getOrgDetails
-  );
+  const getOrgDetails =
+    useSelector((state) => state.organizationTable.getOrgDetails) || {};
 
-  const { name, email, phoneNumber, domain, address, isActive } = getOrgDetails;
-
-  const submitFormData = (values) => {
-    setLoading(true)
-    // const updatedBy = 4
-    const payload = {
-      name,
-      phoneNumber,
-      ...values,
-    };
-    payload.phoneNumber = payload?.phoneNumber?.toString();
-    dispatch(updateOrganizationFunc({ id: columnId, payload })).then((res) => {
-      if (res?.payload?.status) {
-        dispatch(getOrganizationsFunc({ page, perPage: TOTAL_ITEMS_PER_PAGE }));
-        message.success(API_RESPONSE_MESSAGES.org_updated);
-        setLoading(false)
-        onClose();
-      } else if (res?.payload?.status === false) {
-        message.error(res?.payload?.message);
-        setLoading(false)
-      } else {
-        message.error(API_RESPONSE_MESSAGES.err_rest_api);
-        setLoading(false)
-      }
-    });
-  };
-
-  useEffect(() => {
-    formData.validateFields({ validateOnly: true }).then(
-      () => {
-        setSubmittable(true);
-      },
-      () => {
-        setSubmittable(false);
-      }
-    );
-  }, [formValues]);
+  const {
+    name,
+    email,
+    phoneNumber,
+    organizationType,
+    domain,
+    address,
+    isActive,
+  } = getOrgDetails;
 
   useEffect(() => {
     if (columnId) {
       dispatch(getOrganizationsById(columnId));
     }
-  }, [columnId, isEditClicked]);
+  }, [columnId]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 500);
+    };
+    if (typeof window !== 'undefined') {
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, []);
 
   return (
-    <>
+    <Drawer
+      title='View Organization'
+      placement='right'
+      open={displayViewDrawer}
+      closable={true}
+      onClose={onClose}
+      width={isSmallScreen ? PERCENTAGE_TEXT_FOR_100 : PERCENTAGE_TEXT_FOR_80}
+      destroyOnClose={true}
+      footer={
+        <Row className='view-org-footer-container'>
+          <Button size='large' className='global-close-btn-style' onClick={onClose}>
+            Close
+          </Button>
+        </Row>
+      }
+    >
       {isLoading ? (
         <Skeleton active paragraph={{ row: 18 }} />
       ) : (
-        <Form
-          className="display-organization-details-container"
-          form={formData}
-          name="oncology-fields-editable"
-          onFinish={submitFormData}
-          autoComplete="off"
-          preserve={false}
-          layout="vertical"
-        >
-          <Row className="display-organization-rows-parent-container">
-            <Col className="each-single-detail-row-child-container">
-              <p className="column-name-lable-at-om">Organization</p>
-              <p className="column-value-as-heading-at-om text-transform-class-om">
+        <div className='display-organization-container'>
+          <Row span={24} gutter={24}>
+            <Col
+              className='display-org-each-column-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='column-name-lable-at-om'>Organization</label>
+              <h3 className='column-value-as-heading-at-om text-transform-class-om'>
                 {name}
-              </p>
+              </h3>
             </Col>
 
-            {!isEditClicked && (
-              <Col className="each-single-detail-row-child-container">
-                <p className="column-name-lable-at-om">Email ID</p>
-                <p className="column-value-as-heading-at-om">
-                  {email || 'N/A'}
-                </p>
-              </Col>
-            )}
+            <Col
+              className='display-org-each-column-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='column-name-lable-at-om'>
+                Organization Type
+              </label>
+              <h3 className='column-value-as-heading-at-om text-transform-class-om'>
+                {organizationType}
+              </h3>
+            </Col>
 
-            {!isEditClicked && (
-              <Col className="each-single-detail-row-child-container">
-                <p className="column-name-lable-at-om">Phone Number</p>
-                <p className="column-value-as-heading-at-om">
-                  {formatPhoneNumberToUSFormat(phoneNumber)}
-                </p>
-              </Col>
-            )}
-            {isEditClicked && (
-              <Form.Item
-                className="each-single-detail-row-child-container"
-                initialValue={phoneNumber}
-                name={FORM_NAME_VALUES.number}
-                label="Phone Number"
-                rules={ORGANIZATION_FORM_FIELD_RULES.number}
-              >
-                <InputNumber
-                  type="tel"
-                  size="large"
-                  className="add-org-form-input-box add-org-number-input"
-                  placeholder="Please Enter Phone Number"
-                  onKeyDown={allowDigitsOnly}
-                  formatter={(value) => formatPhoneNumberForInput(value)}
-                  parser={(value) => value.replace(/\D/g, '')}
-                  maxLength={14}
-                />
-              </Form.Item>
-            )}
+            <Col
+              className='display-org-each-column-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='column-name-lable-at-om'>Email ID</label>
+              <h3 className='column-value-as-heading-at-om'>
+                {email || 'N/A'}
+              </h3>
+            </Col>
 
-            {!isEditClicked && (
-              <Col className="each-single-detail-row-child-container">
-                <p className="column-name-lable-at-om">Domain</p>
-                <p className="column-value-as-heading-at-om text-transform-class-om">
-                  {domain}
-                </p>
-              </Col>
-            )}
+            <Col
+              className='display-org-each-column-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='column-name-lable-at-om'>Phone Number</label>
+              <h3 className='column-value-as-heading-at-om'>
+                {formatPhoneNumberToUSFormat(phoneNumber)}
+              </h3>
+            </Col>
+
+            <Col
+              className='display-org-each-column-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='column-name-lable-at-om'>Domain</label>
+              <h3 className='column-value-as-heading-at-om text-transform-class-om'>
+                {domain}
+              </h3>
+            </Col>
+
+            <Col
+              className='display-org-each-column-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='column-name-lable-at-om'>Status</label>
+              <h3 className={`organization-current-${isActive}`}>
+                {isActive ? ACTIVE_STATUS : INACTIVE_STATUS}
+              </h3>
+            </Col>
           </Row>
 
-          {isEditClicked && (
-            <Row className="display-organization-rows-parent-container">
-              <Form.Item
-                className="each-single-detail-row-child-container"
-                initialValue={domain}
-                name={FORM_NAME_VALUES.domain}
-                label="Domain"
-                rules={ORGANIZATION_FORM_FIELD_RULES.domain}
-              >
-                <Input
-                  size="large"
-                  className="edit-organization-input-box"
-                  placeholder="Please Enter Domain Name"
-                />
-              </Form.Item>
-
-              <Form.Item
-                className="each-single-detail-row-child-container"
-                initialValue={email}
-                name={FORM_NAME_VALUES.email}
-                label="Email ID"
-                rules={ORGANIZATION_FORM_FIELD_RULES.org_email}
-              >
-                <Input
-                  type="email"
-                  size="large"
-                  placeholder="Please Enter Email ID"
-                  className="edit-organization-input-box"
-                />
-              </Form.Item>
-            </Row>
-          )}
-
-          {!isEditClicked && (
-            <Row className="display-organization-rows-parent-container">
-              <Col className="each-single-detail-row-child-container">
-                <p className="column-name-lable-at-om">Address</p>
-                <p className="column-value-as-heading-at-om text-transform-class-om">
-                  {address || ORG_MESSAGES.address_not_available}
-                </p>
-              </Col>
-
-              <Col className="each-single-detail-row-child-container">
-                <p className="column-name-lable-at-om">Status</p>
-                <p
-                  className={`text-transform-class-om organization-current-${isActive}`}
-                >
-                  {isActive ? ACTIVE_STATUS : INACTIVE_STATUS}
-                </p>
-              </Col>
-            </Row>
-          )}
-
-          {isEditClicked && (
-            <Row className="display-organization-rows-parent-container">
-              <Form.Item
-                className="each-single-detail-row-child-container"
-                initialValue={address}
-                name={FORM_NAME_VALUES.address}
-                label="Address"
-              >
-                <TextArea
-                  className="edit-organization-input-box"
-                  placeholder="Please Enter Full Address"
-                  autoSize={{ minRows: 4, maxRows: 6 }}
-                />
-              </Form.Item>
-            </Row>
-          )}
-
-          {isEditClicked && (
-            <Row className="display-organization-rows-parent-container">
-              <Form.Item
-                className="each-single-detail-row-child-container"
-                initialValue={isActive}
-                name={FORM_NAME_VALUES.isActive}
-                label="Status"
-              >
-                <Radio.Group className="radio-group-for-edit-in-org-mgt">
-                  <Radio value={true} className="organization-current-active">
-                    Active
-                  </Radio>
-
-                  <Radio
-                    value={false}
-                    className="organization-current-inactive"
-                  >
-                    InActive
-                  </Radio>
-                </Radio.Group>
-              </Form.Item>
-            </Row>
-          )}
-
-          <Form.Item className="edit-component-btn-container-parent-at-org">
-            <Row className="cancel-and-submit-btn-container-at-org-edit">
-              <Button
-                size="large"
-                className="org-mgt-edit-btn-for-cancel"
-                onClick={onClose}
-              >
-                {isEditClicked ? CANCEL : CLOSE}
-              </Button>
-
-              {isEditClicked && (
-                <Button
-                  size="large"
-                  className="org-mgt-edit-btn-for-update"
-                  htmlType="submit"
-                  disabled={!submittable}
-                >
-                  Update
-                </Button>
-              )}
-            </Row>
-          </Form.Item>
-          {loading && <Spin fullscreen />}
-        </Form>
+          <Row span={24} gutter={24}>
+            <Col
+              className='display-org-each-column-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 16 }}
+              lg={{ span: 12 }}
+            >
+              <label className='column-name-lable-at-om'>Address</label>
+              <h3 className='column-value-as-heading-at-om text-transform-class-om'>
+                {address || ORG_MESSAGES.address_not_available}
+              </h3>
+            </Col>
+          </Row>
+        </div>
       )}
-    </>
+    </Drawer>
   );
 };
 

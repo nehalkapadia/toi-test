@@ -2,27 +2,39 @@
 const { body, query } = require('express-validator');
 const constants = require('../utils/constants.util');
 
+const validateOrderType = (value, { req }) =>
+  req.body.orderType.toLowerCase() === 'chemo';
+
 // create medical history schema
 exports.createMedicalHistorySchema = [
-    body('patientId')
-    .notEmpty().withMessage(constants.CANT_BE_EMPTY + 'patientId'),
+  body('patientId')
+    .notEmpty()
+    .withMessage(constants.CANT_BE_EMPTY + ' patientId'),
 
-    body('diagnosis')
-    .notEmpty().withMessage(constants.CANT_BE_EMPTY + 'Diagnosis'),
+  body('diagnosis')
+    .notEmpty()
+    .withMessage(constants.CANT_BE_EMPTY + ' Diagnosis'),
 
-    body('chemoTherapyStatus')
-    .notEmpty().withMessage(constants.CANT_BE_EMPTY + 'Chemotherapy Status'),
+  body('orderType')
+    .notEmpty()
+    .withMessage(constants.CANT_BE_EMPTY + ' Order Type'),
 
-    body('orderingProvider')
-    .notEmpty().withMessage(constants.CANT_BE_EMPTY + 'Ordering Provider'),
+  body('chemoTherapyStatus')
+    .if(validateOrderType)
+    .notEmpty()
+    .withMessage(constants.CANT_BE_EMPTY + ' Chemotherapy Status'),
 
-    body('referringProvider')
-    .notEmpty().withMessage(constants.CANT_BE_EMPTY + 'Referring Provider'),
+  body('orderingProvider')
+    .if(validateOrderType)
+    .notEmpty()
+    .withMessage(constants.CANT_BE_EMPTY + ' Ordering Provider'),
 ];
 
 // get medical history schema
 exports.getMedicalHistorySchema = [
-    query('historyId')
-      .notEmpty().withMessage(constants.CANT_BE_EMPTY + 'Medical History ID')
-      .isNumeric().withMessage(constants.MUST_BE_NUMBER + 'Medical History ID'),
+  query('historyId')
+    .notEmpty()
+    .withMessage(constants.CANT_BE_EMPTY + 'Medical History ID')
+    .isNumeric()
+    .withMessage(constants.MUST_BE_NUMBER + 'Medical History ID'),
 ];

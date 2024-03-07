@@ -8,12 +8,6 @@ const { createUserLog } = require('../services/user_log.service');
 const { formatRequest } = require('../utils/common.util');
 
 /**
- * Handles the initiation of Facebook login authentication by using Passport.js
- * @returns Passport.js authentication for Facebook with email scope
- */
-exports.facebookLogin = passport.authenticate('facebook');
-
-/**
  * Handles the initiation of Google login authentication using Passport.js
  * @returns Passport.js authentication for Google with profile and email scope
  */
@@ -64,7 +58,7 @@ exports.loginCallback = async (req, res) => {
     }
     await user.save();
 
-    if(user) {
+    if (user) {
       user.recordId = user.id;
       user.action = "login"
       user.createdBy = user.id;
@@ -92,8 +86,8 @@ exports.loginCallback = async (req, res) => {
  */
 exports.getProfile = async (req, res) => {
   try {
-    
-    if(req?.userData) {
+
+    if (req?.userData) {
       const id = req?.userData?.id;
       // Find user by email in the database
       let user = await detail(id);
@@ -111,6 +105,48 @@ exports.getProfile = async (req, res) => {
         .json(errorResponse(constantsUtils.USER_NOT_EXIST_OR_ACCESS));
     }
   } catch (error) {
+    return res
+      .status(constantsUtils.INTERNAL_SERVER_STATUS)
+      .json({ message: constantsUtils.INTERNAL_SERVER_ERROR });
+  }
+}
+
+/**
+ * This function will generate the authentication token for salesforce webhook
+ * @param {Object} req 
+ * @param {Object} res 
+ * @returns {Object} response with token
+ */
+exports.generateSalesforceAuthenticationToken = async (req, res) => {
+  try {
+
+    // get user details
+    const salesForceUserEmail = req.body.email;
+    const salesForceUserPassword = req.body.password;
+
+    // check if salesforce user is valid or not
+    if (
+      salesForceUserEmail != process.env.SALESFORCE_INTEGRATION_USER_EMAIL ||
+      salesForceUserPassword != process.env.SALESFORCE_INTEGRATION_USER_PASSWORD
+    ) {
+
+      return res.status(constantsUtils.NOT_FOUND).json({ message: constantsUtils.SALESFORCE_USER_NOT_FOUND });
+
+    }
+
+    const user = { id: salesForceUserEmail };
+    const authToken = await assignToken(user); // generate authentication token
+
+    if (!authToken) {
+      return res.status(constantsUtils.BAD_REQUEST).json({ message: constantsUtils.SALESFORCE_USER_TOKEN_FAILED });
+    }
+
+    return res.status(constantsUtils.SUCCESS).json(successResponse(constantsUtils.LOGIN_SUCCESSFUL, { 'token': authToken }));
+
+  } catch (error) {
+
+    await auditLogService.createLog(formatRequest(req), 'SALESFORCEUSER', 'LOGIN', error);
+
     return res
       .status(constantsUtils.INTERNAL_SERVER_STATUS)
       .json({ message: constantsUtils.INTERNAL_SERVER_ERROR });

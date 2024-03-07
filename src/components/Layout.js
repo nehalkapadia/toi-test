@@ -4,8 +4,9 @@ import AppHeader from "./Header";
 import { Layout } from "antd";
 import { Content } from "antd/es/layout/layout";
 import { useSelector } from "react-redux";
+import Head from "next/head";
 
-const UniversalLayout = ({ children }) => {
+const UniversalLayout = ({ children, pageTitle }) => {
   const [collapsed, setCollapsed] = useState(false);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const [isAuth, setIsAuth] = useState(false);
@@ -16,6 +17,10 @@ const UniversalLayout = ({ children }) => {
 
   return (
     <>
+      <Head>
+        <link rel="icon" href="/TOI.svg" />
+        <title>{pageTitle}</title>
+      </Head>
       {isAuth ? (
         <Layout>
           <AppSidebar collapsed={collapsed} setCollapsed={setCollapsed} />

@@ -14,19 +14,17 @@ RUN npm install
 COPY . .
 
 # Change working directory to the server folder
-WORKDIR /usr/src/app/server
+WORKDIR /usr/src/app
 
-# Run sequelize migrations
-RUN npx sequelize db:migrate
+ARG NEXT_PORT=3002
 
-# Run sequelize migrations
-RUN npx sequelize db:seed:all
+ENV NEXT_PORT=$NEXT_PORT
 
 # Expose the port the app runs on
-EXPOSE 3009
+EXPOSE $NEXT_PORT
 
 # Change working directory to the server folder
 WORKDIR /usr/src/app
 
-# Start the application
-CMD ["npm", "run", "dev"]
+# Build the nextjs production build && start the application
+CMD ["sh", "-c", "npm run build && npm run start"]

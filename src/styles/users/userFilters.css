@@ -17,26 +17,3 @@
   justify-content: space-between;
   margin-bottom: 20px;
 }
-
-.close-filter-btn-drawer-at-user {
-  font-size: 14px !important;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.close-filter-btn-drawer-at-user:hover {
-  color: #344054 !important;
-}
-
-.apply-filter-btn-at-user {
-  background-color: #34657f;
-  color: #fff;
-  font-size: 14px !important;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.apply-filter-btn-at-user:hover {
-  color: #fff !important;
-  border: 1px solid #34657f !important;
-}

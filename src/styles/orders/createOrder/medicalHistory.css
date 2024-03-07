@@ -1,26 +1,25 @@
 .create-order-medical-history-tab-2-container {
   width: 100%;
   background-color: #fff;
-  /* max-height: 50vh;
-  overflow-y: scroll; */
-  /* padding: 27px 24px 0px; */
+  padding: 27px 24px 0px;
+  min-height: 55vh;
 }
 
 .tab-2-child-component-container {
-  padding: 27px 24px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 2px solid #ccc;
 }
 
-.tab-2-child-component-container-second {
-  display: flex;
-  flex-direction: column;
-  padding: 27px 24px 0 24px;
-  gap: 24px;
+.co-medical-history-order-type {
+  margin: 0;
+  text-transform: capitalize;
+  font-weight: 500;
+  font-size: 24px;
+  color: #4d5464;
+  margin-bottom: 24px;
 }
 
 .co-tab-2-medical-history-number-input {
   width: 100%;
-  background: #f9f9fc;
 }
 
 .co-tab-2-ordering-btn {
@@ -50,13 +49,6 @@
   color: #34657f !important;
 }
 
-.medical-history-modal-customized {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
 .tab2-ordering-provider-lable-conatiner {
   display: flex;
   gap: 10px;
@@ -67,36 +59,6 @@
   font-size: 18px;
   font-weight: 500;
   color: #396571;
-  cursor: pointer;
-}
-
-.modal-title-container-with-close-icon {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
-}
-
-.tab-2-modal-title-heading-text {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.co-tab-2-modal-validate-btn {
-  color: #fff;
-  background-color: #396571;
-  font-size: 14px !important;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.co-tab-2-modal-validate-btn:hover {
-  border: 1px solid #396571 !important;
-  color: #fff !important;
-}
-
-.close-icon-for-modal {
   cursor: pointer;
 }
 
@@ -115,21 +77,22 @@
 }
 
 /* Antd CSS Styles Override */
-.ant-select-selector {
-  background-color: #f9f9fc !important;
-}
 
-.ant-input {
+/* .ant-select-selector {
+  background-color: #f9f9fc !important;
+} */
+
+/* .ant-input {
   background-color: #f9f9fc !important;
 }
 
 .ant-input-number {
   background-color: #f9f9fc !important;
-}
+} */
 
-.ant-picker {
+/* .ant-picker {
   background-color: #f9f9fc !important;
-}
+} */
 
 .ant-modal-footer {
   display: flex;
@@ -138,7 +101,6 @@
   padding-top: 16px;
 }
 
-/* media query class */
-/* co-tab-2-ordering-container */
-/* co-tab-2-referring-container */
-/* co-tab-2-pcp-number-container */
+.chemo-font-weight-bold {
+  font-weight: bold;
+}

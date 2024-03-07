@@ -1,22 +1,25 @@
-import React, { useEffect, useState } from "react";
-import "../styles/users.css";
-import AddUser from "@/components/users/AddUser";
-import DisplayUser from "@/components/users/DisplayUser";
-import UserFilters from "@/components/users/UserFilters";
-import { Col, Row, Button, Drawer, Skeleton, Select, Tag } from "antd";
-import { FaPlus } from "react-icons/fa6";
-import { LuSlidersHorizontal } from "react-icons/lu";
-import CustomTable from "@/components/customTable/CustomTable";
-import { useDispatch, useSelector } from "react-redux";
-import { getUsersFunc } from "@/store/userTableDataSlice";
-import { TABLE_FOR_USER_MANAGEMENT } from "@/utils/columns";
-import { getOrganizationsFunc } from "@/store/organizationSlice";
-import { capitalizeWords } from "@/utils/commonFunctions";
+import React, { useEffect, useState } from 'react';
+import '../styles/users.css';
+import AddUser from '@/components/users/AddUser';
+import DisplayUser from '@/components/users/DisplayUser';
+import UserFilters from '@/components/users/UserFilters';
+import { Col, Row, Button, Drawer, Skeleton, Select, Tag } from 'antd';
+import { FaPlus } from 'react-icons/fa6';
+import { LuSlidersHorizontal } from 'react-icons/lu';
+import CustomTable from '@/components/customTable/CustomTable';
+import { useDispatch, useSelector } from 'react-redux';
+import { getUsersFunc, setGetUserDetails } from '@/store/userTableDataSlice';
+import { TABLE_FOR_USER_MANAGEMENT } from '@/utils/columns';
+import { getOrganizationsFunc } from '@/store/organizationSlice';
+import { capitalizeWords } from '@/utils/commonFunctions';
 import {
+  ADMIN_ROLE_NUMBER_VALUE,
   ORG_COLUMN_FOR_USER_MGT,
-  ROLE_COLUMN_FOR_USER_MGT,
   TOTAL_ITEMS_PER_PAGE,
-} from "@/utils/constant.util";
+} from '@/utils/constant.util';
+import { FiRefreshCcw } from 'react-icons/fi';
+import { setDisplayorderingSuccessTick } from '@/store/createOrderFormSlice';
+import { setValidationCancelForOrdering } from '@/store/orderSlice';
 
 const UserManagement = () => {
   const dispatch = useDispatch();
@@ -29,53 +32,78 @@ const UserManagement = () => {
   const getUsersData = useSelector((state) => state.userTable.getUsersData);
   const totalCount = useSelector((state) => state.userTable.totalCount);
   const [isAuth, setIsAuth] = useState(false);
-  const [selectedOrganization, setSelectedOrganization] = useState("");
-  const [organizationName, setOrganizationName] = useState("");
-  const [drawerHeadingText, setDrawerHeadingText] = useState("");
+  const [selectedOrganization, setSelectedOrganization] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
+  const [organizationType, setOrganizationType] = useState('');
+  const [drawerHeadingText, setDrawerHeadingText] = useState('');
   const [displayViewDrawer, setDisplayViewDrawer] = useState(false);
-  const [displayAddOrgDrawer, setDisplayAddOrgDrawer] = useState(false);
+  const [displayAddUserDrawer, setDisplayAddUserDrawer] = useState(false);
   const [displayFilterDrawer, setDisplayFilterDrawer] = useState(false);
   const [isEditClicked, setIsEditClicked] = useState(false);
   const [clickedColumnId, setClickedColumnId] = useState(null);
-  
+  const [selectedRoleType, setSelectedRoleType] = useState(null);
+
   const [filterParams, setFilterparams] = useState({});
   const [isClearable, setIsClearable] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedOrgStatus, setSelectedOrgStatus] = useState(null);
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [providerValue, setProviderValue] = useState(null);
+
+  const getAlluserDataFunc = async (page, filters, selectedOrganization) => {
+    const organizationId = selectedOrganization?.toString().trim() || 'n';
+
+    const payload = {
+      page,
+      perPage: TOTAL_ITEMS_PER_PAGE,
+      filters,
+      organizationId,
+    };
+    await dispatch(getUsersFunc(payload));
+  };
 
   // Change this when user Data is Available
   const displayEmptyColumn = (columnArr) => {
     let newColumns = [...columnArr];
     newColumns.splice(1, 0, ORG_COLUMN_FOR_USER_MGT);
-    newColumns.splice(6, 0, ROLE_COLUMN_FOR_USER_MGT);
     return newColumns;
   };
 
-  const makeOptionsForOrganizations = (getOrganizations) => [
-    // { value: "", label: "Select Any Organization" },
-    ...getOrganizations.map((elem) => ({
-      label: capitalizeWords(elem.name),
-      value: elem.id,
-    })),
-  ];
+  const makeOptionsForOrganizations = (getOrganizations) => {
+    if (getOrganizations) {
+      return [
+        // { value: "", label: "Select Any Organization" },
+        ...getOrganizations?.map((elem) => ({
+          label: capitalizeWords(elem.name),
+          value: elem.id,
+        })),
+      ];
+    }
+  };
 
   const handleOrganizationChange = (value) => {
     setSelectedOrganization(value);
+    setFilterparams({});
     const org = getOrganizations.find(
       (elem) => parseInt(elem.id) === parseInt(value)
     );
     setSelectedOrgStatus(org.isActive);
+    setOrganizationName(org.name);
+    setOrganizationType(org.organizationType);
+    setPage(1);
+  };
+
+  const handleRefreshBtn = () => {
+    getAlluserDataFunc(page, filterParams, selectedOrganization);
   };
 
   const handleAddAndEditDrawer = () => {
-    setDisplayAddOrgDrawer(true);
-    setDrawerHeadingText("Add");
+    setDisplayAddUserDrawer(true);
+    setDrawerHeadingText('Add');
   };
 
   const handleFilterDrawer = () => {
     setDisplayFilterDrawer(true);
-    setDisplayAddOrgDrawer(false);
+    setDisplayAddUserDrawer(false);
     setDisplayViewDrawer(false);
   };
 
@@ -85,8 +113,8 @@ const UserManagement = () => {
   };
 
   const handleEditOrganizationTable = (record) => {
-    setDisplayAddOrgDrawer(true);
-    setDrawerHeadingText("Edit");
+    setDisplayAddUserDrawer(true);
+    setDrawerHeadingText('Edit');
     setIsEditClicked(true);
     setClickedColumnId(record?.id);
   };
@@ -94,46 +122,26 @@ const UserManagement = () => {
   const handleCloseDrawer = () => {
     setDisplayViewDrawer(false);
     setClickedColumnId(null);
-    setDrawerHeadingText("");
+    setDrawerHeadingText('');
     setIsEditClicked(false);
-    setDisplayAddOrgDrawer(false);
+    setDisplayAddUserDrawer(false);
     setDisplayFilterDrawer(false);
+    setSelectedRoleType(null);
+    setProviderValue(null);
+    dispatch(setGetUserDetails({}));
+    dispatch(setDisplayorderingSuccessTick(false));
+    dispatch(setValidationCancelForOrdering());
+    if (!getUsersData || getUsersData?.length === 0) {
+      getAlluserDataFunc(1, {}, selectedOrganization);
+      setFilterparams({});
+      setIsClearable(false);
+      setPage(1);
+    }
   };
 
   useEffect(() => {
-    if (
-      selectedOrganization &&
-      selectedOrganization?.toString().trim() !== ""
-    ) {
-      dispatch(
-        getUsersFunc({
-          filters:filterParams,
-          page: page,
-          perPage: TOTAL_ITEMS_PER_PAGE,
-          organizationId: selectedOrganization,
-        })
-      );
-    } else {
-      dispatch(
-        getUsersFunc({
-          page: page,
-          perPage: TOTAL_ITEMS_PER_PAGE,
-          organizationId: "n",
-        })
-      );
-    }
+    getAlluserDataFunc(page, filterParams, selectedOrganization);
   }, [page, selectedOrganization]);
-
-  useEffect(() => {
-    if (selectedOrganization) {
-      const organization = getOrganizations.find(
-        (elem) => elem.id === selectedOrganization
-      );
-      if (organization) {
-        setOrganizationName(organization.name);
-      }
-    }
-  }, [selectedOrganization]);
 
   useEffect(() => {
     dispatch(getOrganizationsFunc());
@@ -143,28 +151,15 @@ const UserManagement = () => {
     setIsAuth(isAuthenticated);
   }, [isAuthenticated, userRole]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsSmallScreen(window.innerWidth < 500);
-    };
-    if (typeof window !== 'undefined') {
-      handleResize();
-      window.addEventListener('resize', handleResize);
-      return () => {
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, []);
-
   return (
     <>
-      {isAuth && userRole == 1 && (
-        <div className="user-management-parent-container">
-          <Row className="users-child-container-one">
-            <h3 className="user-heading-text-customization">User Management</h3>
+      {isAuth && userRole == ADMIN_ROLE_NUMBER_VALUE && (
+        <div className='user-management-parent-container'>
+          <Row className='users-child-container-one'>
+            <h3 className='user-heading-text-customization'>User Management</h3>
             <Button
-              size="large"
-              className={!selectedOrganization || !selectedOrgStatus ? "" : "new-user-add-btn"}
+              size='large'
+              className='global-primary-btn-style'
               icon={<FaPlus />}
               disabled={!selectedOrganization || !selectedOrgStatus}
               onClick={handleAddAndEditDrawer}
@@ -173,41 +168,62 @@ const UserManagement = () => {
             </Button>
           </Row>
 
-          <Row className="users-child-container-second">
+          <Row className='users-child-container-second'>
             <Col>
-              <p className="users-mormal-text-customization">Organization</p>
-              <Select
-                className="user-mgt-select-for-organization"
-                placeholder="Select OR Search Organization"
-                size="large"
-                // defaultValue={""}
-                // value={selectedOrganization}
-                options={makeOptionsForOrganizations(getOrganizations)}
-                showSearch
-                optionFilterProp="children"
-                filterOption={(input, option) =>
-                  (option?.label?.toLocaleLowerCase() ?? "").includes(
-                    input?.toLocaleLowerCase()
-                  )
-                }
-                onChange={handleOrganizationChange}
-              />
-              {selectedOrgStatus === false && (
-                <Tag className="user-mgt-tag-for-status" color="red">
-                  Inactive
-                </Tag>
-              )}
+              <Col>
+                <p className='users-mormal-text-customization'>Organization</p>
+                <Select
+                  className='user-mgt-select-for-organization'
+                  placeholder='Select OR Search Organization'
+                  size='large'
+                  options={makeOptionsForOrganizations(getOrganizations)}
+                  showSearch
+                  optionFilterProp='children'
+                  filterOption={(input, option) =>
+                    (option?.label?.toLocaleLowerCase() ?? '').includes(
+                      input?.toLocaleLowerCase()
+                    )
+                  }
+                  onChange={handleOrganizationChange}
+                />
+                {selectedOrgStatus === false && (
+                  <Tag className='user-mgt-tag-for-status' color='red'>
+                    Inactive
+                  </Tag>
+                )}
+              </Col>
+
+              <Col>
+                <h3 className='user-mgt-org-type-display'>
+                  {organizationType}
+                </h3>
+              </Col>
             </Col>
 
-            <Button
-              className="user-mgt-filter-btn"
-              size="large"
-              icon={<LuSlidersHorizontal className="user-mgt-filter-icon" />}
-              disabled={!selectedOrganization}
-              onClick={handleFilterDrawer}
-            >
-              Filters
-            </Button>
+            <Row gutter={8}>
+              <Col>
+                <Button
+                  className='global-secondary-btn-style'
+                  size='large'
+                  icon={<LuSlidersHorizontal />}
+                  disabled={!selectedOrganization}
+                  onClick={handleFilterDrawer}
+                >
+                  Filters
+                </Button>
+              </Col>
+              <Col>
+                <Button
+                  size='large'
+                  icon={<FiRefreshCcw />}
+                  className='global-primary-btn-style'
+                  onClick={handleRefreshBtn}
+                  disabled={!selectedOrganization || !selectedOrgStatus}
+                >
+                  Refresh
+                </Button>
+              </Col>
+            </Row>
           </Row>
 
           <Row>
@@ -215,10 +231,10 @@ const UserManagement = () => {
               <Skeleton active paragraph={{ rows: 12 }} />
             ) : (
               <CustomTable
-                rowKey={"id"}
+                rowKey={'id'}
                 rows={getUsersData}
                 columns={
-                  getUsersData?.length > 0 && selectedOrganization !== ""
+                  getUsersData?.length > 0 && selectedOrganization !== ''
                     ? TABLE_FOR_USER_MANAGEMENT
                     : displayEmptyColumn(TABLE_FOR_USER_MANAGEMENT)
                 }
@@ -232,6 +248,7 @@ const UserManagement = () => {
                 pageSize={TOTAL_ITEMS_PER_PAGE}
                 total={totalCount}
                 onPageChange={(page) => setPage(page)}
+                scroll={{y: 300}}
               />
             )}
           </Row>
@@ -239,48 +256,36 @@ const UserManagement = () => {
           {/* All Drawer start from here */}
 
           {/* Add and Edit User Drawer */}
-          <Drawer
-            title={`${drawerHeadingText} User`}
-            placement="right"
-            open={displayAddOrgDrawer}
+
+          <AddUser
             onClose={handleCloseDrawer}
-            closable={true}
-            width={ isSmallScreen ? "100%" : "80%"}
-            destroyOnClose={true}
-            footer={false}
-          >
-            <AddUser
-              onClose={handleCloseDrawer}
-              page={page}
-              organizationName={organizationName}
-              organizationID={selectedOrganization}
-              isEditClicked={isEditClicked}
-              columnId={clickedColumnId}
-            />
-          </Drawer>
+            page={page}
+            organizationName={organizationName}
+            organizationID={selectedOrganization}
+            isEditClicked={isEditClicked}
+            columnId={clickedColumnId}
+            drawerHeadingText={drawerHeadingText}
+            displayAddUserDrawer={displayAddUserDrawer}
+            organizationType={organizationType}
+            selectedRoleType={selectedRoleType}
+            setSelectedRoleType={setSelectedRoleType}
+            providerValue={providerValue}
+            setProviderValue={setProviderValue}
+
+          />
 
           {/* View User Details Drawer */}
-          <Drawer
-            title="View User"
-            placement="right"
-            open={displayViewDrawer}
+          <DisplayUser
+            columnId={clickedColumnId}
             onClose={handleCloseDrawer}
-            closable={true}
-            width={ isSmallScreen ? "100%" : "80%"}
-            destroyOnClose={true}
-            footer={false}
-          >
-            <DisplayUser
-              columnId={clickedColumnId}
-              onClose={handleCloseDrawer}
-              organizationName={organizationName}
-            />
-          </Drawer>
+            organizationName={organizationName}
+            displayViewDrawer={displayViewDrawer}
+          />
 
           {/* Filter Drawer */}
           <Drawer
-            title="Filters"
-            placement="right"
+            title='Filters'
+            placement='right'
             open={displayFilterDrawer}
             onClose={handleCloseDrawer}
             closable={true}
@@ -290,13 +295,13 @@ const UserManagement = () => {
           >
             <UserFilters
               onClose={handleCloseDrawer}
-              page={page}
               setPage={setPage}
               organizationID={selectedOrganization}
               filterParams={filterParams}
               setFilterparams={setFilterparams}
               isClearable={isClearable}
               setIsClearable={setIsClearable}
+              organizationType={organizationType}
             />
           </Drawer>
         </div>

@@ -6,6 +6,10 @@ exports.createOrderSchema = [
   body('patientId')
     .exists().withMessage(constants.PATIENT_ID_REQUIRED)
     .isNumeric().withMessage(constants.PATIENT_ID_NUMERIC_ERROR),
+  
+  body('orderTypeId')
+    .notEmpty().withMessage(constants.ORDER_TYPE_ID_REQUIRED)
+    .isNumeric().withMessage(constants.ORDER_TYPE_ID_NUMERIC_ERROR),  
 
   body('historyId')
     .exists().withMessage(constants.HISTORY_ID_REQUIRED)

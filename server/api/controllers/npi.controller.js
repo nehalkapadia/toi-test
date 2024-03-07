@@ -30,6 +30,10 @@ exports.validate = async (req, res) => {
     if (response.data && response.data.result_count > 0) {
       // If results are present, extract basic information and send a success response
       const basicInfo = response.data.results[0].basic;
+      if(!basicInfo.first_name && basicInfo.organization_name) {
+        basicInfo.first_name = basicInfo.organization_name;
+        basicInfo.last_name = '';
+      }
       return res.status(constants.SUCCESS).json(successResponse(constants.NPI_DETAIL, basicInfo));
     } else if (response.data && response.data.Errors) {
       // If errors are present in the response, send a bad request with error details

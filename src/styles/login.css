@@ -38,8 +38,8 @@
   display: flex;
   flex-direction: column;
   gap: 30px;
-  min-width: 400px;
-  max-width: 400px;
+  min-width: 500px;
+  max-width: 500px;
 }
 
 .login-header-box-container {
@@ -52,15 +52,17 @@
 .login-page-headings-line {
   font-size: 1.5rem;
   font-weight: 500;
-  color: #1a1c21;
+  color: #34657f;
   margin: 0;
+  text-align: center;
 }
 
 .login-page-simple-text-line {
   font-size: 1rem;
   color: #667085;
-  margin: 0;
+  margin-top: 5px;
   line-height: 20px;
+  font-weight: 600;
 }
 
 .all-three-btn-container {
@@ -84,6 +86,15 @@
 
 .login-btn-for-oauth {
   font-size: 14px;
+}
+
+.login-link {
+  color: #34657f !important;
+  font-size: 14px !important;
+  font-weight: 540 !important;
+  line-height: 36px !important;
+  text-decoration: underline !important;
+  text-align: center !important;
 }
 
 /* Media Query for Login page */

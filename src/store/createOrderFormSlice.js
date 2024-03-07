@@ -1,47 +1,67 @@
 const { createSlice } = require('@reduxjs/toolkit');
 
 const initialState = {
+  currentSelectedTab: 'patientDemographics',
+  patientDemographicsTab: false,
   medicalHistoryTab: true,
   insuranceInfoTab: true,
+  orderDetailsTab: true,
   pateintDocsTab: true,
   isPatientExist: false,
-  currentSelectedTab: 'patientDemographics',
   searchPatientResMessage: '',
   tab2FormData: {},
   tab3FormData: {},
-  tab4FormData: {},
+  insuranceInfoDateValues: {},
+  tab4FormData: {}, // Order Details tab
   displayOrderingSuccessTick: false,
   displayReferringSuccessTick: false,
   displayPcpNumberSuccessTick: false,
-
   diagnosisSearchedValue: '',
-
+  cptCodeSearchedStr: null,
+  selectedCptCodeData: null,
   patientDocsWrittenOrderCategory: false,
   patientDocsMdNotesCategory: false,
+  patientDocsReferralCategory: false,
+  selectedUploadCategory: null,
 };
 
 const createOrderFormDataSlice = createSlice({
   name: 'createOrderForm',
   initialState,
   reducers: {
+    setPatientDemographicsTab: (state, action) => {
+      return {
+        ...state,
+        patientDemographicsTab: action.payload,
+      };
+    },
     setMedicalHistoryTab: (state, action) => {
-      state.medicalHistoryTab = action.payload;
+      return {
+        ...state,
+        medicalHistoryTab: action.payload,
+      };
     },
     setInsuranceInfoTab: (state, action) => {
-      state.insuranceInfoTab = action.payload;
+      return {
+        ...state,
+        insuranceInfoTab: action.payload,
+      };
+    },
+    setOrderDetailsTab: (state, action) => {
+      return {
+        ...state,
+        orderDetailsTab: action.payload,
+      };
     },
     setPateintDocsTab: (state, action) => {
-      state.pateintDocsTab = action.payload;
+      return {
+        ...state,
+        pateintDocsTab: action.payload,
+      };
     },
 
     setTab2FormData: (state, action) => {
-      return {
-        ...state,
-        tab2FormData: {
-          ...state.tab2FormData,
-          ...action.payload,
-        },
-      };
+      state.tab2FormData = action.payload;
     },
     setTab3FormData: (state, action) => {
       state.tab3FormData = action.payload;
@@ -67,10 +87,47 @@ const createOrderFormDataSlice = createSlice({
     setPatientDocsMdNotesCategory: (state, action) => {
       state.patientDocsMdNotesCategory = action.payload;
     },
+    setPatientDocsReferralCategory: (state, action) => {
+      return {
+        ...state,
+        patientDocsReferralCategory: action.payload,
+      };
+    },
     setDiagnosisSearchedValue: (state, action) => {
       return {
         ...state,
         diagnosisSearchedValue: action.payload,
+      };
+    },
+
+    setCptCodeSearchedStr: (state, action) => {
+      return {
+        ...state,
+        cptCodeSearchedStr: action.payload,
+      };
+    },
+
+    setSelectedCptCodeData: (state, action) => {
+      return {
+        ...state,
+        selectedCptCodeData: action.payload,
+      };
+    },
+
+    setSelectedUploadCategory: (state, action) => {
+      return {
+        ...state,
+        selectedUploadCategory: action.payload,
+      };
+    },
+
+    setInsuranceInfoDateValues: (state, action) => {
+      return {
+        ...state,
+        insuranceInfoDateValues: {
+          ...state.insuranceInfoDateValues,
+          ...action.payload,
+        },
       };
     },
     resetCreateOrderDataBacktoInitialState: () => initialState,
@@ -81,6 +138,7 @@ export const {
   setMedicalHistoryTab,
   setInsuranceInfoTab,
   setPateintDocsTab,
+  setOrderDetailsTab,
   setTab2FormData,
   setTab3FormData,
   setTab4FormData,
@@ -90,8 +148,14 @@ export const {
   setDisplayPcpNumberSuccessTick,
   setPatientDocsWrittenOrderCategory,
   setPatientDocsMdNotesCategory,
-  resetCreateOrderDataBacktoInitialState,
+  setPatientDocsReferralCategory,
   setDiagnosisSearchedValue,
+  setCptCodeSearchedStr,
+  setSelectedCptCodeData,
+  setPatientDemographicsTab,
+  setInsuranceInfoDateValues,
+  setSelectedUploadCategory,
+  resetCreateOrderDataBacktoInitialState,
 } = createOrderFormDataSlice.actions;
 
 export const selectCreateOrderForm = (state) => state.createOrderForm;

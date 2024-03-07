@@ -1,107 +1,156 @@
-import { formatPhoneNumberToUSFormat } from "./commonFunctions";
-import dayjs from "dayjs";
-import { DATE_FORMAT_STARTING_FROM_MONTH } from "./constant.util";
+import {
+  customizedStringFunc,
+  formatPhoneNumberToUSFormat,
+  getRoleById,
+} from './commonFunctions';
+import dayjs from 'dayjs';
+import { DATE_FORMAT_STARTING_FROM_MONTH } from './constant.util';
+import { Tooltip } from 'antd';
 
 export const TABLE_FOR_ORGANIZATION_MANAGEMENT = [
   {
-    title: "ID #",
-    dataIndex: "id",
-    key: "id",
-    className: "organization-table-id-cell-text-color",
+    title: 'ID #',
+    dataIndex: 'id',
+    key: 'id',
+    width: '110px',
+    className: 'organization-table-id-cell-text-color',
+  },
+  {
+    title: 'Organizations',
+    dataIndex: 'name',
+    key: 'name',
+    width: '120px',
+    className: 'org-table-common-cell-customization',
+  },
+  {
+    title: 'Type',
+    dataIndex: 'organizationType',
+    key: 'organizationType',
+    width: '120px',
+    className: 'org-table-common-cell-customization',
+  },
+  {
+    title: 'Email Id',
+    dataIndex: 'email',
+    key: 'email',
+    width: '210px',
+    className: 'organization-table-email-column',
     render: (text) => {
-      return <span>{`#${text}`}</span>;
+      return (
+        <Tooltip title={text}>
+          <span>{customizedStringFunc(text, 20) || 'NA'}</span>
+        </Tooltip>
+      );
     },
   },
   {
-    title: "Organizations",
-    dataIndex: "name",
-    key: "name",
-    className: "org-table-common-cell-customization",
-  },
-  {
-    title: "Email Id",
-    dataIndex: "email",
-    key: "email",
-    className: "organization-table-email-column",
-  },
-  {
-    title: "Phone Number",
-    dataIndex: "phoneNumber",
-    key: "phoneNumber",
-    className: "org-table-common-cell-customization",
+    title: 'Phone Number',
+    dataIndex: 'phoneNumber',
+    key: 'phoneNumber',
+    width: '150px',
+    className: 'org-table-common-cell-customization',
     render: (text) => {
       return <span>{formatPhoneNumberToUSFormat(text)}</span>;
     },
   },
   {
-    title: "Address",
-    dataIndex: "address",
-    key: "address",
-    className: "org-address-cell-customization",
-  },
-  {
-    title: "Domain",
-    dataIndex: "domain",
-    key: "domain",
-    className: "org-table-common-cell-customization",
-  },
-  {
-    title: "Status",
-    dataIndex: "isActive",
-    key: "isActive",
+    title: 'Status',
+    dataIndex: 'isActive',
+    key: 'isActive',
+    width: '120px',
     render: (text) => (
       <span
         className={
           text
-            ? "organization-table-status-active"
-            : "organization-table-status-inactive"
+            ? 'organization-table-status-active'
+            : 'organization-table-status-inactive'
         }
       >
-        {text ? "Active" : "InActive"}
+        {text ? 'Active' : 'InActive'}
       </span>
     ),
+  },
+  {
+    title: 'Domain',
+    width: '130px',
+    dataIndex: 'domain',
+    key: 'domain',
+    className: 'org-table-common-cell-customization',
+  },
+  {
+    title: 'Address',
+    dataIndex: 'address',
+    key: 'address',
+    width: '180px',
+    className: 'org-address-cell-customization',
+    render: (text) => {
+      return (
+        <Tooltip title={text}>
+          <span>{customizedStringFunc(text, 20) || 'NA'}</span>
+        </Tooltip>
+      );
+    },
   },
 ];
 
 export const TABLE_FOR_USER_MANAGEMENT = [
   {
-    title: "ID #",
-    dataIndex: "id",
-    key: "id",
-    className: "users-table-id-cell-text-color",
+    title: 'ID #',
+    dataIndex: 'id',
+    key: 'id',
+    width: '100px',
+    className: 'users-table-id-cell-text-color',
+  },
+  {
+    title: 'First Name',
+    dataIndex: 'firstName',
+    key: 'firstName',
+    width: '120px',
+    className: 'user-table-common-cell-customization',
+  },
+  {
+    title: 'Last Name',
+    dataIndex: 'lastName',
+    key: 'lastName',
+    width: '120px',
+    className: 'user-table-common-cell-customization',
+  },
+  {
+    title: 'Role',
+    dataIndex: 'roleId',
+    key: 'roleId',
+    width: '130px',
+    className: 'user-table-common-cell-customization',
     render: (text) => {
-      return <span>{`#${text}`}</span>;
+      return <span>{getRoleById(text)}</span>;
     },
   },
   {
-    title: "First Name",
-    dataIndex: "firstName",
-    key: "firstName",
-    className: "user-table-common-cell-customization",
+    title: 'Email Id',
+    dataIndex: 'email',
+    key: 'email',
+    width: '210px',
+    className: 'users-table-email-column',
+    render: (text) => {
+      return (
+        <Tooltip title={text}>
+          <span>{customizedStringFunc(text, 20) || 'NA'}</span>
+        </Tooltip>
+      );
+    },
   },
   {
-    title: "Last Name",
-    dataIndex: "lastName",
-    key: "lastName",
-    className: "user-table-common-cell-customization",
-  },
-  {
-    title: "Email Id",
-    dataIndex: "email",
-    key: "email",
-    className: "users-table-email-column",
-  },
-  {
-    title: "Status",
-    dataIndex: "isActive",
-    key: "isActive",
+    title: 'Status',
+    dataIndex: 'isActive',
+    key: 'isActive',
+    width: '120px',
     render: (text) => (
       <span
         className={
-          text ? "users-table-status-active" : "users-table-status-inactive"
+          text ? 'users-table-status-active' : 'users-table-status-inactive'
         }
       >
-        {text ? "Active" : "InActive"}
+        {text ? 'Active' : 'InActive'}
       </span>
     ),
   },
@@ -109,61 +158,80 @@ export const TABLE_FOR_USER_MANAGEMENT = [
 
 export const TABLE_FOR_ORDER_MANAGEMENT = [
   {
-    title: "Order ID #",
-    dataIndex: "id",
-    key: "id",
-    className: "order-table-id-cell-text-color",
-    render: (text) => {
-      return <span>{`#${text}`}</span>;
-    },
+    title: 'Order ID #',
+    dataIndex: 'id',
+    key: 'id',
+    width: '100px',
+    className: 'order-table-id-cell-text-color',
   },
   {
-    title: "First Name",
-    dataIndex: "firstName",
-    key: "firstName",
-    className: "order-table-common-cell-customization",
+    title: 'First Name',
+    dataIndex: 'firstName',
+    key: 'firstName',
+    width: '120px',
+    className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return <span>{record?.patientDemography?.firstName}</span>;
     },
   },
   {
-    title: "Last Name",
-    dataIndex: "lastName",
-    key: "lastName",
-    className: "order-table-common-cell-customization",
+    title: 'Last Name',
+    dataIndex: 'lastName',
+    key: 'lastName',
+    width: '120px',
+    className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return <span>{record?.patientDemography?.lastName}</span>;
     },
   },
   {
-    title: "DOB",
-    dataIndex: "dateOfBirth",
-    key: "dateOfBirth",
-    className: "order-table-common-cell-customization",
+    title: 'Member ID',
+    dataIndex: 'memberId',
+    key: 'memberId',
+    width: '120px',
+    className: 'order-table-common-cell-customization',
     render: (_, record) => {
-      return <span>{dayjs(record?.patientDemography?.dob).format("MM-DD-YYYY")}</span>;
+      return <span>{record?.patientDemography?.hsMemberID}</span>;
     },
   },
   {
-    title: "Primary Number",
-    dataIndex: "primaryPhoneNumber",
-    key: "primaryPhoneNumber",
-    className: "order-table-common-cell-customization",
+    title: 'Date of Visit',
+    dataIndex: 'dateOfVisit',
+    key: 'dateOfVisit',
+    width: '120px',
+    className: 'order-table-common-cell-customization',
     render: (_, record) => {
       return (
         <span>
-          {record?.patient?.primaryPhoneNumber
-            ? formatPhoneNumberToUSFormat(record?.patientDemography?.primaryPhoneNumber)
-            : "N/A"}
+          {record?.medicalHistory?.dateOfVisit
+            ? dayjs(record?.medicalHistory?.dateOfVisit).format(
+                DATE_FORMAT_STARTING_FROM_MONTH
+              )
+            : 'NA'}
         </span>
       );
     },
   },
   {
-    title: "Owner",
-    dataIndex: "ownerData",
-    key: "ownerData",
-    className: "order-table-common-cell-customization",
+    title: 'Latest Updated Date',
+    dataIndex: 'updatedAt',
+    key: 'updatedAt',
+    width: '160px',
+    className: 'order-table-common-cell-customization',
+    render: (_, record) => {
+      return (
+        <span>
+          {dayjs(record?.updatedAt).format(DATE_FORMAT_STARTING_FROM_MONTH)}
+        </span>
+      );
+    },
+  },
+  {
+    title: 'Created By',
+    dataIndex: 'userData',
+    key: 'userData',
+    width: '130px',
+    className: 'order-table-common-cell-customization',
     render: (data) => (
       <span>
         {data?.firstName} {data?.lastName}
@@ -171,103 +239,127 @@ export const TABLE_FOR_ORDER_MANAGEMENT = [
     ),
   },
   {
-    title: "Created By",
-    dataIndex: "userData",
-    key: "userData",
-    className: "order-table-common-cell-customization",
-    render: (data) => (
-      <span>
-        {data?.firstName} {data?.lastName}
+    title: 'Order Types',
+    dataIndex: 'orderTypeData',
+    key: 'orderTypeData',
+    width: '130px',
+    render: (orderTypeData) => (
+      <span
+        className={`order-mgt-table-order-type-${orderTypeData?.name
+          ?.split(' ')
+          ?.join('-')
+          ?.toLowerCase()}`}
+      >
+        {orderTypeData?.name}
       </span>
     ),
   },
   {
-    title: "Status",
-    dataIndex: "currentStatus",
-    key: "status",
+    title: 'Order Status',
+    dataIndex: 'currentStatus',
+    key: 'status',
+    width: '140px',
     render: (text) => (
       <span className={`order-mgt-table-status-${text}`}>{text}</span>
     ),
   },
+  {
+    title: 'TOI Response',
+    dataIndex: 'toiResponse',
+    key: 'toiResponse',
+    width: '120px',
+    className: 'order-table-common-cell-customization',
+    render: (_, record) => {
+      return <span>{record?.toiStatus || 'NA'}</span>;
+    },
+  },
+
+  {
+    title: 'Comments',
+    dataIndex: 'comments',
+    key: 'comments',
+    width: '160px',
+    className: 'order-table-common-cell-customization',
+    render: (_, record) => {
+      return (
+        <Tooltip title={record?.orderStatusHistoryData?.[0]?.comment}>
+          <span>
+            {customizedStringFunc(
+              record?.orderStatusHistoryData?.[0]?.comment,
+              20
+            ) || 'NA'}
+          </span>
+        </Tooltip>
+      );
+    },
+  },
 ];
 
-export const TABLE_FOR_DISPLAYING_SEARCHED_PATIENT = [
+export const TABLE_FOR_CPT_CODES_AT_ORDER_DETAILS_TAB = [
   {
-    title: "First Name",
-    dataIndex: "firstName",
-    key: "firstName",
-    className: "co-tab-1-common-cell-customization",
-    render: (_, record) => {
-      return <span>{record?.firstName}</span>;
-    },
+    title: 'CPT Code',
+    dataIndex: 'cptCode',
+    key: 'cptCode',
+    width: '120px',
+    className: 'order-details-cpt-code-table-cell-customization',
   },
   {
-    title: "Last Name",
-    dataIndex: "lastName",
-    key: "lastName",
-    className: "co-tab-1-common-cell-customization",
-    render: (_, record) => {
-      return <span>{record?.lastName}</span>;
-    },
+    title: 'Description',
+    dataIndex: 'description',
+    key: 'description',
+    width: '300px',
+    className: 'order-details-cpt-code-table-cell-customization',
   },
   {
-    title: "DOB",
-    dataIndex: "dob",
-    key: "dob",
-    className: "co-tab-1-common-cell-customization",
-    render: (_, record) => {
-      return (
-        <span>
-          {dayjs(record?.dob).format(
-            DATE_FORMAT_STARTING_FROM_MONTH
-          )}
-        </span>
-      );
-    },
+    title: 'Dose/Unit',
+    dataIndex: 'dose',
+    key: 'dose',
+    width: '150px',
+    className: 'order-details-cpt-code-table-cell-customization',
+  },
+];
+
+export const TABLE_FOR_CPT_CODES_AT_ORDER_DETAILS_CHEMO = [
+  {
+    title: 'CPT Code',
+    dataIndex: 'cptCode',
+    key: 'cptCode',
+    width: '110px',
+    className: 'order-details-cpt-code-table-cell-customization',
   },
   {
-    title: "Gender",
-    dataIndex: "gender",
-    key: "gender",
-    className: "co-tab-1-common-cell-customization",
-    render: (_, record) => {
-      return <span>{record?.gender}</span>;
-    },
+    title: 'Description',
+    dataIndex: 'description',
+    key: 'description',
+    width: '300px',
+    className: 'order-details-cpt-code-table-cell-customization',
   },
   {
-    title: "MRN Number",
-    dataIndex: "mrn",
-    key: "mrn",
-    className: "co-tab-1-common-cell-customization",
-    render: (_, record) => {
-      return <span>{record?.mrn}</span>;
-    },
+    title: 'Dose/Unit',
+    dataIndex: 'dose',
+    key: 'dose',
+    width: '120px',
+    className: 'order-details-cpt-code-table-cell-customization',
   },
   {
-    title: "Address",
-    dataIndex: "address",
-    key: "address",
-    className: "co-tab-1-common-cell-customization",
-    width: 180,
-    render: (_, record) => {
-      return <span>{record?.address}</span>;
-    },
+    title: 'Route',
+    dataIndex: 'route',
+    key: 'route',
+    width: '150px',
+    className: 'order-details-cpt-code-table-cell-customization',
   },
   {
-    title: "Primary Number",
-    dataIndex: "primaryPhoneNumber",
-    key: "primaryPhoneNumber",
-    className: "co-tab-1-common-cell-customization",
-    render: (_, record) => {
-      return (
-        <span>
-          {record?.primaryPhoneNumber
-            ? formatPhoneNumberToUSFormat(
-                record?.primaryPhoneNumber
-              )
-            : "Not Available"}
-        </span>
-      );
-    },
+    title: 'Frequency',
+    dataIndex: 'frequency',
+    key: 'frequency',
+    width: '150px',
+    className: 'order-details-cpt-code-table-cell-customization',
+  },
+  {
+    title: 'Cycle',
+    dataIndex: 'cycle',
+    key: 'cycle',
+    width: '150px',
+    className: 'order-details-cpt-code-table-cell-customization',
   },
 ];

@@ -94,10 +94,16 @@ exports.list = async ({ page, perPage, order, filters, searchText }) => {
     whereClause.domain = { [Op.like]: `%${filters?.domain}%` };
   }
 
+  // Add organization type filter if provided
+  if (filters?.organizationType) {
+    whereClause.organizationType = { [Op.like]: `%${filters?.organizationType}%` };
+  }
+
   // Add isActive filter if provided
   if (filters?.isActive !== undefined) {
     whereClause.isActive = { [Op.eq]: filters?.isActive };
   }
+
 
   if (!page) {
     return await Organization.findAndCountAll({

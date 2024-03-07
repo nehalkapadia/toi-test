@@ -16,7 +16,7 @@ import {
   setDisplayReferringSuccessTick,
   setDisplayorderingSuccessTick,
 } from '@/store/createOrderFormSlice';
-import { resetSearchPatientData, setIsNewPatientCreated, setTab1FormData } from '@/store/orderSlice';
+import { resetSearchPatientData, setTab1FormData } from '@/store/orderSlice';
 
 const AppSidebar = ({ collapsed, setCollapsed }) => {
   const dispatch = useDispatch();
@@ -32,7 +32,6 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
     dispatch(resetCreateOrderDataBacktoInitialState());
     dispatch(setTab1FormData({}));
     dispatch(resetSearchPatientData());
-    dispatch(setIsNewPatientCreated(false));
     dispatch(setDisplayPcpNumberSuccessTick(false));
     dispatch(setDisplayReferringSuccessTick(false));
     dispatch(setDisplayorderingSuccessTick(false));
@@ -51,7 +50,7 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
         />
       ),
       label: (
-        <Link href="/organization-management">Organization Management</Link>
+        <Link href='/organization-management'>Organization Management</Link>
       ),
     },
     {
@@ -65,7 +64,7 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
           }
         />
       ),
-      label: <Link href="/user-management">User Management</Link>,
+      label: <Link href='/user-management'>User Management</Link>,
     },
     // {
     //   key: "/roles",
@@ -95,7 +94,7 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
         />
       ),
       label: (
-        <Link href="/order-management" onClick={onOrderManagementClick}>
+        <Link href='/order-management' onClick={onOrderManagementClick}>
           Order Management
         </Link>
       ),
@@ -118,16 +117,16 @@ const AppSidebar = ({ collapsed, setCollapsed }) => {
       collapsible={true}
       trigger={null}
       collapsed={collapsed}
-      breakpoint="md"
+      breakpoint='md'
       onBreakpoint={(broken) => setCollapsed(broken)}
     >
-      <div className="oncology-univsersal-logo">
-        <Image src={Logo} alt="Logo" style={collapsed && { width: '80px' }} />
+      <div className='oncology-univsersal-logo'>
+        <Image src={Logo} alt='Logo' style={collapsed && { width: '80px' }} />
       </div>
-      <div className="handle-sidebar-menu-container">
+      <div className='handle-sidebar-menu-container'>
         <Menu
-          theme="light"
-          mode="inline"
+          theme='light'
+          mode='inline'
           openKeys={''}
           onOpenChange={handleSubmenu}
           defaultSelectedKeys={[

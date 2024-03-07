@@ -8,8 +8,16 @@ import View_Icon from '../../icons/eye_icon.svg';
 import Edit_Icon from '../../icons/pen.svg';
 import Delete_Icon from '../../icons/trash.svg';
 import { useRouter } from 'next/router';
+import { useDispatch } from 'react-redux';
+import {
+  resetCreateOrderDataBacktoInitialState,
+  setTab2FormData,
+} from '@/store/createOrderFormSlice';
+import { resetOrderStateToInitialState } from '@/store/orderSlice';
+import { TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
 
 const CustomTable = (props) => {
+  const dispatch = useDispatch();
   const router = useRouter();
   const { pathname } = router;
   const { columns, rows, rowSelectionType, total, size = 'default' } = props;
@@ -36,6 +44,11 @@ const CustomTable = (props) => {
 
   const editFunction = (event, record, onEdit) => {
     event.stopPropagation();
+    if (pathname === '/order-management') {
+      dispatch(resetOrderStateToInitialState());
+      dispatch(resetCreateOrderDataBacktoInitialState());
+      dispatch(setTab2FormData({}));
+    }
     onEdit && onEdit(record);
   };
 
@@ -63,7 +76,7 @@ const CustomTable = (props) => {
         {
           title: 'Actions',
           dataIndex: 'actions',
-          // width: 130,
+          width: '180px',
           render: (_, record) => {
             return (
               <div className='table-action-btn-container'>
@@ -112,6 +125,15 @@ const CustomTable = (props) => {
                     </Button>
                   )}
 
+                {isDeleteable && pathname !== '/order-management' && (
+                  <Button
+                    type='link'
+                    onClick={(e) => deleteFunction(e, record, onDelete)}
+                  >
+                    <Image className='red-5' src={Delete_Icon} alt='Delete' />
+                  </Button>
+                )}
+
                 {isDeleteable &&
                   pathname === '/order-management' &&
                   record?.currentStatus?.toLowerCase() === 'draft' &&
@@ -152,7 +174,9 @@ const CustomTable = (props) => {
                   showSizeChanger: false,
                   showQuickJumper:
                     props?.showQuickJumper === false ? false : true,
-                  defaultPageSize: props.pageSize ? props.pageSize : 5,
+                  defaultPageSize: props.pageSize
+                    ? props.pageSize
+                    : TOTAL_ITEMS_PER_PAGE,
                   showTotal: (total) => `Total ${total} items`,
                   total: total,
                   current: props.current,
@@ -162,12 +186,14 @@ const CustomTable = (props) => {
                   },
                 }
               : {
-                  showSizeChanger: total > 5 ? true : false,
+                  showSizeChanger: total > TOTAL_ITEMS_PER_PAGE ? true : false,
                   showQuickJumper: true,
                   showTotal: (total) => `Total ${total} items`,
                   total: { total },
                   position: ['bottomRight'],
-                  defaultPageSize: props.pageSize ? props.pageSize : 5,
+                  defaultPageSize: props.pageSize
+                    ? props.pageSize
+                    : TOTAL_ITEMS_PER_PAGE,
                 }
             : props?.pagination
         }

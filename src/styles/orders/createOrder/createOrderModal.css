@@ -19,3 +19,27 @@
   letter-spacing: 0.5px;
   margin: 0;
 }
+
+.modal-title-container-with-close-icon {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.tab-2-modal-title-heading-text {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.close-icon-for-modal {
+  cursor: pointer;
+}
+
+.medical-history-modal-customized {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

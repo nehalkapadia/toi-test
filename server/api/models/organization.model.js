@@ -35,6 +35,9 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.BOOLEAN,
         defaultValue: true,
       },
+      organizationType: {
+        type: Sequelize.STRING,
+      },
       createdBy: {
         type: Sequelize.INTEGER,
         defaultValue: 0,

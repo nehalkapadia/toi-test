@@ -16,4 +16,7 @@ module.exports = (app) => {
   app.use(`${baseRoute}/orderAuthDocument`, require('./order_auth_document.route'));
   app.use(`${baseRoute}/order`, require('./order.route'));
   app.use(`${baseRoute}/diagnosis`, require('./diagnosis.route'));
+  app.use(`${baseRoute}/orderTypes`, require('./order_types.route'));
+  app.use(`${baseRoute}/orderDetails`, require('./order_details.route'));
+  app.use(`${baseRoute}/cptCode`, require('./cpt_codes.route'));
 };

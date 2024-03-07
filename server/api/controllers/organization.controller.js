@@ -39,7 +39,7 @@ exports.list = async (req, res) => {
       .status(constants.SUCCESS)
       .json(
         successResponse(
-          constants.message(constants.organizationModule, 'List'),
+          constants.message(constants.organizationModule, 'List fetched'),
           organizationList
         )
       );
@@ -49,7 +49,7 @@ exports.list = async (req, res) => {
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
         errorResponse(
-          constants.message(constants.organizationModule, 'List', false),
+          constants.message(constants.organizationModule, 'List fetching', false),
           error?.message
         )
       );
@@ -78,7 +78,7 @@ exports.detail = async (req, res) => {
       .status(constants.SUCCESS)
       .json(
         successResponse(
-          constants.message(constants.organizationModule, 'Detail'),
+          constants.message(constants.organizationModule, 'Detail fetched'),
           organizationDetail
         )
       );
@@ -88,7 +88,7 @@ exports.detail = async (req, res) => {
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
         errorResponse(
-          constants.message(constants.organizationModule, 'Detail', false),
+          constants.message(constants.organizationModule, 'Detail fetching', false),
           error?.message
         )
       );
@@ -151,7 +151,7 @@ exports.create = async (req, res) => {
       .status(constants.SUCCESS)
       .json(
         successResponse(
-          constants.message(constants.organizationModule, 'Create'),
+          constants.message(constants.organizationModule, 'Created'),
           createdOrganization
         )
       );
@@ -161,7 +161,7 @@ exports.create = async (req, res) => {
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
         errorResponse(
-          constants.message(constants.organizationModule, 'Create', false),
+          constants.message(constants.organizationModule, 'Creation', false),
           error?.message
         )
       );
@@ -240,7 +240,7 @@ exports.update = async (req, res) => {
       createOrganizationLog(reqData)
     }
     return res.json(
-      successResponse(constants.message(constants.organizationModule, 'Update'))
+      successResponse(constants.message(constants.organizationModule, 'Updated'))
     );
   } catch (error) {
     await auditService.createLog(formatRequest(req), 'Organizations', 'PUT', error);
@@ -248,7 +248,7 @@ exports.update = async (req, res) => {
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
         errorResponse(
-          constants.message(constants.organizationModule, 'Update', false),
+          constants.message(constants.organizationModule, 'Updation', false),
           error?.message
         )
       );
@@ -278,7 +278,7 @@ exports.delete = async (req, res) => {
       .status(constants.SUCCESS)
       .json(
         successResponse(
-          constants.message(constants.organizationModule, 'Delete')
+          constants.message(constants.organizationModule, 'Deleted')
         )
       );
   } catch (error) {
@@ -287,7 +287,7 @@ exports.delete = async (req, res) => {
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(
         errorResponse(
-          constants.message(constants.organizationModule, 'Delete', false),
+          constants.message(constants.organizationModule, 'Deletion', false),
           error?.message
         )
       );
@@ -307,8 +307,8 @@ exports.getOrganizationUsers = async (req, res) => {
     const userData = req?.userData;
     const organizationId = req.query.organizationId ? req.query.organizationId : userData?.user?.organizationId;
     const userList = await organizationService.getUserList(organizationId);
-    return res.status(constants.SUCCESS).json(successResponse(constants.message('Organization', 'User List'), userList))
+    return res.status(constants.SUCCESS).json(successResponse(constants.message('Organization', 'User List fetched'), userList))
   } catch(error) {
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.message(constants.organizationModule, 'User List', false), error))
+    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.message(constants.organizationModule, 'User List fetching', false), error))
   }
 }
