@@ -1,32 +1,20 @@
-.display-organization-details-container {
+.display-org-each-column-gap {
   display: flex;
   flex-direction: column;
-  gap: 21px;
-}
-
-.display-organization-rows-parent-container {
-  display: flex;
-  gap: 24px;
-}
-
-.each-single-detail-row-child-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  max-width: calc(50% - 12px);
-  /* gap: 6px; */
+  gap: 7px;
+  margin-bottom: 24px;
 }
 
 .column-name-lable-at-om {
-  margin: 0;
+  font-size: 14px;
   color: #4d5464;
   letter-spacing: 0.5px;
 }
 
 .column-value-as-heading-at-om {
   margin: 0;
-  font-size: 1rem;
-  color: #333843;
+  font-size: 16px;
+  font-weight: 500;
   letter-spacing: 0.5px;
 }
 
@@ -38,60 +26,30 @@
   margin: 0;
   font-size: 1rem;
   color: #0d894f;
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
 .organization-current-false {
   margin: 0;
   font-size: 1rem;
   color: #b4332a;
-  font-weight: 600;
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
-.edit-organization-input-box {
-  background-color: #f9f9fc;
-  color: #4d5464;
-  border: 1px solid #ddd;
-  margin-top: -5px;
-}
-
-.radio-group-for-edit-in-org-mgt {
-  margin-top: -10px;
+.view-org-footer-container {
   display: flex;
-  gap: 10%;
-}
-
-.edit-component-btn-container-parent-at-org {
-  width: calc(100% - 48px);
-  position: absolute;
-  bottom: 0;
-}
-
-.cancel-and-submit-btn-container-at-org-edit {
-  padding-top: 16px;
-  gap: 16px;
-  border-top: 1px solid #ddd;
   justify-content: flex-end;
+  padding-top: 7px;
 }
 
-.org-mgt-edit-btn-for-cancel {
+.view-org-close-btn {
   font-weight: 600;
-  font-size: 14px !important;
-  letter-spacing: 0.5px;
+  font-size: 14px;
+  color: #344054;
 }
 
-.org-mgt-edit-btn-for-cancel:hover {
-  border: 1px solid #ddd !important;
-}
-
-.org-mgt-edit-btn-for-update {
-  background: #34657f;
-  color: #fff;
-  font-size: 14px !important;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.org-mgt-edit-btn-for-update:hover {
-  border: 1px solid #34657f !important;
-  color: #fff !important;
+.view-org-close-btn:hover {
+  color: #344054 !important;
 }

@@ -1,20 +1,22 @@
 // patientValidator.js
 const { body, query } = require('express-validator');
 const constants = require('../utils/constants.util');
-const { ALPHABETIC_REGEX, DOB_REGEX } = require('../utils/pattern.util');
+const { ALPHABETIC_REGEX, DOB_REGEX, EMAIL_REGEX } = require('../utils/pattern.util');
+
+const validateMemberId = (value, { req }) => !req?.query?.hsMemberID
 
 exports.createPatientSchema = [
   body('firstName')
     .notEmpty()
     .withMessage(constants.CANT_BE_EMPTY + ' First Name')
     .matches(ALPHABETIC_REGEX)
-    .withMessage(constants.INVALID_ALPHABETS + ' First Name'),
+    .withMessage(constants.FIRST_NAME_LAST_NAME_CONTAIN_ONLY_ALPHABETS),
 
   body('lastName')
     .notEmpty()
     .withMessage(constants.CANT_BE_EMPTY + ' Last Name')
     .matches(ALPHABETIC_REGEX)
-    .withMessage(constants.INVALID_ALPHABETS + ' Last Name'),
+    .withMessage(constants.FIRST_NAME_LAST_NAME_CONTAIN_ONLY_ALPHABETS),
 
   body('gender')
     .notEmpty()
@@ -26,15 +28,15 @@ exports.createPatientSchema = [
     .matches(DOB_REGEX)
     .withMessage(constants.INVALID_DATE_FORMAT + ' Date of Birth'),
 
-  body('email').optional().isEmail().withMessage(constants.INVALID_EMAIL),
+  body('email').optional().matches(EMAIL_REGEX).withMessage(constants.INVALID_EMAIL),
 
   body('address')
     .notEmpty()
     .withMessage(constants.CANT_BE_EMPTY + ' Address'),
 
-  body('mrn')
+  body('hsMemberID')
     .notEmpty()
-    .withMessage(constants.CANT_BE_EMPTY + ' MRN'),
+    .withMessage(constants.CANT_BE_EMPTY + ' Hs Member ID'),
 ];
 
 exports.updatePatientSchema = [
@@ -42,13 +44,13 @@ exports.updatePatientSchema = [
     .notEmpty()
     .withMessage(constants.CANT_BE_EMPTY + ' First Name')
     .matches(ALPHABETIC_REGEX)
-    .withMessage(constants.INVALID_ALPHABETS + ' First Name'),
+    .withMessage(constants.FIRST_NAME_LAST_NAME_CONTAIN_ONLY_ALPHABETS),
 
   body('lastName')
     .notEmpty()
     .withMessage(constants.CANT_BE_EMPTY + ' Last Name')
     .matches(ALPHABETIC_REGEX)
-    .withMessage(constants.INVALID_ALPHABETS + ' Last Name'),
+    .withMessage(constants.FIRST_NAME_LAST_NAME_CONTAIN_ONLY_ALPHABETS),
 
   body('gender')
     .notEmpty()
@@ -60,7 +62,7 @@ exports.updatePatientSchema = [
     .matches(DOB_REGEX)
     .withMessage(constants.INVALID_DATE_FORMAT + ' Date of Birth'),
 
-  body('email').optional().isEmail().withMessage(constants.INVALID_EMAIL),
+  body('email').optional().matches(EMAIL_REGEX).withMessage(constants.INVALID_EMAIL),
 
   body('address')
     .notEmpty()
@@ -69,24 +71,28 @@ exports.updatePatientSchema = [
 
 exports.searchPatientSchema = [
   query('firstName')
+    .if(validateMemberId)
     .notEmpty()
     .withMessage(constants.CANT_BE_EMPTY + ' First Name'),
 
   query('lastName')
+    .if(validateMemberId)
     .notEmpty()
     .withMessage(constants.CANT_BE_EMPTY + ' Last Name'),
 
   query('gender')
+    .if(validateMemberId)
     .notEmpty()
     .withMessage(constants.CANT_BE_EMPTY + ' Gender'),
 
   query('dob')
+    .if(validateMemberId)
     .notEmpty().withMessage(constants.CANT_BE_EMPTY + ' Date of Birth')
     .matches(DOB_REGEX).withMessage(constants.INVALID_DATE_FORMAT + ' Date of Birth'),
-  
-  query('mrn')
-    .notEmpty()
-    .withMessage(constants.CANT_BE_EMPTY + ' MRN'),
+  // TODO will remove after test completed
+  // query('hsMemberID')
+  //   .notEmpty()
+  //   .withMessage(constants.CANT_BE_EMPTY + ' Hs Member ID'),
 ];
 
 // get patient schema

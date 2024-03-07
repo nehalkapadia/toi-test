@@ -1,0 +1,31 @@
+.order-status-type-dropdown-order-mgt {
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  min-width: 172px;
+  max-width: 172px;
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.order-type-container-at-order-mgt {
+  padding: 0px 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  max-width: 120px;
+  background-color: #fff;
+}
+
+.order-type-at-order-mgt {
+  display: flex;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+.filter-checkbox-for-order-type-at-om {
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.88);
+}

@@ -39,7 +39,7 @@ exports.create = async (req, res, next) => {
           .status(constantsUtil.SUCCESS)
           .json(
             successResponse(
-              constantsUtil.message('Medical Record', 'Update'),
+              constantsUtil.message('Medical Record', 'Updated'),
               isMedicalRecordExist
             )
           );
@@ -55,7 +55,7 @@ exports.create = async (req, res, next) => {
     delete reqData?.orderId;
     const medicalRecord = await medicalRecordService.createMedicalRecord(reqData);
     // return response
-    return res.status(constantsUtil.SUCCESS).json(successResponse(constantsUtil.message('Medical Record', 'Create'), medicalRecord));
+    return res.status(constantsUtil.SUCCESS).json(successResponse(constantsUtil.message('Medical Record', 'Created'), medicalRecord));
   } catch (error) {
 
     // error response

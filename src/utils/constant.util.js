@@ -10,6 +10,9 @@ import {
   validatePhoneNumber,
 } from './formValidations';
 
+export const ADMIN_ROLE_NUMBER_VALUE = 1;
+export const USER_ROLE_NUMBER_VALUE = 2;
+
 export const FORM_NAME_VALUES = {
   domain: 'domain',
   email: 'email',
@@ -46,7 +49,7 @@ export const API_RESPONSE_MESSAGES = {
   org_added: 'Organization Added Successfully',
   org_updated: 'Organization Updated Successfully',
   org_deleted: 'Organization Deleted Successfully',
-  err_rest_api: 'Something went wrong',
+  err_rest_api: 'Something went wrong, Please try again later',
   user_added: 'User Added Successfully',
   user_updated: 'User Updated Successfully',
 };
@@ -89,7 +92,7 @@ export const CREATE_ORDER_FORM_KEY_NAMES = {
   secondaryPhoneNumber: 'secondaryPhoneNumber',
   preferredLanguage: 'preferredLanguage',
   address: 'address',
-  mrn: 'mrn',
+  hsMemberID: 'hsMemberID',
   race: 'race',
   diagnosis: 'diagnosis',
   chemoStatus: 'chemoTherapyStatus',
@@ -106,7 +109,7 @@ export const CREATE_ORDER_FORM_KEY_NAMES = {
   labStatus: 'isLabStatus',
   labFacility: 'labFacility',
   labDocs: 'labDocs',
-  prevAuthorization: 'prevAuthorization',
+  prevAuthorization: 'isPreviousAuthorizationStatus',
   singleMedicialReleaseForm: 'singleMedicialReleaseForm',
   healthPlan: 'healthPlan',
   lob: 'lob',
@@ -121,6 +124,13 @@ export const CREATE_ORDER_FORM_KEY_NAMES = {
   secondaryEndDate: 'secondaryEndDate',
   secondaryInsurance: 'secondaryInsurance',
   copyOfInsuranceCard: 'copyOfInsuranceCard',
+  cptCode: 'cptCode',
+  dose: 'dose',
+  route: 'route',
+  frequency: 'frequency',
+  cycle: 'cycle',
+  dateOfVisit: 'dateOfVisit',
+  chemotherapyOrdered: 'chemotherapyOrdered',
 };
 
 export const CREATE_ORDER_FORM_FIELD_RULES = {
@@ -140,23 +150,29 @@ export const CREATE_ORDER_FORM_FIELD_RULES = {
   ],
   email: [{ required: false }, { validator: validateAnEmail }],
   preferredLanguage: [{ required: false }],
-  address: [{ required: true, message: 'Address is Required' }],
+  address: [{ required: false, message: 'Address is Required' }],
   race: [{ required: false }],
   diagnosis: [{ required: true, message: 'Select Diagnosis Status' }],
   orderingProvider: [
     { required: true, message: 'Ordering Provider is Required' },
   ],
+  orderingProviderOptional: [
+    { required: false, message: 'Ordering Provider is Required' },
+  ],
   referringProvider: [
     { required: true, message: 'Referring Provider is Required' },
   ],
+  referringProviderOptional: [
+    { required: false, message: 'Referring Provider is Required' },
+  ],
   pcpNumber: [{ required: true, message: 'PCP Number is Required' }],
-  healthPlan: [{ required: false, message: 'Please Select Health Plan' }],
-  lob: [{ required: true, message: 'Please Select LoB' }],
+  healthPlan: [{ required: true, message: 'Please Select Health Plan' }],
+  lob: [{ required: false, message: 'Please Select LoB' }],
   primarySubscriberNumber: [
-    { required: true, message: 'Primary Subscriber Number is Required' },
+    { required: false, message: 'Primary Subscriber Number is Required' },
   ],
   primaryGroupNumber: [
-    { required: true, message: 'Primary Group Number is Required' },
+    { required: false, message: 'Primary Group Number is Required' },
   ],
   secondarySubscriberNumber: [
     { required: false, message: 'Secondary Subscriber Number is Required' },
@@ -165,12 +181,14 @@ export const CREATE_ORDER_FORM_FIELD_RULES = {
     { required: false, message: 'Secondary Group Number is Required' },
   ],
   copyOfInsuranceCard: [
-    { required: true, message: 'Insurance Card Copy is Required' },
+    { required: false, message: 'Insurance Card Copy is Required' },
   ],
   primaryStartDate: [
-    { required: true, message: 'Primary Start Date is Required' },
+    { required: false, message: 'Primary Start Date is Required' },
   ],
-  primaryEndDate: [{ required: true, message: 'Primary End Date is Required' }],
+  primaryEndDate: [
+    { required: false, message: 'Primary End Date is Required' },
+  ],
   secondaryStartDate: [
     { required: true, message: 'Secondary Start Date is Required' },
   ],
@@ -178,7 +196,16 @@ export const CREATE_ORDER_FORM_FIELD_RULES = {
     { required: true, message: 'Secondary End Date is Required' },
   ],
   medicareId: [{ required: true, message: 'Medicare ID is Required' }],
-  mrn: [{ required: true, message: 'MRN Number is Required' }],
+  hsMemberID: [{ required: true, message: 'Member ID is Required' }],
+  cptCode: [{ required: true, message: 'CPT Code is Required' }],
+  dose: [{ required: true, message: 'Dose is Required' }],
+  route: [{ required: false, message: 'Route is Required' }],
+  frequency: [{ required: false, message: 'Frequency is Required' }],
+  cycle: [{ required: false, message: 'Cycle is Required' }],
+  dateOfVisit: [{ required: true, message: 'Date Of Visit is Required' }],
+  chemotherapyOrdered: [
+    { required: true, message: 'Chemotherapy Ordered is Required' },
+  ],
 };
 
 export const getFileTypeForUploadedDocs = (fileName) => {
@@ -220,7 +247,7 @@ export const NPI_NUMBER_VALIDATION_ERROR_MESSAGE =
   'Please Enter Valid NPI Number';
 export const MEDICARE_CONDITIONAL_VALIDATION = 'medicare';
 export const DATE_FORMAT_STARTING_FROM_YEAR = 'YYYY-MM-DD';
-export const DATE_FORMAT_STARTING_FROM_MONTH = 'MM-DD-YYYY';
+export const DATE_FORMAT_STARTING_FROM_MONTH = 'MM/DD/YYYY';
 export const DUMMAY_ARR_FOR_ORDER_DETAILS = [0, 0, 0, 0, 0];
 export const ERROR_WHEN_CREATING_ORGANIZATION = 'Error When Creating Org';
 
@@ -250,7 +277,7 @@ export const CASE_ID = '';
 export const ORDER_STATUS = {
   draft: 'draft',
   submitted: 'submitted',
-  complete: 'complete',
+  completed: 'completed',
   cancel: 'cancel',
 };
 
@@ -281,9 +308,11 @@ export const DOCUMENTS_UPLOAD_IN_SECONDARY_INSURANCE_CATEGORY =
 export const DOCUMENTS_UPLOAD_IN_WRITTEN_ORDERS_CATEGORY =
   'written orders for treatment';
 export const DOCUMENTS_UPLOAD_IN_MD_NOTES_CATEGORY = 'md notes';
+export const DOCUMENT_PATIENT_AUTHORIZATION = 'patient auth document';
 // Categories ending here.
 
 export const MAX_UPLOAD_DOCUMENTS_PER_CATEGORY = 5;
+export const MAX_UPLOAD_DOCUMENTS_OV_RAD_ORDER_TYPE = 2;
 export const ERROR_MESSAGE_FOR_MAX_UPLOAD_DOCS =
   'Maximum 5 Documents can be uploaded!';
 
@@ -315,6 +344,7 @@ export const PATIENT_DOCUMENTS_FILE_UPLOAD_CATEGORIES = [
     value: DOCUMENTS_UPLOAD_IN_WRITTEN_ORDERS_CATEGORY,
   },
   { key: 'mdNotesFiles', value: DOCUMENTS_UPLOAD_IN_MD_NOTES_CATEGORY },
+  { key: 'patientAuthDocFiles', value: DOCUMENT_PATIENT_AUTHORIZATION },
 ];
 export const ARE_YOU_SURE_WANT_DRAFT_ORDER =
   'Are you sure you want to save this Order as Draft?';
@@ -323,29 +353,40 @@ export const ORDER_MODAL_CANCEL_TEXT = 'No';
 export const MISSING_REQUIRED_FIELDS = 'Missing Required Fields';
 export const ARE_YOU_SURE_YOU_WANT_TO_SUBMIT_THE_ORDER_MESSAGE =
   'Are you sure you want to submit this Order ?';
-export const ORDER_HAS_BEEN_CANCELED = "This Order has been canceled"
+export const ORDER_HAS_BEEN_CANCELED = 'This Order has been canceled';
 
-export const MEDICAL_HISTORY_FIELDS_ONLY = [
-  'diagnosis',
-  'chemoTherapyStatus',
-  'orderingProvider',
-  'referringProvider',
-  'isReferringPhysician',
-  'pcpName',
-  'diagnosisId'
-];
+export const MEDICAL_HISTORY_FIELDS_ONLY = {
+  Chemo: [
+    'diagnosis',
+    'chemoTherapyStatus',
+    'orderingProvider',
+    'referringProvider',
+    'isReferringPhysician',
+    'pcpName',
+    'diagnosisId',
+    'dateOfVisit',
+    'chemotherapyOrdered',
+  ],
+  'Office Visit': ['diagnosis', 'dateOfVisit'],
+  Radiation: ['diagnosis', 'dateOfVisit'],
+};
 
-export const MEDICAL_RECORD__FIELDS_ONLY = [
-  'isRadiologyStatus',
-  'isPathologyStatus',
-  'isLabStatus',
-  'isPreviousAuthorizationStatus',
-  'labFacility',
-  'pathologyFacility',
-  'radiologyFacility',
-];
+export const MEDICAL_RECORD__FIELDS_ONLY = {
+  Chemo: [
+    'isRadiologyStatus',
+    'isPathologyStatus',
+    'isLabStatus',
+    'isPreviousAuthorizationStatus',
+    'labFacility',
+    'pathologyFacility',
+    'radiologyFacility',
+  ],
+  'Office Visit': [],
+  Radiation: [],
+};
 
 export const ALL_PROVIDERS_MAX_LENGTH_COUNT = 10;
+export const PHONE_NUMBER_MAX_LENGTH_COUNT = 10;
 export const MEDICAL_HISTORY_AND_RECORD_CREATED_MESSAGE =
   'Medical History and Record has been created successfully';
 export const MEDICAL_HISTORY_AND_RECORD_UPDATED_MESSAGE =
@@ -373,7 +414,123 @@ export const SELECT_AT_LIST_WRITTEN_ORDER_FILE =
 export const SELECT_AT_LIST_MD_NOTES_FILE =
   'Please select at least one md notes file';
 export const LOGGED_IN_SUCCESSFULLY_MESSAGE = 'Logged-In Successfully';
-export const EDIT = "Edit";
-export const CREATE = "Create";
-export const ARE_YOU_SURE_WANT_TO_DELETE_ORDER = "Are you sure you want to delete this Order ?";
-export const NA = 'N/A'
+export const EDIT = 'Edit';
+export const CREATE = 'Create';
+export const ARE_YOU_SURE_WANT_TO_DELETE_ORDER =
+  'Are you sure you want to delete this Order?';
+export const NA = 'N/A';
+export const PCP_AND_REFERRING_PROVIDER_NOT_SAME_WARNING =
+  'PCP and Referring Provider should not be same';
+export const FIRST_VALIDATE_REFERRING_NUMBER =
+  'Please first validate referring provider, then try again.';
+export const FIRST_VALIDATE_PCP_NUMBER =
+  'Please first validate PCP, OR Click the Checkbox.';
+export const TOGGLER_KEYS_FOR_MEDICAL_TAB = [
+  'chemoTherapyStatus',
+  'isRadiologyStatus',
+  'isPathologyStatus',
+  'isLabStatus',
+  'isPreviousAuthorizationStatus',
+];
+export const INSURANCE_INFO_ALL_FIELDS_ARRAY = [
+  'healthPlan',
+  'lob',
+  'medicareId',
+  'primarySubscriberNumber',
+  'primaryGroupNumber',
+  'secondarySubscriberNumber',
+  'secondaryGroupNumber',
+  'primaryStartDate',
+  'primaryEndDate',
+  'secondaryStartDate',
+  'secondaryEndDate',
+  'patientId',
+];
+
+export const ALL_DATE_RELATED_FIELDS_FOR_CREATE_ORDER = [
+  'dob',
+  'primaryStartDate',
+  'primaryEndDate',
+  'secondaryStartDate',
+  'secondaryEndDate',
+  'dateOfVisit',
+  'chemotherapyOrdered',
+];
+export const FALSE_PROVIDER_NUMBER_FOR_MEDICAL_TAB = '0000000000';
+export const SEARCH_PATIENT_FIELDS_NAME = [
+  'firstName',
+  'lastName',
+  'dob',
+  'gender',
+  'hsMemberID',
+];
+export const MIN_FIELDS_FOR_ENABLE_SEARCH_AT_PATIENT_DEMO = [
+  'firstName',
+  'lastName',
+  'dob',
+  'gender',
+];
+export const PROVIDER_DETAILS = 'Provider Details';
+export const VALIDATE_PROVIDER_DETAILS = 'Validate Provider Details';
+export const YES = 'Yes';
+export const NO = 'No';
+export const PLEASE_FILL_MEDICAL_HISTORY_AND_RECORD_TAB =
+  'Please fill medical history and record data';
+export const PLEASE_FILL_INSURANCE_INFO_TAB =
+  'Please fill insurance information data';
+export const PLEASE_FILL_ORDER_DETAILS_TAB = 'Please fill order details tab';
+export const ADD_BUTTON_TEXT = 'Add';
+export const UPDATE_BUTTON_TEXT = 'Update';
+export const PERCENTAGE_TEXT_FOR_100 = '100%';
+export const PERCENTAGE_TEXT_FOR_80 = '80%';
+export const SEARCH_RESULT_SUCCESS = 'Search Results fetched Successfully';
+export const PATIENT_NO_RECORD_FOUND = 'No Record Found for entered details';
+export const LOGGED_IN_EMAIL_UPDATE_TEXT =
+  'Are you sure you want to update email? If you proceed with the email update, you will need to log in again using the newly updated email address.';
+export const INACTIVE_YOURSELF =
+  'Are you sure you want to inactive yourself? If you proceed with the inactivation, you will not be able to log in to the system.';
+export const ERROR_IN_FILE_DOWNLOADING = 'Error in file downloading';
+export const DEFAULT_ORDER_TYPE = 'Chemo';
+export const CHEMO_ORDER_TYPE = 'Chemo';
+export const OFFICE_VISIT_ORDER_TYPE = 'Office Visit';
+export const RADIATION_ORDER_TYPE = 'Radiation';
+export const HEALTH_PLAN_DEFAULT_VALUE = 'healthsun';
+export const USER_CANT_ACCESS_OR_EXIST =
+  'The user is either inaccessible or does not exist!';
+export const PLEASE_LOGOUT_AND_LOGIN_BACK = 'Please login back.';
+export const RADIOLOGY = 'radiology';
+export const PATHOLOGY = 'pathology';
+export const LAB = 'lab';
+export const PREVIOUS_AUTHORIZATION = 'previous authorization';
+export const TITLE_MAPPING = {
+  '/login': 'TOI | Login',
+  '/': 'TOI | Login',
+  '/privacy-policy': 'TOI | Privacy Policy',
+  '/order-management': 'TOI | Dashboard',
+  '/organization-management': 'TOI | Dashboard',
+  '/user-management': 'TOI | User Management',
+  '/order-management/create': 'TOI | Order Management',
+};
+export const PLEASE_SELECT_ONE_CPT_CODE = 'Please Select One CPT Code';
+export const BTN_TEXT_FOR_DRAFT_IN_LOWER_CASE = 'yes';
+export const BTN_TEXT_FOR_NEXT_IN_LOWER_CASE = 'next';
+export const THIS_CPT_CODE_ALREADY_EXIST =
+  'You have already added this CPT Code';
+export const CPT_CODE_DESCRIPTION_MAX_LENGTH = 50;
+export const MAX_CPT_CODE_TO_BE_UPLOADED = 25;
+export const MAX_CPT_CODE_UPLOAD_WARNING =
+  'You can add maximum of 25 CPT Codes';
+export const USER_ROLE_HAS_BEEN_CHANGED = "The user's role has been changed.";
+export const SECONDARY_DATES_OBJECT_ONLY = [
+  'secondaryStartDate',
+  'secondaryEndDate',
+];
+export const ORDER_TYPES_ARRAY = ['Chemo', 'Office Visit', 'Radiation'];
+export const TYPE_TEXT_FOR_ORDER_TYPE = 'type';
+export const MEDICAL_HISTORY_PROVIDER_TYPES = {
+  orderingProvider: 'orderingProvider',
+  referringProvider: 'referringProvider',
+  pcpName: 'pcpName',
+};
+export const WELCOME_TO_TOI = 'The Oncology Institute of Hope & Innovation';
+export const PHYSICIAN_PORTAL = 'Physician Portal';

@@ -3,7 +3,7 @@ import { Avatar, Button, Col, Divider, Dropdown, Row } from 'antd';
 import { Header } from 'antd/es/layout/layout';
 import { AiOutlineMenuUnfold, AiOutlineMenuFold } from 'react-icons/ai';
 import { IoNotificationsOutline } from 'react-icons/io5';
-import { FaAngleDown } from 'react-icons/fa6';
+import { FaAngleDown, FaAngleUp } from 'react-icons/fa6';
 import '../styles/index.css';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,10 +13,10 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const user = useSelector((state) => state.auth.user);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogutBtn = () => {
     dispatch(logout());
-    router.push('/login');
   };
 
   useEffect(() => {
@@ -24,13 +24,6 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
   }, []);
 
   const items = [
-    // {
-    //   label: "Profile",
-    //   key: "0",
-    // },
-    // {
-    //   type: "divider",
-    // },
     {
       label: 'Log out',
       key: '1',
@@ -39,54 +32,51 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
     },
   ];
 
+  const handleDropdownChange = (value) => {
+    setIsOpen(value);
+  };
+
   return (
-    <Header className="universal-layout-header">
-      <Row justify="space-between">
+    <Header className='universal-layout-header'>
+      <Row justify='space-between'>
         <Col
           xs={4}
           sm={4}
           md={6}
           lg={6}
-          className="layout-header-left-side-container"
+          className='layout-header-left-side-container'
         >
           <Button
-            size="large"
-            type="text"
-            className="btn-for-collapsed-or-shrink"
+            size='large'
+            type='text'
+            className='btn-for-collapsed-or-shrink'
             icon={
               collapsed ? (
-                <AiOutlineMenuUnfold className="icon-at-header-bar" />
+                <AiOutlineMenuUnfold className='icon-at-header-bar' />
               ) : (
-                <AiOutlineMenuFold className="icon-at-header-bar" />
+                <AiOutlineMenuFold className='icon-at-header-bar' />
               )
             }
             onClick={() => setCollapsed(!collapsed)}
           />
         </Col>
 
-        <Row
-          className="layout-header-right-side-container"
-          gutter={8}
-          xs={20}
-          sm={20}
-          md={18}
-          lg={18}
-        >
-          <Col xs={0} sm={2} className="layout-header-notification-icon">
+        <Row className='layout-header-right-side-container' gutter={8}>
+          <Col xs={0} sm={2} className='layout-header-notification-icon'>
             <IoNotificationsOutline />
           </Col>
 
           <Col>
-            <Divider type="vertical" className="divider-at-header-bar" />
+            <Divider type='vertical' className='divider-at-header-bar' />
           </Col>
 
-          <Row gutter={8}>
-            <Col xs={0} sm={6}>
+          <Row gutter={16}>
+            <Col xs={0} sm={6} md={6}>
               <Avatar
-                size="large"
-                className="user-profile-icon-at-header"
+                size='large'
+                className='user-profile-icon-at-header'
                 src={undefined}
-                alt="profile"
+                alt='profile'
               >
                 {user && user?.firstName
                   ? user?.firstName[0]?.toUpperCase() +
@@ -95,27 +85,34 @@ const AppHeader = ({ collapsed, setCollapsed }) => {
               </Avatar>
             </Col>
 
-            <Col className="dropdown-for-profile-view-details">
+            <Col
+              className='dropdown-for-profile-view-details'
+              xs={24}
+              sm={15}
+              md={15}
+            >
               <Dropdown
                 menu={{ items }}
                 trigger={['click']}
-                placement="bottom"
+                placement='bottom'
+                onOpenChange={handleDropdownChange}
               >
-                <div
-                  className="profile-details-at-header-bar"
-                  onClick={(e) => e.preventDefault()}
-                >
-                  <Col className="profile-details-container-header">
-                    <p className="customized-zero-margin-for-p-tag customized-user-name-at-header">
+                <div className='profile-details-at-header-bar'>
+                  <Col className='profile-details-container-header'>
+                    <p className='customized-zero-margin-for-p-tag customized-user-name-at-header'>
                       {user && user?.firstName
                         ? `${user?.firstName} ${user?.lastName}`
-                        : 'unknown'}
+                        : 'Unknown'}
                     </p>
-                    <p className="customized-zero-margin-for-p-tag customized-user-role-at-header">
+                    <p className='customized-zero-margin-for-p-tag customized-user-role-at-header'>
                       {user && user?.roleId === 1 ? 'Admin' : 'Member'}
                     </p>
                   </Col>
-                  <FaAngleDown />
+                  {isOpen ? (
+                    <FaAngleUp className='fa-angle-down-for-profile' />
+                  ) : (
+                    <FaAngleDown className='fa-angle-down-for-profile' />
+                  )}
                 </div>
               </Dropdown>
             </Col>

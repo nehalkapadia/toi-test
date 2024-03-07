@@ -1,183 +1,326 @@
 import React, { useEffect, useState } from 'react';
 import '../../styles/organizations/addOrganization.css';
-import { Form, Input, Row, Button, InputNumber, message, Spin } from 'antd';
+import {
+  Form,
+  Input,
+  Row,
+  Button,
+  InputNumber,
+  message,
+  Col,
+  Radio,
+  Drawer,
+  Skeleton,
+} from 'antd';
 import {
   FORM_NAME_VALUES,
   ORGANIZATION_FORM_FIELD_RULES,
   API_RESPONSE_MESSAGES,
   TOTAL_ITEMS_PER_PAGE,
-  ERROR_WHEN_CREATING_ORGANIZATION,
   ORG_LABEL,
+  ADD_BUTTON_TEXT,
+  UPDATE_BUTTON_TEXT,
+  PERCENTAGE_TEXT_FOR_100,
+  PERCENTAGE_TEXT_FOR_80,
 } from '@/utils/constant.util';
 import { replaceMultipleSpacesWithSingleSpace } from '@/utils/patterns';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
+  getOrganizationsById,
   getOrganizationsFunc,
   postOrganizationFunc,
+  updateOrganizationFunc,
 } from '@/store/organizationSlice';
-import { allowDigitsOnly, formatPhoneNumberForInput } from '@/utils/commonFunctions';
+import { formatPhoneNumberForInput } from '@/utils/commonFunctions';
+import CustomSpinner from '../CustomSpinner';
 
 const { TextArea } = Input;
 
-const AddOrganization = ({ onClose, page }) => {
+const AddOrganization = ({
+  columnId,
+  isEditClicked,
+  onClose,
+  page,
+  drawerHeadingText,
+  displayAddOrgDrawer,
+}) => {
   const dispatch = useDispatch();
   const [formData] = Form.useForm();
   const [submittable, setSubmittable] = useState(false);
-  const [loading, setLoading] = useState(false);
   const formValues = Form.useWatch([], formData);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const isLoading = useSelector((state) => state.organizationTable.isLoading);
+  const viewIsLoading = useSelector(
+    (state) => state.organizationTable.viewIsLoading
+  );
+  const getOrgDetails =
+    useSelector((state) => state.organizationTable.getOrgDetails) || {};
 
-  const handleSubmitFormData = async (values) => {
-    try {
-      setLoading(true);
-      values.isActive = true;
-      values.name = replaceMultipleSpacesWithSingleSpace(values.name);
-      values.domain = replaceMultipleSpacesWithSingleSpace(values.domain);
-      values.address = replaceMultipleSpacesWithSingleSpace(values.address);
-      values.phoneNumber = values.phoneNumber.toString();
-      dispatch(postOrganizationFunc(values)).then((res) => {
-        if (res?.payload?.status) {
-          dispatch(
-            getOrganizationsFunc({ page: page, perPage: TOTAL_ITEMS_PER_PAGE })
-          );
-          message.success(API_RESPONSE_MESSAGES.org_added);
-          setLoading(false);
-          onClose();
-        } else if (res?.payload?.status === false) {
-          message.error(res?.payload?.message);
-          setLoading(false);
-        } else {
-          message.error(API_RESPONSE_MESSAGES.err_rest_api);
-          setLoading(false);
-        }
-      });
-    } catch (error) {
-      message.error(
-        error?.message ? error?.message : ERROR_WHEN_CREATING_ORGANIZATION
+  const handleApiResponse = (res, page, event) => {
+    if (res?.payload?.status) {
+      dispatch(getOrganizationsFunc({ page, perPage: TOTAL_ITEMS_PER_PAGE }));
+      message.success(
+        event === 'create'
+          ? API_RESPONSE_MESSAGES.org_added
+          : API_RESPONSE_MESSAGES.org_updated
       );
-      setLoading(false);
+      onClose();
+    } else if (res?.payload?.status === false) {
+      message.error(res?.payload?.message);
+    } else {
+      message.error(API_RESPONSE_MESSAGES.err_rest_api);
+    }
+  };
+
+  const handleSubmitFormData = async () => {
+    try {
+      const values = await formData.validateFields();
+
+      values.domain =
+        replaceMultipleSpacesWithSingleSpace(values?.domain) || '';
+      values.address =
+        replaceMultipleSpacesWithSingleSpace(values?.address) || '';
+      values.phoneNumber = values?.phoneNumber?.toString() || '';
+
+      if (!isEditClicked) {
+        values.isActive = true;
+        values.name = replaceMultipleSpacesWithSingleSpace(values?.name) || '';
+
+        const res = await dispatch(postOrganizationFunc(values));
+
+        handleApiResponse(res, page, 'create');
+      } else if (isEditClicked) {
+        const payload = {
+          name: getOrgDetails?.name,
+          ...values,
+        };
+        const res = await dispatch(
+          updateOrganizationFunc({ id: columnId, payload })
+        );
+
+        handleApiResponse(res, page, 'edit');
+      }
+    } catch (error) {
+      message.error(API_RESPONSE_MESSAGES.err_rest_api);
     }
   };
 
   useEffect(() => {
-    formData.validateFields({ validateOnly: true }).then(
-      () => {
-        setSubmittable(true);
-      },
-      () => {
-        setSubmittable(false);
-      }
-    );
+    if (columnId && isEditClicked) {
+      formData.resetFields();
+      dispatch(getOrganizationsById(columnId));
+    }
+  }, [columnId, isEditClicked]);
+
+  useEffect(() => {
+    if (displayAddOrgDrawer) {
+      formData.validateFields({ validateOnly: true }).then(
+        () => {
+          setSubmittable(true);
+        },
+        () => {
+          setSubmittable(false);
+        }
+      );
+    } else {
+      setSubmittable(false);
+    }
   }, [formValues]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 500);
+    };
+    if (typeof window !== 'undefined') {
+      handleResize();
+      window.addEventListener('resize', handleResize);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, []);
+
   return (
-    <Form
-      form={formData}
-      name='add-organization-form'
-      onFinish={handleSubmitFormData}
-      autoComplete='off'
-      preserve={false}
-      layout='vertical'
+    <Drawer
+      title={`${drawerHeadingText} Organization`}
+      placement='right'
+      open={displayAddOrgDrawer}
+      onClose={onClose}
+      closable={true}
+      width={isSmallScreen ? PERCENTAGE_TEXT_FOR_100 : PERCENTAGE_TEXT_FOR_80}
+      destroyOnClose={true}
+      footer={
+        <Row className='cancel-and-add-btn-container-at-add-org'>
+          <Button
+            size='large'
+            className='org-mgt-add-btn-for-cancel'
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            size='large'
+            className='org-mgt-add-btn-for-creating-org'
+            onClick={handleSubmitFormData}
+            disabled={!submittable}
+          >
+            {isEditClicked ? UPDATE_BUTTON_TEXT : ADD_BUTTON_TEXT}
+          </Button>
+        </Row>
+      }
     >
-      <div className='all-form-items-container-at-add-organization'>
-        <Row className='single-rows-for-form-items-container'>
-          <Form.Item
-            className='each-one-for-item-itself-at-org'
-            name={FORM_NAME_VALUES.name}
-            label={ORG_LABEL.org_name}
-            rules={ORGANIZATION_FORM_FIELD_RULES.org_name}
-          >
-            <Input
-              size='large'
-              className='add-org-form-input-box'
-              placeholder='Please Enter Organization'
-            />
-          </Form.Item>
+      {viewIsLoading ? (
+        <Skeleton active paragraph={{ row: 16 }} />
+      ) : (
+        <Form
+          form={formData}
+          name='add-organization-form'
+          autoComplete='off'
+          onFinish={handleSubmitFormData}
+          preserve={false}
+          layout='vertical'
+          initialValues={isEditClicked ? getOrgDetails : {}}
+        >
+          <Row span={24} gutter={24}>
+            {isEditClicked ? (
+              <Col
+                xs={{ span: 24 }}
+                sm={{ span: 12 }}
+                md={{ span: 12 }}
+                lg={{ span: 12 }}
+              >
+                <label className='edit-org-label-tag'>Organization</label>
+                <h3 className='edit-org-heading-tag'>{getOrgDetails?.name}</h3>
+              </Col>
+            ) : (
+              <Col
+                xs={{ span: 24 }}
+                sm={{ span: 12 }}
+                md={{ span: 12 }}
+                lg={{ span: 12 }}
+              >
+                <Form.Item
+                  name={FORM_NAME_VALUES.name}
+                  label={ORG_LABEL.org_name}
+                  rules={ORGANIZATION_FORM_FIELD_RULES.org_name}
+                >
+                  <Input size='large' placeholder='Please Enter Organization' />
+                </Form.Item>
+              </Col>
+            )}
 
-          <Form.Item
-            className='each-one-for-item-itself-at-org'
-            name={FORM_NAME_VALUES.email}
-            label={ORG_LABEL.email}
-            rules={ORGANIZATION_FORM_FIELD_RULES.org_email}
-          >
-            <Input
-              size='large'
-              className='add-org-form-input-box'
-              type='email'
-              placeholder='example@domain.com'
-            />
-          </Form.Item>
-        </Row>
-
-        <Row className='single-rows-for-form-items-container'>
-          <Form.Item
-            className='each-one-for-item-itself-at-org'
-            name={FORM_NAME_VALUES.domain}
-            label={ORG_LABEL.domain}
-            rules={ORGANIZATION_FORM_FIELD_RULES.domain}
-          >
-            <Input
-              size='large'
-              className='add-org-form-input-box'
-              placeholder='Please Enter Domain Name'
-            />
-          </Form.Item>
-
-          <Form.Item
-            className='each-one-for-item-itself-at-org'
-            name={FORM_NAME_VALUES.number}
-            label={ORG_LABEL.number}
-            rules={ORGANIZATION_FORM_FIELD_RULES.number}
-          >
-            <InputNumber
-              step={null}
-              size='large'
-              className='add-org-form-input-box add-org-number-input'
-              placeholder='Please Enter Phone Number'
-              onKeyDown={allowDigitsOnly}
-              formatter={(value) => formatPhoneNumberForInput(value)}
-              parser={(value) => value.replace(/\D/g, '')}
-              maxLength={14}
-            />
-          </Form.Item>
-        </Row>
-
-        <Row className='single-rows-for-form-items-container'>
-          <Form.Item
-            className='each-one-for-item-itself-at-org'
-            name={FORM_NAME_VALUES.address}
-            label={ORG_LABEL.address}
-          >
-            <TextArea
-              className='add-org-form-input-box'
-              placeholder='Please Enter Full Address'
-              autoSize={{ minRows: 4, maxRows: 6 }}
-            />
-          </Form.Item>
-        </Row>
-
-        <Form.Item className='parent-btn-container-at-add-org'>
-          <Row className='cancel-and-add-btn-container-at-add-org'>
-            <Button
-              size='large'
-              className='org-mgt-add-btn-for-cancel'
-              onClick={onClose}
+            <Col
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 12 }}
+              lg={{ span: 12 }}
             >
-              Cancel
-            </Button>
-
-            <Button
-              size='large'
-              className='org-mgt-add-btn-for-creating-org'
-              htmlType='submit'
-              disabled={!submittable}
-            >
-              Add
-            </Button>
+              <Form.Item
+                name={FORM_NAME_VALUES.email}
+                label={ORG_LABEL.email}
+                rules={ORGANIZATION_FORM_FIELD_RULES.org_email}
+              >
+                <Input
+                  size='large'
+                  type='email'
+                  placeholder='example@domain.com'
+                />
+              </Form.Item>
+            </Col>
           </Row>
-        </Form.Item>
-      </div>
-      {loading && <Spin fullscreen />}
-    </Form>
+
+          <Row span={24} gutter={24}>
+            <Col
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 12 }}
+              lg={{ span: 12 }}
+            >
+              <Form.Item
+                name={FORM_NAME_VALUES.domain}
+                label={ORG_LABEL.domain}
+                rules={ORGANIZATION_FORM_FIELD_RULES.domain}
+              >
+                <Input size='large' placeholder='Please Enter Domain Name' />
+              </Form.Item>
+            </Col>
+
+            <Col
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 12 }}
+              lg={{ span: 12 }}
+            >
+              <Form.Item
+                name={FORM_NAME_VALUES.number}
+                label={ORG_LABEL.number}
+                rules={ORGANIZATION_FORM_FIELD_RULES.number}
+              >
+                <InputNumber
+                  size='large'
+                  className='add-org-number-input hide-spinner'
+                  placeholder='Please Enter Phone Number'
+                  formatter={(value) => formatPhoneNumberForInput(value)}
+                  parser={(value) => value.replace(/\D/g, '')}
+                  maxLength={14}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row span={24} gutter={24}>
+            <Col
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 12 }}
+              lg={{ span: 12 }}
+            >
+              <Form.Item
+                name={FORM_NAME_VALUES.address}
+                label={ORG_LABEL.address}
+              >
+                <TextArea
+                  placeholder='Please Enter Full Address'
+                  autoSize={{ minRows: 4, maxRows: 6 }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row span={24} gutter={24}>
+            {isEditClicked && (
+              <Col
+                xs={{ span: 24 }}
+                sm={{ span: 12 }}
+                md={{ span: 12 }}
+                lg={{ span: 12 }}
+              >
+                <Form.Item
+                  initialValue={getOrgDetails?.isActive}
+                  name={FORM_NAME_VALUES.isActive}
+                  label='Status'
+                >
+                  <Radio.Group className='radio-group-for-edit-in-org-mgt'>
+                    <Radio value={true} className='organization-current-active'>
+                      Active
+                    </Radio>
+
+                    <Radio
+                      value={false}
+                      className='organization-current-inactive'
+                    >
+                      InActive
+                    </Radio>
+                  </Radio.Group>
+                </Form.Item>
+              </Col>
+            )}
+          </Row>
+          {isLoading && <CustomSpinner />}
+        </Form>
+      )}
+    </Drawer>
   );
 };
 

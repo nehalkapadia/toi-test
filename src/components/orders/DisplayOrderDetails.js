@@ -10,8 +10,23 @@ import {
 import { DISPLAY_DIFFERENT_TABS_OF_ORDER_MANAGEMENT } from '@/utils/options';
 import { formatPhoneNumberToUSFormat } from '@/utils/commonFunctions';
 import dayjs from 'dayjs';
-import { DATE_FORMAT_STARTING_FROM_MONTH, NA } from '@/utils/constant.util';
+import {
+  CHEMO_ORDER_TYPE,
+  DATE_FORMAT_STARTING_FROM_MONTH,
+  LAB,
+  NA,
+  OFFICE_VISIT_ORDER_TYPE,
+  PATHOLOGY,
+  PREVIOUS_AUTHORIZATION,
+  RADIATION_ORDER_TYPE,
+  RADIOLOGY,
+} from '@/utils/constant.util';
 import NoFileDisplay from './NoFileDisplay';
+import CustomTable from '../customTable/CustomTable';
+import {
+  TABLE_FOR_CPT_CODES_AT_ORDER_DETAILS_CHEMO,
+  TABLE_FOR_CPT_CODES_AT_ORDER_DETAILS_TAB,
+} from '@/utils/columns';
 
 const DisplayOrderDetails = ({ columnId }) => {
   const dispatch = useDispatch();
@@ -35,8 +50,11 @@ const DisplayOrderDetails = ({ columnId }) => {
     secondaryInsuranceFiles = [],
   } = patientAllUploadedFilesData || {};
 
-  const { mdNotesFiles = [], writtenOrdersFiles = [] } =
-    patientUploadedDocsData || {};
+  const {
+    mdNotesFiles = [],
+    writtenOrdersFiles = [],
+    patientAuthDocFiles = [],
+  } = patientUploadedDocsData || {};
 
   const [selectedTab, setSelectedTab] = useState(1);
 
@@ -45,6 +63,8 @@ const DisplayOrderDetails = ({ columnId }) => {
     medicalHistory,
     medicalRecord,
     insuranceInfo,
+    orderDetails,
+    orderTypeData,
   } = getOrderDetails || {};
 
   const handleChangeOfCategoryTab = (key) => {
@@ -55,18 +75,61 @@ const DisplayOrderDetails = ({ columnId }) => {
     if (columnId) {
       dispatch(getOrderDetailsById(columnId)).then((res) => {
         if (res?.payload?.status) {
-          const { patientId } = res?.payload?.data;
-          dispatch(getPatientDocumentsAtEdit({ patientId, orderId: columnId }));
+          const { patientId, orderTypeId } = res?.payload?.data;
+          const isSecondaryInsurance =
+            res?.payload?.data?.insuranceInfo?.secondaryInsurance;
+          dispatch(
+            getPatientDocumentsAtEdit({
+              patientId,
+              orderId: columnId,
+              orderTypeId,
+              view: true,
+              isSecondaryInsurance,
+            })
+          );
           // had to clear all documents variable when we close this drawer
         }
       });
     }
   }, [columnId]);
 
+  const getProviderName = (orderingData) => {
+    if (orderingData?.first_name) {
+      return `${orderingData?.first_name} ${orderingData?.last_name}`;
+    } else {
+      return false;
+    }
+  };
+
+  const getMedicalRecordStatus = (type) => {
+    switch (type) {
+      case RADIOLOGY:
+        return medicalRecord?.isRadiologyStatus || radiologyFiles?.length > 0
+          ? 'Yes'
+          : 'No';
+      case PATHOLOGY:
+        return medicalRecord?.isPathologyStatus || pathologyFiles?.length > 0
+          ? 'Yes'
+          : 'No';
+      case LAB:
+        return medicalRecord?.isLabStatus || labStatusFiles?.length > 0
+          ? 'Yes'
+          : 'No';
+      case PREVIOUS_AUTHORIZATION:
+        return medicalRecord?.isPreviousAuthorizationStatus ||
+          prevAuthorizationFiles?.length > 0
+          ? 'Yes'
+          : 'No';
+      default:
+        return 'No';
+    }
+  };
+
   return (
     <div className='display-order-details-parent-container'>
       <Row>
         <Tabs
+          tabBarGutter={120}
           items={DISPLAY_DIFFERENT_TABS_OF_ORDER_MANAGEMENT}
           activeKey={selectedTab}
           onChange={handleChangeOfCategoryTab}
@@ -74,154 +137,151 @@ const DisplayOrderDetails = ({ columnId }) => {
       </Row>
 
       {selectedTab === 1 && (
-        <Row span={24} gutter={24}>
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>First Name</label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {patientDemographics?.firstName}
+        <div>
+          <Col>
+            <h3 className='order-type-heading-text-at-view-order'>
+              {orderTypeData?.name}
             </h3>
           </Col>
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>Last Name</label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {patientDemographics?.lastName}
-            </h3>
-          </Col>
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>Gender</label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {patientDemographics?.gender}
-            </h3>
-          </Col>
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>Date Of Birth</label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {dayjs(patientDemographics?.dob).format(
-                DATE_FORMAT_STARTING_FROM_MONTH
-              )}
-            </h3>
-          </Col>
+          <Row span={24} gutter={24}>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>First Name</label>
+              <h3 className='dod-tabs-inner-heading-for-titles'>
+                {patientDemographics?.firstName}
+              </h3>
+            </Col>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>Last Name</label>
+              <h3 className='dod-tabs-inner-heading-for-titles'>
+                {patientDemographics?.lastName}
+              </h3>
+            </Col>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>Gender</label>
+              <h3 className='dod-tabs-inner-heading-for-titles'>
+                {patientDemographics?.gender}
+              </h3>
+            </Col>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>Date Of Birth</label>
+              <h3 className='dod-tabs-inner-heading-for-titles'>
+                {dayjs(patientDemographics?.dob).format(
+                  DATE_FORMAT_STARTING_FROM_MONTH
+                )}
+              </h3>
+            </Col>
 
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>MRN Number</label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {patientDemographics?.mrn || NA}
-            </h3>
-          </Col>
-
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>Primary Phone Number</label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {formatPhoneNumberToUSFormat(
-                patientDemographics?.primaryPhoneNumber
-              ) || NA}
-            </h3>
-          </Col>
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>
-              Secondary Phone Number
-            </label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {formatPhoneNumberToUSFormat(
-                patientDemographics?.secondaryPhoneNumber
-              ) || NA}
-            </h3>
-          </Col>
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>Email</label>
-            <h3 className='dod-tabs-inner-email-field'>
-              {patientDemographics?.email || NA}
-            </h3>
-          </Col>
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>Preferred Language</label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {patientDemographics?.preferredLanguage || NA}
-            </h3>
-          </Col>
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>Race</label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {patientDemographics?.race || NA}
-            </h3>
-          </Col>
-          <Col
-            className='dod-tabs-for-each-row-gap'
-            xs={{ span: 24 }}
-            sm={{ span: 12 }}
-            md={{ span: 8 }}
-            lg={{ span: 6 }}
-          >
-            <label className='dod-tabs-label-text'>Address</label>
-            <h3 className='dod-tabs-inner-heading-for-titles'>
-              {patientDemographics?.address || NA}
-            </h3>
-          </Col>
-        </Row>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>Member Cell Phone</label>
+              <h3 className='dod-tabs-inner-heading-for-titles'>
+                {formatPhoneNumberToUSFormat(
+                  patientDemographics?.primaryPhoneNumber
+                ) || NA}
+              </h3>
+            </Col>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>Member Home Phone</label>
+              <h3 className='dod-tabs-inner-heading-for-titles'>
+                {formatPhoneNumberToUSFormat(
+                  patientDemographics?.secondaryPhoneNumber
+                ) || NA}
+              </h3>
+            </Col>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>Email</label>
+              <h3 className='dod-tabs-inner-email-field'>
+                {patientDemographics?.email || NA}
+              </h3>
+            </Col>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>Preferred Language</label>
+              <h3 className='dod-tabs-inner-heading-for-titles'>
+                {patientDemographics?.preferredLanguage || NA}
+              </h3>
+            </Col>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>Member ID</label>
+              <h3 className='dod-tabs-inner-heading-for-titles'>
+                {patientDemographics?.hsMemberID || NA}
+              </h3>
+            </Col>
+            <Col
+              className='dod-tabs-for-each-row-gap'
+              xs={{ span: 24 }}
+              sm={{ span: 12 }}
+              md={{ span: 8 }}
+              lg={{ span: 6 }}
+            >
+              <label className='dod-tabs-label-text'>Address</label>
+              <h3 className='dod-tabs-inner-heading-for-titles'>
+                {patientDemographics?.address || NA}
+              </h3>
+            </Col>
+          </Row>
+        </div>
       )}
 
       {selectedTab === 2 && (
         <div>
+          <Col>
+            <h3 className='order-type-heading-text-at-view-order'>
+              {orderTypeData?.name}
+            </h3>
+          </Col>
           <Row span={24} gutter={24}>
             <Col
               className='dod-tabs-for-each-row-gap'
@@ -232,301 +292,456 @@ const DisplayOrderDetails = ({ columnId }) => {
             >
               <label className='dod-tabs-label-text'>Diagnosis</label>
               <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalHistory?.diagnosis}
+                {medicalHistory?.diagnosis || NA}
               </h3>
             </Col>
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>Chemotherapy Status</label>
-              <h3
-                className={`dod-tabs-inner-heading-for-titles dod-class-for-diff-status-${medicalHistory?.chemoTherapyStatus}`}
+            {(orderTypeData?.name === OFFICE_VISIT_ORDER_TYPE ||
+              orderTypeData?.name === RADIATION_ORDER_TYPE) && (
+              <Col
+                className='dod-tabs-for-each-row-gap'
+                xs={{ span: 24 }}
+                sm={{ span: 8 }}
+                md={{ span: 6 }}
+                lg={{ span: 6 }}
               >
-                {medicalHistory?.chemoTherapyStatus ? 'Yes' : 'No'}
-              </h3>
-            </Col>
-          </Row>
-
-          <Row span={24} gutter={24}>
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>Ordering Provider</label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalHistory?.orderingProvider}
-              </h3>
-            </Col>
-
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>Referring Provider</label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalHistory?.referringProvider}
-              </h3>
-            </Col>
-
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>PCP Number</label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalHistory?.pcpName || medicalHistory?.referringProvider}
-              </h3>
-            </Col>
-          </Row>
-
-          <Row span={24} gutter={24}>
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>Radiology Status</label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalRecord?.isRadiologyStatus ? 'Yes' : 'No'}
-              </h3>
-            </Col>
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>Radiology Facility</label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalRecord?.radiologyFacility || NA}
-              </h3>
-            </Col>
-          </Row>
-
-          <Row span={24} gutter={24} className='upload-btm-mr-25'>
-            <Col span={24} className='upload-documents-container-at-tab-2'>
-              <label className='dod-tabs-label-text'>
-                Uploaded Radiology Documents
-              </label>
-            </Col>
-
-            {radiologyFiles?.length > 0 ? (
-              radiologyFiles?.map((elem) => (
+                <label className='dod-tabs-label-text'>Date Of Visit</label>
+                <h3 className='dod-tabs-inner-heading-for-titles'>
+                  {medicalHistory?.dateOfVisit
+                    ? dayjs(medicalHistory?.dateOfVisit).format(
+                        DATE_FORMAT_STARTING_FROM_MONTH
+                      )
+                    : NA}
+                </h3>
+              </Col>
+            )}
+            {orderTypeData?.name === CHEMO_ORDER_TYPE && (
+              <>
                 <Col
                   className='dod-tabs-for-each-row-gap'
                   xs={{ span: 24 }}
-                  sm={{ span: 12 }}
-                  md={{ span: 8 }}
-                  lg={{ span: 8 }}
-                  key={elem?.id}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
                 >
-                  <DisplayFilesContainer dataObj={elem} />
+                  <label className='dod-tabs-label-text'>
+                    Chemotherapy Status
+                  </label>
+                  <h3
+                    className={`dod-tabs-inner-heading-for-titles dod-class-for-diff-status-${medicalHistory?.chemoTherapyStatus}`}
+                  >
+                    {medicalHistory?.chemoTherapyStatus ? 'Yes' : 'No'}
+                  </h3>
                 </Col>
-              ))
-            ) : (
-              <NoFileDisplay />
-            )}
-          </Row>
-
-          <Row span={24} gutter={24}>
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>Pathology Status</label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalRecord?.isPathologyStatus ? 'Yes' : 'No'}
-              </h3>
-            </Col>
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>Pathology Facility</label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalRecord?.pathologyFacility || NA}
-              </h3>
-            </Col>
-          </Row>
-
-          <Row span={24} gutter={24} className='upload-btm-mr-25'>
-            <Col span={24} className='upload-documents-container-at-tab-2'>
-              <label className='dod-tabs-label-text'>
-                Uploaded Pathology Documents
-              </label>
-            </Col>
-
-            {pathologyFiles?.length > 0 ? (
-              pathologyFiles?.map((elem) => (
                 <Col
                   className='dod-tabs-for-each-row-gap'
                   xs={{ span: 24 }}
-                  sm={{ span: 12 }}
-                  md={{ span: 8 }}
-                  lg={{ span: 8 }}
-                  key={elem?.id}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
                 >
-                  <div>
-                    <DisplayFilesContainer dataObj={elem} />
-                  </div>
+                  <label className='dod-tabs-label-text'>
+                    Received Prior Treatment?
+                  </label>
+                  <h3
+                    className={`dod-tabs-inner-heading-for-titles dod-class-for-diff-status-${medicalHistory?.chemoTherapyStatus}`}
+                  >
+                    {medicalHistory?.chemoTherapyStatus ? 'Yes' : 'No'}
+                  </h3>
                 </Col>
-              ))
-            ) : (
-              <NoFileDisplay />
-            )}
-          </Row>
-
-          <Row span={24} gutter={24}>
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>Lab Status</label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalRecord?.isLabStatus ? 'Yes' : 'No'}
-              </h3>
-            </Col>
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>Lab Facility</label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalRecord?.labFacility || NA}
-              </h3>
-            </Col>
-          </Row>
-
-          <Row span={24} gutter={24} className='upload-btm-mr-25'>
-            <Col span={24} className='upload-documents-container-at-tab-2'>
-              <label className='dod-tabs-label-text'>
-                Uploaded Lab Documents
-              </label>
-            </Col>
-
-            {labStatusFiles?.length > 0 ? (
-              labStatusFiles?.map((elem) => (
                 <Col
                   className='dod-tabs-for-each-row-gap'
                   xs={{ span: 24 }}
-                  sm={{ span: 12 }}
-                  md={{ span: 8 }}
-                  lg={{ span: 8 }}
-                  key={elem?.id}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
                 >
-                  <div>
-                    <DisplayFilesContainer dataObj={elem} />
-                  </div>
+                  <label className='dod-tabs-label-text'>
+                    Chemotherapy Ordered
+                  </label>
+                  <h3
+                    className={`dod-tabs-inner-heading-for-titles dod-class-for-diff-status-${medicalHistory?.chemotherapyOrdered}`}
+                  >
+                    {medicalHistory?.chemoTherapyStatus
+                      ? dayjs(medicalHistory?.chemotherapyOrdered).format(
+                          DATE_FORMAT_STARTING_FROM_MONTH
+                        )
+                      : NA}
+                  </h3>
                 </Col>
-              ))
-            ) : (
-              <NoFileDisplay />
+              </>
             )}
           </Row>
 
-          <Row span={24} gutter={24}>
-            <Col
-              className='dod-tabs-for-each-row-gap'
-              xs={{ span: 24 }}
-              sm={{ span: 8 }}
-              md={{ span: 6 }}
-              lg={{ span: 6 }}
-            >
-              <label className='dod-tabs-label-text'>
-                Previous Authorization
-              </label>
-              <h3 className='dod-tabs-inner-heading-for-titles'>
-                {medicalRecord?.isPreviousAuthorizationStatus ? 'Yes' : 'No'}
-              </h3>
-            </Col>
-          </Row>
-
-          <Row span={24} gutter={24} className='upload-btm-mr-25'>
-            <Col span={24} className='upload-documents-container-at-tab-2'>
-              <label className='dod-tabs-label-text'>
-                Previous Authorization Uploaded Documents
-              </label>
-            </Col>
-
-            {prevAuthorizationFiles?.length > 0 ? (
-              prevAuthorizationFiles?.map((elem) => (
+          {orderTypeData?.name === CHEMO_ORDER_TYPE && (
+            <>
+              <Row span={24} gutter={24}>
                 <Col
                   className='dod-tabs-for-each-row-gap'
                   xs={{ span: 24 }}
-                  sm={{ span: 12 }}
-                  md={{ span: 8 }}
-                  lg={{ span: 8 }}
-                  key={elem?.id}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
                 >
-                  <div>
-                    <DisplayFilesContainer dataObj={elem} />
-                  </div>
+                  <label className='dod-tabs-label-text'>
+                    Ordering Provider
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {medicalHistory?.orderingProvider || NA}
+                  </h3>
                 </Col>
-              ))
-            ) : (
-              <NoFileDisplay />
-            )}
-          </Row>
 
-          <Row span={24} gutter={24} className='upload-btm-mr-25'>
-            <Col span={24} className='upload-documents-container-at-tab-2'>
-              <label className='dod-tabs-label-text'>
-                Single Medical Release Form
-              </label>
-            </Col>
-
-            {medicalReleaseFiles?.length > 0 ? (
-              medicalReleaseFiles?.map((elem) => (
                 <Col
                   className='dod-tabs-for-each-row-gap'
                   xs={{ span: 24 }}
-                  sm={{ span: 12 }}
-                  md={{ span: 8 }}
-                  lg={{ span: 8 }}
-                  key={elem?.id}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
                 >
-                  <div>
-                    <DisplayFilesContainer dataObj={elem} />
-                  </div>
+                  <label className='dod-tabs-label-text'>
+                    Referring Provider
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {medicalHistory?.referringProvider || NA}
+                  </h3>
                 </Col>
-              ))
-            ) : (
-              <NoFileDisplay />
-            )}
-          </Row>
+
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>PCP Number</label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {medicalHistory?.pcpName ||
+                      medicalHistory?.referringProvider ||
+                      NA}
+                  </h3>
+                </Col>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>Date Of Visit</label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {medicalHistory?.dateOfVisit
+                      ? dayjs(medicalHistory?.dateOfVisit).format(
+                          DATE_FORMAT_STARTING_FROM_MONTH
+                        )
+                      : NA}
+                  </h3>
+                </Col>
+              </Row>
+
+              <Row span={24} gutter={24}>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>
+                    Ordering Provider Name
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {getProviderName(medicalHistory?.orderingProviderData) ||
+                      NA}
+                  </h3>
+                </Col>
+
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>
+                    Referring Provider Name
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {getProviderName(medicalHistory?.referringProviderData) ||
+                      NA}
+                  </h3>
+                </Col>
+
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>PCP Number Name</label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {getProviderName(medicalHistory?.pcpNameData) ||
+                      getProviderName(medicalHistory?.referringProviderData) ||
+                      NA}
+                  </h3>
+                </Col>
+              </Row>
+
+              <Row span={24} gutter={24}>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>
+                    Radiology Status
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {getMedicalRecordStatus(RADIOLOGY)}
+                  </h3>
+                </Col>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>
+                    Radiology Facility
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {medicalRecord?.isRadiologyStatus
+                      ? medicalRecord?.radiologyFacility || NA
+                      : NA}
+                  </h3>
+                </Col>
+              </Row>
+
+              <Row span={24} gutter={24} className='upload-btm-mr-25'>
+                <Col span={24} className='upload-documents-container-at-tab-2'>
+                  <label className='dod-tabs-label-text'>
+                    Uploaded Radiology Documents
+                  </label>
+                </Col>
+
+                {radiologyFiles?.length > 0 ? (
+                  radiologyFiles?.map((elem) => (
+                    <Col
+                      className='dod-tabs-for-each-row-gap'
+                      xs={{ span: 24 }}
+                      sm={{ span: 12 }}
+                      md={{ span: 8 }}
+                      lg={{ span: 8 }}
+                      key={elem?.id}
+                    >
+                      <DisplayFilesContainer dataObj={elem} />
+                    </Col>
+                  ))
+                ) : (
+                  <NoFileDisplay />
+                )}
+              </Row>
+
+              <Row span={24} gutter={24}>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>
+                    Pathology Status
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {getMedicalRecordStatus(PATHOLOGY)}
+                  </h3>
+                </Col>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>
+                    Pathology Facility
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {medicalRecord?.isPathologyStatus
+                      ? medicalRecord?.pathologyFacility || NA
+                      : NA}
+                  </h3>
+                </Col>
+              </Row>
+
+              <Row span={24} gutter={24} className='upload-btm-mr-25'>
+                <Col span={24} className='upload-documents-container-at-tab-2'>
+                  <label className='dod-tabs-label-text'>
+                    Uploaded Pathology Documents
+                  </label>
+                </Col>
+
+                {pathologyFiles?.length > 0 ? (
+                  pathologyFiles?.map((elem) => (
+                    <Col
+                      className='dod-tabs-for-each-row-gap'
+                      xs={{ span: 24 }}
+                      sm={{ span: 12 }}
+                      md={{ span: 8 }}
+                      lg={{ span: 8 }}
+                      key={elem?.id}
+                    >
+                      <div>
+                        <DisplayFilesContainer dataObj={elem} />
+                      </div>
+                    </Col>
+                  ))
+                ) : (
+                  <NoFileDisplay />
+                )}
+              </Row>
+
+              <Row span={24} gutter={24}>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>Lab Status</label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {getMedicalRecordStatus(LAB)}
+                  </h3>
+                </Col>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>Lab Facility</label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {medicalRecord?.isLabStatus
+                      ? medicalRecord?.labFacility || NA
+                      : NA}
+                  </h3>
+                </Col>
+              </Row>
+
+              <Row span={24} gutter={24} className='upload-btm-mr-25'>
+                <Col span={24} className='upload-documents-container-at-tab-2'>
+                  <label className='dod-tabs-label-text'>
+                    Uploaded Lab Documents
+                  </label>
+                </Col>
+
+                {labStatusFiles?.length > 0 ? (
+                  labStatusFiles?.map((elem) => (
+                    <Col
+                      className='dod-tabs-for-each-row-gap'
+                      xs={{ span: 24 }}
+                      sm={{ span: 12 }}
+                      md={{ span: 8 }}
+                      lg={{ span: 8 }}
+                      key={elem?.id}
+                    >
+                      <div>
+                        <DisplayFilesContainer dataObj={elem} />
+                      </div>
+                    </Col>
+                  ))
+                ) : (
+                  <NoFileDisplay />
+                )}
+              </Row>
+
+              <Row span={24} gutter={24}>
+                <Col
+                  className='dod-tabs-for-each-row-gap'
+                  xs={{ span: 24 }}
+                  sm={{ span: 8 }}
+                  md={{ span: 6 }}
+                  lg={{ span: 6 }}
+                >
+                  <label className='dod-tabs-label-text'>
+                    Previous Authorization
+                  </label>
+                  <h3 className='dod-tabs-inner-heading-for-titles'>
+                    {getMedicalRecordStatus(PREVIOUS_AUTHORIZATION)}
+                  </h3>
+                </Col>
+              </Row>
+
+              <Row span={24} gutter={24} className='upload-btm-mr-25'>
+                <Col span={24} className='upload-documents-container-at-tab-2'>
+                  <label className='dod-tabs-label-text'>
+                    Previous Authorization Uploaded Documents
+                  </label>
+                </Col>
+
+                {prevAuthorizationFiles?.length > 0 ? (
+                  prevAuthorizationFiles?.map((elem) => (
+                    <Col
+                      className='dod-tabs-for-each-row-gap'
+                      xs={{ span: 24 }}
+                      sm={{ span: 12 }}
+                      md={{ span: 8 }}
+                      lg={{ span: 8 }}
+                      key={elem?.id}
+                    >
+                      <div>
+                        <DisplayFilesContainer dataObj={elem} />
+                      </div>
+                    </Col>
+                  ))
+                ) : (
+                  <NoFileDisplay />
+                )}
+              </Row>
+
+              <Row span={24} gutter={24} className='upload-btm-mr-25'>
+                <Col span={24} className='upload-documents-container-at-tab-2'>
+                  <label className='dod-tabs-label-text'>
+                    Single Medical Release Form
+                  </label>
+                </Col>
+
+                {medicalReleaseFiles?.length > 0 ? (
+                  medicalReleaseFiles?.map((elem) => (
+                    <Col
+                      className='dod-tabs-for-each-row-gap'
+                      xs={{ span: 24 }}
+                      sm={{ span: 12 }}
+                      md={{ span: 8 }}
+                      lg={{ span: 8 }}
+                      key={elem?.id}
+                    >
+                      <div>
+                        <DisplayFilesContainer dataObj={elem} />
+                      </div>
+                    </Col>
+                  ))
+                ) : (
+                  <NoFileDisplay />
+                )}
+              </Row>
+            </>
+          )}
         </div>
       )}
 
       {selectedTab === 3 && (
         <div>
+          <Col>
+            <h3 className='order-type-heading-text-at-view-order'>
+              {orderTypeData?.name}
+            </h3>
+          </Col>
           <Row span={24} gutter={24}>
             <Col
               className='dod-tabs-for-each-row-gap'
@@ -791,15 +1006,75 @@ const DisplayOrderDetails = ({ columnId }) => {
 
       {selectedTab === 4 && (
         <div>
+          <Col>
+            <h3 className='order-type-heading-text-at-view-order'>
+              {orderTypeData?.name}
+            </h3>
+          </Col>
+
+          <CustomTable
+            rowKey='id'
+            rows={orderDetails?.cptCodes}
+            columns={
+              orderTypeData?.name === CHEMO_ORDER_TYPE
+                ? TABLE_FOR_CPT_CODES_AT_ORDER_DETAILS_CHEMO
+                : TABLE_FOR_CPT_CODES_AT_ORDER_DETAILS_TAB
+            }
+            pagination={false}
+            pageSize={25}
+            scroll={{ y: 300 }}
+          />
+        </div>
+      )}
+
+      {selectedTab === 5 && (
+        <div>
+          <Col>
+            <h3 className='order-type-heading-text-at-view-order'>
+              {orderTypeData?.name}
+            </h3>
+          </Col>
+          {orderTypeData?.name === CHEMO_ORDER_TYPE &&
+            writtenOrdersFiles?.length > 0 && (
+              <Row span={24} gutter={24}>
+                <Col span={24} className='upload-documents-container-at-tab-2'>
+                  <label className='dod-tabs-label-text'>
+                    Written Orders For Treatment
+                  </label>
+                </Col>
+
+                {writtenOrdersFiles?.length > 0 ? (
+                  writtenOrdersFiles?.map((elem) => (
+                    <Col
+                      className='dod-tabs-for-each-row-gap'
+                      xs={{ span: 24 }}
+                      sm={{ span: 12 }}
+                      md={{ span: 8 }}
+                      lg={{ span: 8 }}
+                      key={elem?.id}
+                    >
+                      <div>
+                        <DisplayFilesContainer dataObj={elem} />
+                      </div>
+                    </Col>
+                  ))
+                ) : (
+                  <NoFileDisplay />
+                )}
+              </Row>
+            )}
+
           <Row span={24} gutter={24}>
             <Col span={24} className='upload-documents-container-at-tab-2'>
               <label className='dod-tabs-label-text'>
-                Written Orders For Treatment
+                {orderTypeData?.name === OFFICE_VISIT_ORDER_TYPE
+                  ? 'Referral'
+                  : 'MD Notes'}
               </label>
             </Col>
 
-            {writtenOrdersFiles?.length > 0 ? (
-              writtenOrdersFiles?.map((elem) => (
+            {mdNotesFiles?.length > 0 ? (
+              mdNotesFiles?.map((elem) => (
                 <Col
                   className='dod-tabs-for-each-row-gap'
                   xs={{ span: 24 }}
@@ -820,11 +1095,13 @@ const DisplayOrderDetails = ({ columnId }) => {
 
           <Row span={24} gutter={24}>
             <Col span={24} className='upload-documents-container-at-tab-2'>
-              <label className='dod-tabs-label-text'>MD Notes</label>
+              <label className='dod-tabs-label-text'>
+                Patient Auth Response
+              </label>
             </Col>
 
-            {mdNotesFiles?.length > 0 ? (
-              mdNotesFiles?.map((elem) => (
+            {patientAuthDocFiles?.length > 0 ? (
+              patientAuthDocFiles?.map((elem) => (
                 <Col
                   className='dod-tabs-for-each-row-gap'
                   xs={{ span: 24 }}

@@ -8,8 +8,15 @@ import View_Icon from '../../icons/eye_icon.svg';
 import Edit_Icon from '../../icons/pen.svg';
 import Delete_Icon from '../../icons/trash.svg';
 import { useRouter } from 'next/router';
+import { useDispatch } from 'react-redux';
+import {
+  resetCreateOrderDataBacktoInitialState,
+  setTab2FormData,
+} from '@/store/createOrderFormSlice';
+import { resetOrderStateToInitialState } from '@/store/orderSlice';
 
 const CustomTable = (props) => {
+  const dispatch = useDispatch();
   const router = useRouter();
   const { pathname } = router;
   const { columns, rows, rowSelectionType, total, size = 'default' } = props;
@@ -36,6 +43,11 @@ const CustomTable = (props) => {
 
   const editFunction = (event, record, onEdit) => {
     event.stopPropagation();
+    if (pathname === '/order-management') {
+      dispatch(resetOrderStateToInitialState());
+      dispatch(resetCreateOrderDataBacktoInitialState());
+      dispatch(setTab2FormData({}));
+    }
     onEdit && onEdit(record);
   };
 
@@ -111,6 +123,15 @@ const CustomTable = (props) => {
                       <Image src={Edit_Icon} alt='Edit' />
                     </Button>
                   )}
+
+                {isDeleteable && pathname !== '/order-management' && (
+                  <Button
+                    type='link'
+                    onClick={(e) => deleteFunction(e, record, onDelete)}
+                  >
+                    <Image className='red-5' src={Delete_Icon} alt='Delete' />
+                  </Button>
+                )}
 
                 {isDeleteable &&
                   pathname === '/order-management' &&

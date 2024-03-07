@@ -1,60 +1,48 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-const token =
-  typeof window !== "undefined" && localStorage.getItem("userToken");
-
-const axiosInstance = axios.create({
-  baseURL: process.env.BASE_URL,
-  headers: {
-    authorization: "Bearer " + token,
-  },
-});
+import { handleErrorResponse } from '@/utils/commonFunctions';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axiosInstance from './axiosInstance';
 
 export const getOrganizationsFunc = createAsyncThunk(
-  "organization/getList",
+  'organization/getList',
   async (payload = {}) => {
-    const authToken = localStorage.getItem("userToken");
-    axiosInstance.interceptors.request.use((config) => {
-      config.headers.Authorization = `Bearer ${authToken}`;
-      return config;
-    });
-    const response = await axiosInstance.post(
-      "/api/organizations/list",
-      payload
-    );
-    return response.data;
+    try {
+      const response = await axiosInstance.post(
+        '/api/organizations/list',
+        payload
+      );
+      return response.data;
+    } catch (err) {
+      return handleErrorResponse(err);
+    }
   }
 );
 
 export const postOrganizationFunc = createAsyncThunk(
-  "organization/post",
+  'organization/post',
   async (payload) => {
     try {
-      const response = await axiosInstance.post("/api/organizations", payload);
+      const response = await axiosInstance.post('/api/organizations', payload);
       return response.data;
     } catch (err) {
-      const payload = {
-        status: false,
-        message: err?.response?.data?.errors
-          ? err?.response?.data?.errors[0]?.msg
-          : err?.response?.data?.message,
-      };
-      return payload;
+      return handleErrorResponse(err);
     }
   }
 );
 
 export const getOrganizationsById = createAsyncThunk(
-  "organization/listDetails",
+  'organization/listDetails',
   async (id) => {
-    const response = await axiosInstance.get(`/api/organizations/${id}`);
-    return response.data;
+    try {
+      const response = await axiosInstance.get(`/api/organizations/${id}`);
+      return response.data;
+    } catch (err) {
+      return handleErrorResponse(err);
+    }
   }
 );
 
 export const updateOrganizationFunc = createAsyncThunk(
-  "organization/put",
+  'organization/put',
   async ({ id, payload }) => {
     try {
       const response = await axiosInstance.put(
@@ -63,27 +51,25 @@ export const updateOrganizationFunc = createAsyncThunk(
       );
       return response.data;
     } catch (err) {
-      const payload = {
-        status: false,
-        message: err?.response?.data?.errors
-          ? err?.response?.data?.errors[0]?.msg
-          : err?.response?.data?.message,
-      };
-      return payload;
+      return handleErrorResponse(err);
     }
   }
 );
 
 export const deleteOrganizationFunc = createAsyncThunk(
-  "organization/delete",
+  'organization/delete',
   async (id) => {
-    const response = await axiosInstance.delete(`/api/organizations/${id}`);
-    return response.data;
+    try {
+      const response = await axiosInstance.delete(`/api/organizations/${id}`);
+      return response.data;
+    } catch (err) {
+      return handleErrorResponse(err);
+    }
   }
 );
 
 const organizationSlice = createSlice({
-  name: "organization",
+  name: 'organization',
   initialState: {
     getOrganizations: [],
     getOrgDetails: {},
@@ -96,7 +82,14 @@ const organizationSlice = createSlice({
     successMessage: null,
     totalCount: 0,
   },
-  reducers: {},
+  reducers: {
+    setGetorderDetailsById: (state) => {
+      return {
+        ...state,
+        getOrgDetails: {},
+      };
+    },
+  },
   extraReducers: (builder) => {
     builder
       // Post Req
@@ -122,9 +115,9 @@ const organizationSlice = createSlice({
       .addCase(getOrganizationsFunc.fulfilled, (state, action) => {
         const { payload } = action;
         state.isLoading = false;
-        state.successMessage = payload.message;
-        state.getOrganizations = payload.data.rows;
-        state.totalCount = payload.data.count;
+        state.successMessage = payload?.message;
+        state.getOrganizations = payload?.data?.rows;
+        state.totalCount = payload?.data?.count;
       })
       .addCase(getOrganizationsFunc.rejected, (state, action) => {
         state.isLoading = false;
@@ -164,21 +157,33 @@ const organizationSlice = createSlice({
 
       // Get Organization Details for Specific ID
       .addCase(getOrganizationsById.pending, (state) => {
-        state.viewIsLoading = true;
+        return {
+          ...state,
+          viewIsLoading: true,
+          getOrgDetails: {},
+        };
       })
       .addCase(getOrganizationsById.fulfilled, (state, action) => {
         const { payload } = action;
-        state.viewIsLoading = false;
-        state.successMessage = payload.message;
-        state.getOrgDetails = payload.data;
+        return {
+          ...state,
+          viewIsLoading: false,
+          successMessage: payload?.message,
+          getOrgDetails: payload?.data,
+        };
       })
       .addCase(getOrganizationsById.rejected, (state, action) => {
-        state.viewIsLoading = false;
-        state.isError = true;
-        state.errorMessage = action.error.message;
+        return {
+          ...state,
+          viewIsLoading: false,
+          getOrgDetails: {},
+          isError: true,
+          errorMessage: action.error.message,
+        };
       });
   },
 });
 
-export const { fetchOrganizationData } = organizationSlice.actions;
+export const { fetchOrganizationData, setGetorderDetailsById } =
+  organizationSlice.actions;
 export const organizationReducer = organizationSlice.reducer;

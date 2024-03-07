@@ -39,11 +39,16 @@ exports.list = async () => {
  * @description Get order auth document by patient id
  * @access Private
  */
-exports.getOrderAuthDocumentByPatientId = async (patientId) => {
+exports.getOrderAuthDocumentByPatientId = async (patientId, orderId) => {
+
+  const whereClause = { patientId };
+  if (orderId) {
+    whereClause.orderId = orderId;
+  }
   return await OrderAuthDocuments.findAll({
-    where: { patientId },
+    where: whereClause,
     order: [['createdAt', 'DESC']],
-    attributes: ['id', 'patientId', 'orderId'],
+    attributes: ['id', 'patientId', 'orderId', 'patDocumentId'],
     include: [
       {
         model: db.PatDocuments,

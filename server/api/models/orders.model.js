@@ -6,6 +6,9 @@ module.exports = (sequelize, Sequelize) => {
   const Organization = require('./organization.model')(sequelize, Sequelize);
   const User = require('./user.model')(sequelize, Sequelize);
   const OrderPatDocument = require('./order_pat_document.model')(sequelize, Sequelize);
+  const OrderType = require('./order_types.model')(sequelize, Sequelize);
+  const OrderDetails = require('./order_details.model')(sequelize, Sequelize);
+  const OrderStatusHistory = require('./order_status_history.model')(sequelize, Sequelize);
   const constantsUtil = require("../utils/constants.util");
 
   const Orders = sequelize.define(
@@ -19,6 +22,13 @@ module.exports = (sequelize, Sequelize) => {
       caseId: {
         type: Sequelize.STRING,
         allowNull: false,
+      },
+      orderTypeId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'OrderTypes',
+          key: 'id',
+        },
       },
       patientId: {
         type: Sequelize.INTEGER,
@@ -52,6 +62,13 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.INTEGER,
         references: {
           model: 'Organizations',
+          key: 'id',
+        },
+      },
+      orderDetailsId: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'OrderDetails',
           key: 'id',
         },
       },
@@ -95,8 +112,19 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.DATE,
         allowNull: true,
       },
+      createdAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      toiStatus: {
+        type: Sequelize.STRING,
+      },
     },
-    { timestamps: true }
+    { timestamps: false }
   );
 
   Orders.belongsTo(PatientDemo, { foreignKey: 'patientId', as: 'patientDemography' });
@@ -104,11 +132,13 @@ module.exports = (sequelize, Sequelize) => {
   Orders.belongsTo(MedicalRecord, { foreignKey: 'recordId', as: 'medicalRecord' });
   Orders.belongsTo(InsuranceInfo, { foreignKey: 'insuranceId', as: 'insuranceInfo' });
   Orders.belongsTo(Organization, { foreignKey: 'organizationId', as: 'organization' });
+  Orders.belongsTo(OrderDetails, { foreignKey: 'orderDetailsId', as: 'orderDetails' });
   Orders.belongsTo(User, { foreignKey: 'createdBy', as: 'userData' });
   Orders.hasMany(OrderPatDocument, {
     foreignKey: 'orderId'
   })
   Orders.belongsTo(User, { foreignKey: 'ownerId', as: 'ownerData' });
-
+  Orders.belongsTo(OrderType, { foreignKey: 'orderTypeId', as: 'orderTypeData' });
+  Orders.hasMany(OrderStatusHistory, { foreignKey: 'orderId', as: 'orderStatusHistoryData' });
   return Orders;
 };

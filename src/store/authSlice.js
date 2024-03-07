@@ -1,6 +1,7 @@
 // redux/slices/authSlice.js
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axiosInstance from "./axiosInstance";
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import axiosInstance from './axiosInstance';
+import { handleErrorResponse } from '@/utils/commonFunctions';
 
 const initialState = {
   isAuthenticated: false,
@@ -8,14 +9,15 @@ const initialState = {
   userRole: null,
   user: null,
   isLoading: false,
-  errorMessage: "",
+  errorMessage: '',
+  selectedUserAtOrderMgt: null,
 };
 
 // Check if values exist in localStorage and use them as initial state
 const storedToken =
-  typeof window !== "undefined" && localStorage.getItem("userToken");
+  typeof window !== 'undefined' && localStorage.getItem('userToken');
 const storedRole =
-  typeof window !== "undefined" && localStorage.getItem("userRole");
+  typeof window !== 'undefined' && localStorage.getItem('userRole');
 
 if (storedToken && storedRole) {
   initialState.isAuthenticated = true;
@@ -23,32 +25,24 @@ if (storedToken && storedRole) {
   initialState.userRole = storedRole;
 }
 
-export const getProfile = createAsyncThunk("profile/get", async () => {
-  const authToken = localStorage.getItem("userToken");
-  const headers = {
-    Authorization: `Bearer ${authToken}`,
-  };
-  const response = await axiosInstance.get("/api/auth/profile", { headers });
-  localStorage.setItem("userId", response.data?.data?.id);
-  await axiosInstance.interceptors.request.use((config) => {
-    config.headers.Authorization = `Bearer ${authToken}`;
-    return config;
-  });
-  return response.data;
+export const getProfile = createAsyncThunk('profile/getProfile', async () => {
+  try {
+    const response = await axiosInstance.get('/api/auth/profile');
+    localStorage.setItem('userId', response.data?.data?.id);
+    return response.data;
+  } catch (error) {
+    return handleErrorResponse(error);
+  }
 });
 
 const authSlice = createSlice({
-  name: "auth",
+  name: 'auth',
   initialState,
   reducers: {
     loginSuccess: (state, action) => {
       state.isAuthenticated = true;
       state.token = action.payload.token;
       state.userRole = action.payload.role;
-
-      // Save to localStorage
-      // localStorage.setItem("userToken", action.payload.token);
-      // localStorage.setItem("userRole", action.payload.role);
     },
     logout: (state) => {
       state.isAuthenticated = false;
@@ -56,9 +50,15 @@ const authSlice = createSlice({
       state.userRole = null;
 
       // Clear localStorage
-      localStorage.removeItem("userToken");
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("userId");
+      localStorage.removeItem('userToken');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userId');
+    },
+    setSelectedUserAtOrderMgt: (state, action) => {
+      return {
+        ...state,
+        selectedUserAtOrderMgt: action.payload,
+      };
     },
   },
   extraReducers: (builder) => {
@@ -80,7 +80,8 @@ const authSlice = createSlice({
   },
 });
 
-export const { loginSuccess, logout } = authSlice.actions;
+export const { loginSuccess, logout, setSelectedUserAtOrderMgt } =
+  authSlice.actions;
 
 export const selectAuth = (state) => state.auth;
 

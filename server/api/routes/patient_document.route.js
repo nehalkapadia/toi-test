@@ -23,5 +23,11 @@ router.delete('/:id', verifyToken, patDocumentController.delete);
 
 // Route to get the latest documents for a patient
 router.get('/', verifyToken, validate(getPatDocumentSchema), patDocumentController.getLatestDocuments);
+// upload patient document
+router.get(
+  '/download/:id',
+  verifyToken,
+  patDocumentController.download
+);
 
 module.exports = router;

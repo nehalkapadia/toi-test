@@ -4,6 +4,15 @@
   padding: 27px 24px 0px;
 }
 
+.co-insurance-info-order-type {
+  margin: 0;
+  text-transform: capitalize;
+  font-weight: 500;
+  font-size: 24px;
+  color: #4d5464;
+  margin-bottom: 24px;
+}
+
 .co-insurance-info-tab-3-input-number {
   width: 100%;
 }

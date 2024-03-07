@@ -3,12 +3,11 @@ import '../../styles/users/userFilters.css';
 import { Button, Col, Input, Row, Select, message } from 'antd';
 import { ORGANIZATION_STATUS_SELECT_OPTIONS } from '@/utils/options';
 import { useDispatch } from 'react-redux';
-import { TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
+import { CLEAR, CLOSE, TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
 import { getUsersFunc } from '@/store/userTableDataSlice';
 
 const UserFilters = ({
   onClose,
-  page,
   setPage,
   organizationID,
   filterParams,
@@ -20,7 +19,7 @@ const UserFilters = ({
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [isActive, setIsActive] = useState('');
+  const [isActive, setIsActive] = useState(null);
 
   const handleFilterByFirstName = (e) => {
     const value = e.target.value;
@@ -79,8 +78,8 @@ const UserFilters = ({
   };
 
   const handleFilterByStatus = (value) => {
-    if (value === '') {
-      setIsActive('');
+    if (value === undefined || value === null) {
+      setIsActive(null);
       setFilterparams((prevFilterparams) => {
         const { isActive, ...rest } = prevFilterparams;
         return { ...rest };
@@ -95,7 +94,7 @@ const UserFilters = ({
   };
 
   const handleFilterFunc = () => {
-    setPage(1)
+    setPage(1);
     dispatch(
       getUsersFunc({
         filters: filterParams,
@@ -110,20 +109,26 @@ const UserFilters = ({
     });
   };
 
-  const handleClearFilters = () => {
+  const handleClearFilters = (e) => {
+    const closeBtnClicked = e.target.textContent;
+    setPage(1);
     setFilterparams({});
     setEmail('');
     setFirstName('');
     setLastName('');
-    setIsActive('');
+    setIsActive(null);
     setIsClearable(false);
     dispatch(
       getUsersFunc({
-        page: page,
+        page: 1,
         perPage: TOTAL_ITEMS_PER_PAGE,
         organizationId: organizationID,
       })
     );
+
+    if (closeBtnClicked === CLOSE) {
+      onClose();
+    }
   };
 
   useEffect(() => {
@@ -131,28 +136,14 @@ const UserFilters = ({
       (value) => value !== ''
     );
     setIsClearable(hasFilterValues);
-  }, [filterParams]);
 
-  const onFilterClose = () => {
-    if (!firstName && !lastName && !email && !isActive) {
-      setFilterparams({});
+    if (Object.keys(filterParams).length === 0) {
       setEmail('');
       setFirstName('');
       setLastName('');
-      setIsActive('');
-      setIsClearable(false);
-      dispatch(
-        getUsersFunc({
-          page: page,
-          perPage: TOTAL_ITEMS_PER_PAGE,
-          organizationId: organizationID,
-        })
-      );
-      onClose();
-      return;
+      setIsActive(null);
     }
-    onClose();
-  };
+  }, [filterParams]);
 
   return (
     <div className='all-user-filter-element-container'>
@@ -194,6 +185,7 @@ const UserFilters = ({
           value={isActive}
           options={ORGANIZATION_STATUS_SELECT_OPTIONS}
           onChange={handleFilterByStatus}
+          allowClear
         />
       </Col>
 
@@ -201,9 +193,9 @@ const UserFilters = ({
         <Button
           size='large'
           className='close-filter-btn-drawer-at-user'
-          onClick={isClearable ? handleClearFilters : onFilterClose}
+          onClick={isClearable ? handleClearFilters : handleClearFilters}
         >
-          {isClearable ? 'Clear' : 'Close'}
+          {isClearable ? CLEAR : CLOSE}
         </Button>
 
         <Button

@@ -5,6 +5,7 @@ const passport = require('passport');
 const app = express();
 const cors = require('cors');
 const morgan = require('morgan');
+const cookieSession = require('cookie-session');
 require('./auth/passport-config');
 
 // database connection
@@ -13,25 +14,44 @@ const db = require('./models');
 
 // get cronjobs
 const { scheduleDeleteOrderCronJob } = require('./cronjobs/order_delete');
-const salesForceFailedSyncUpOrders = require("./cronjobs/salesForceFa iledSyncUpOrders");
+const salesForceFailedSyncUpOrders = require("./cronjobs/salesForceFailedSyncUpOrders");
 
 // db.sequelize.sync();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: false }));
+
+// Here add this limit to upload the file for the testing an api.
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Apply cors
 app.use(cors());
 
 app.use(morgan('combined'));
 
-app.use(
-  require('express-session')({
-    secret: process.env.SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true,
-  })
-);
+app.use(cookieSession(
+  {
+    // Cookie Options
+    maxAge: 30 * 24 * 60 * 60 * 1000,  // 24 hours
+    keys: [process.env.SESSION_SECRET],
+  }
+))
+
+// register regenerate & save after the cookieSession middleware initialization
+app.use(function(request, response, next) {
+  if (request.session && !request.session.regenerate) {
+    request.session.regenerate = (cb) => {
+      cb()
+    }
+  }
+  if (request.session && !request.session.save) {
+    request.session.save = (cb) => {
+      cb()
+    }
+  }
+  next()
+})
 
 //Passport Initialized
 app.use(passport.initialize());

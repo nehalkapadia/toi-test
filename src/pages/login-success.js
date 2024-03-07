@@ -1,6 +1,7 @@
+import CustomSpinner from '@/components/CustomSpinner';
 import { loginSuccess } from '@/store/authSlice';
 import { LOGGED_IN_SUCCESSFULLY_MESSAGE } from '@/utils/constant.util';
-import { Spin, message } from 'antd';
+import { message } from 'antd';
 import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
@@ -19,11 +20,19 @@ const LoginSuccess = () => {
         dispatch(loginSuccess({ token, role }));
         if (role == 1) {
           router.push('/organization-management');
-          message.success(LOGGED_IN_SUCCESSFULLY_MESSAGE);
+          message.success({
+            content: LOGGED_IN_SUCCESSFULLY_MESSAGE,
+            duration: 3,
+            key: 'loginSuccessAdmin'
+          });
           return;
         } else if (role == 2) {
           router.push('/order-management');
-          message.success(LOGGED_IN_SUCCESSFULLY_MESSAGE);
+          message.success({
+            content: LOGGED_IN_SUCCESSFULLY_MESSAGE,
+            duration: 3,
+            key: 'loginSuccessMember'
+          });
           return;
         }
       }
@@ -32,7 +41,7 @@ const LoginSuccess = () => {
   }, [token, role]);
   return (
     <div className='spin-indicator-at-center'>
-      <Spin />
+      <CustomSpinner />
     </div>
   );
 };

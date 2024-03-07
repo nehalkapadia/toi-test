@@ -17,6 +17,7 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Orders');
+    await queryInterface.removeColumn('Orders', 'salesForceSyncUpStatus');
+    await queryInterface.removeColumn('Orders', 'retry');
   }
 };

@@ -8,7 +8,6 @@ import { CLEAR, CLOSE, TOTAL_ITEMS_PER_PAGE } from '@/utils/constant.util';
 
 const OrganizationFilters = ({
   onClose,
-  page,
   setPage,
   searchText,
   filterParams,
@@ -20,7 +19,7 @@ const OrganizationFilters = ({
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [domain, setDomain] = useState('');
-  const [isActive, setIsActive] = useState('');
+  const [isActive, setIsActive] = useState(null);
 
   const handleFilterByEmail = (e) => {
     const value = e.target.value;
@@ -79,8 +78,8 @@ const OrganizationFilters = ({
   };
 
   const handleFilterByStatus = (value) => {
-    if (value === '') {
-      setIsActive('');
+    if (value === undefined || value === null) {
+      setIsActive(null);
       setFilterParams((prevFilterparams) => {
         const { isActive, ...rest } = prevFilterparams;
         return { ...rest };
@@ -106,41 +105,25 @@ const OrganizationFilters = ({
     );
   };
 
-  const handleClearFilters = () => {
+  const handleClearFilters = (e) => {
+    const closeBtnClicked = e.target.textContent;
+    setPage(1);
     setFilterParams({});
     setEmail('');
     setPhoneNumber('');
     setDomain('');
-    setIsActive('');
+    setIsActive(null);
     setIsClearable(false);
     dispatch(
       getOrganizationsFunc({
-        page: page,
+        page: 1,
         perPage: TOTAL_ITEMS_PER_PAGE,
         searchText,
       })
     );
-  };
-
-  const onFilterClose = () => {
-    if (!email && !phoneNumber && !domain && !isActive) {
-      setFilterParams({});
-      setEmail('');
-      setPhoneNumber('');
-      setDomain('');
-      setIsActive('');
-      setIsClearable(false);
-      dispatch(
-        getOrganizationsFunc({
-          page: page,
-          perPage: TOTAL_ITEMS_PER_PAGE,
-          searchText,
-        })
-      );
+    if (closeBtnClicked === CLOSE) {
       onClose();
-      return;
     }
-    onClose();
   };
 
   useEffect(() => {
@@ -148,6 +131,12 @@ const OrganizationFilters = ({
       (value) => value !== ''
     );
     setIsClearable(hasFilterValues);
+    if (Object.keys(filterParams)?.length === 0) {
+      setEmail('');
+      setPhoneNumber('');
+      setDomain('');
+      setIsActive(null);
+    }
   }, [filterParams]);
   return (
     <div className='all-organization-filter-element-container'>
@@ -164,7 +153,7 @@ const OrganizationFilters = ({
       <Col className='each-filter-form-elem-single-at-org'>
         <label>Phone Number</label>
         <InputNumber
-          className='org-filter-number-input-elem'
+          className='org-filter-number-input-elem hide-spinner'
           size='large'
           value={phoneNumber}
           placeholder='Enter Phone Number'
@@ -190,6 +179,7 @@ const OrganizationFilters = ({
           value={isActive}
           options={ORGANIZATION_STATUS_SELECT_OPTIONS}
           onChange={handleFilterByStatus}
+          allowClear
         />
       </Col>
 
@@ -197,7 +187,7 @@ const OrganizationFilters = ({
         <Button
           size='large'
           className='close-filter-btn-drawer-at-org'
-          onClick={isClearable ? handleClearFilters : onFilterClose}
+          onClick={isClearable ? handleClearFilters : handleClearFilters}
         >
           {isClearable ? CLEAR : CLOSE}
         </Button>

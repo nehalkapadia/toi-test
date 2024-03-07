@@ -1,9 +1,5 @@
 export const ORGANIZATION_STATUS_SELECT_OPTIONS = [
   {
-    value: '',
-    label: 'Select Any Status',
-  },
-  {
     value: true,
     label: 'Active',
   },
@@ -14,10 +10,6 @@ export const ORGANIZATION_STATUS_SELECT_OPTIONS = [
 ];
 
 export const ROLES_SELECT_OPTIONS_FOR_USER_ADD = [
-  {
-    value: '',
-    label: 'Select Any Role',
-  },
   {
     value: 1,
     label: 'Admin',
@@ -32,18 +24,33 @@ export const DEFAULT_SELECT_VALUES_FOR_ORDER_MGT = [
   { value: 'all', label: 'All' },
 ];
 
+export const ORDER_MANAGEMENT_ORDER_TYPES_OPTIONS = [
+  {
+    value: 'chemo auth',
+    label: 'Chemo Auth',
+  },
+  {
+    value: 'office visit',
+    label: 'Office Visit',
+  },
+  {
+    value: 'rad onc',
+    label: 'Rad Onc',
+  },
+];
+
 export const ORDER_MANAGEMENT_ORDER_STATUS_OPTIONS = [
   {
     value: 'draft',
     label: 'Draft',
   },
   {
-    value: 'complete',
-    label: 'Complete',
-  },
-  {
     value: 'submitted',
     label: 'Submitted',
+  },
+  {
+    value: 'completed',
+    label: 'Completed',
   },
   {
     value: 'deleted',
@@ -53,16 +60,12 @@ export const ORDER_MANAGEMENT_ORDER_STATUS_OPTIONS = [
 
 export const ORDER_MANAGEMENT_FILTER_STATUS_OPTIONS = [
   {
-    value: '',
-    label: 'Select Any Status',
-  },
-  {
     value: 'draft',
     label: 'Draft',
   },
   {
-    value: 'complete',
-    label: 'Complete',
+    value: 'completed',
+    label: 'Completed',
   },
   {
     value: 'submitted',
@@ -70,50 +73,18 @@ export const ORDER_MANAGEMENT_FILTER_STATUS_OPTIONS = [
   },
 ];
 
-export const ORDER_MANAGEMENT_HEALTH_PLAN_OPTIONS = [
-  {
-    value: '',
-    label: 'Select Any Plan',
-  },
-  {
-    value: 'value1',
-    label: 'Value1',
-  },
-  {
-    value: 'complete',
-    label: 'Complete',
-  },
-  {
-    value: 'submitted',
-    label: 'Submitted',
-  },
-];
-
-export const ORDER_MANAGEMENT_DIAGNOSIS_OPTIONS = [
-  {
-    value: '',
-    label: 'Select Any Option',
-  },
-  {
-    value: 'value1',
-    label: 'Value1',
-  },
-  {
-    value: 'complete',
-    label: 'Complete',
-  },
-  {
-    value: 'submitted',
-    label: 'Submitted',
-  },
-];
-
-export const OrderManagementCreateOrderTabs = (tab2, tab3, tab4) => {
+export const OrderManagementCreateOrderTabs = (
+  tab1,
+  tab2,
+  tab3,
+  tab4,
+  tab5
+) => {
   const tabs = [
     {
       label: 'Patient Demographics',
       value: 'patientDemographics',
-      disabled: false,
+      disabled: tab1,
     },
     {
       label: 'Medical History & Records',
@@ -126,16 +97,21 @@ export const OrderManagementCreateOrderTabs = (tab2, tab3, tab4) => {
       disabled: tab3,
     },
     {
+      label: 'Order Details',
+      value: 'orderDetails',
+      disabled: tab4,
+    },
+    {
       label: 'Patient Documents',
       value: 'patientDocuments',
-      disabled: tab4,
+      disabled: tab5,
     },
   ];
 
   return tabs;
 };
 
-export const patientDocumentsUploadCategoryOptions = (
+export const patientDocsCategoryForChemo = (
   writtenOrdersCategory,
   mdNotesCategory
 ) => {
@@ -155,25 +131,36 @@ export const patientDocumentsUploadCategoryOptions = (
   return patDocsCategory;
 };
 
-export const MEDICAL_HISTORY_DIAGNOSIS_OPTIONS = [
-  {
-    value: '',
-    label: 'Select Any Option',
-  },
-  {
-    value: 'value1',
-    label: 'Value1',
-  },
-  {
-    value: 'value2',
-    label: 'Value2',
-  },
-];
+export const patientDocsCategoryForOfficeVisit = (referralCategory) => {
+  const patDocsCate = [
+    {
+      value: 'md notes',
+      label: 'Referral',
+      disabled: referralCategory,
+    },
+  ];
+
+  return patDocsCate;
+};
+
+export const patientDocsCategoryForRadiation = (
+  mdNotesCategory
+) => {
+  const patDocsCategory = [
+    {
+      value: 'md notes',
+      label: 'MD Notes',
+      disabled: mdNotesCategory,
+    },
+  ];
+
+  return patDocsCategory;
+};
 
 export const INSURANCE_INFO_HEALTH_PLAN_OPTIONS = [
   {
     value: 'healthsun',
-    label: 'Healthsun',
+    label: 'HealthSun',
   },
 ];
 
@@ -207,6 +194,10 @@ export const DISPLAY_DIFFERENT_TABS_OF_ORDER_MANAGEMENT = [
   },
   {
     key: 4,
+    label: 'Order Details',
+  },
+  {
+    key: 5,
     label: 'Patient Documents',
   },
 ];
@@ -223,5 +214,24 @@ export const GENDER_OPTIONS = [
   {
     value: 'Unknown',
     label: 'Unknown',
+  },
+];
+
+export const TOI_RESPONSE_DROPDOWN_OPTIONS_FOR_FILTER = [
+  {
+    value: 'Pending UM review',
+    label: 'Pending UM review',
+  },
+  {
+    value: 'Submitted',
+    label: 'Order Submitted',
+  },
+  {
+    value: 'Pending additional information',
+    label: 'Pending additional information',
+  },
+  {
+    value: 'Response received from payers (Check attachments)',
+    label: 'Response received from payers (Check attachments)',
   },
 ];

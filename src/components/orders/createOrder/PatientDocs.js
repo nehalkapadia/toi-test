@@ -8,7 +8,6 @@ import {
   Popover,
   Row,
   Select,
-  Spin,
   Upload,
   message,
 } from 'antd';
@@ -16,6 +15,9 @@ import { FiUpload } from 'react-icons/fi';
 import UploadedImageContainer from './UploadedImageContainer';
 import {
   CREATE_ORDER_PATIENT_DOCS_TAB_FILE_TYPE,
+  patientDocsCategoryForChemo,
+  patientDocsCategoryForOfficeVisit,
+  patientDocsCategoryForRadiation,
   patientDocumentsUploadCategoryOptions,
 } from '@/utils/options';
 import {
@@ -37,6 +39,13 @@ import {
   SELECT_AT_LIST_MD_NOTES_FILE,
   ARE_YOU_SURE_YOU_WANT_TO_SUBMIT_THE_ORDER_MESSAGE,
   ORDER_HAS_BEEN_CANCELED,
+  PLEASE_FILL_INSURANCE_INFO_TAB,
+  PLEASE_FILL_MEDICAL_HISTORY_AND_RECORD_TAB,
+  CHEMO_ORDER_TYPE,
+  OFFICE_VISIT_ORDER_TYPE,
+  RADIATION_ORDER_TYPE,
+  PLEASE_FILL_ORDER_DETAILS_TAB,
+  MAX_UPLOAD_DOCUMENTS_OV_RAD_ORDER_TYPE,
 } from '@/utils/constant.util';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -57,18 +66,23 @@ import {
 import {
   resetCreateOrderDataBacktoInitialState,
   setPatientDocsMdNotesCategory,
+  setPatientDocsReferralCategory,
   setPatientDocsWrittenOrderCategory,
+  setSelectedUploadCategory,
 } from '@/store/createOrderFormSlice';
 import OrderModal from './OrderModal';
 import {
   AiFillExclamationCircle,
   AiOutlineUnorderedList,
 } from 'react-icons/ai';
-import { IoIosCheckmarkCircle } from "react-icons/io"
+import { IoIosCheckmarkCircle } from 'react-icons/io';
 import DisplayFileSize from './DisplayFileSize';
+import CustomSpinner from '@/components/CustomSpinner';
 
 const PatientDocs = () => {
   const dispatch = useDispatch();
+  const router = useRouter();
+  const { orderId, type: orderType } = router.query;
   const userData = useSelector((state) => state.auth.user);
 
   const patientDemographicsData = useSelector(
@@ -83,6 +97,8 @@ const PatientDocs = () => {
   const insuranceInfoData = useSelector(
     (state) => state.allOrdersData.insuranceInfoData
   );
+  const orderDetailsData =
+    useSelector((state) => state.allOrdersData.orderDetailsData) || {};
   const searchResponse = useSelector(
     (state) => state.allOrdersData.patientSearchResponse
   );
@@ -92,14 +108,13 @@ const PatientDocs = () => {
     (state) => state.allOrdersData.patientUploadedDocsData
   );
   // Tab-4 uploaded doc id
-
   const patientFilesAtEditById = useSelector(
     (state) => state.allOrdersData.patientFilesAtEditById
   );
-
   const patientDocsFilesById = useSelector(
     (state) => state.allOrdersData.patientDocsFilesById
   );
+
   // Tab-2 & Tab-3 uploaded documents id
   const medicalFilesAtEditById = useSelector(
     (state) => state.allOrdersData.medicalFilesAtEditById
@@ -109,24 +124,25 @@ const PatientDocs = () => {
     (state) => state.allOrdersData.medicalUploadedFilesById
   );
 
-  const isNewPatientCreated = useSelector(
-    (state) => state.allOrdersData.isNewPatientCreated
-  );
-
-  // Handling State for options Disabling
+  // Handling State for options Disabling, hold boolean values.
   const writtenOrdersCategory = useSelector(
     (state) => state.createOrderTabs.patientDocsWrittenOrderCategory
   );
   const mdNotesCategory = useSelector(
     (state) => state.createOrderTabs.patientDocsMdNotesCategory
   );
+  const referralCategory = useSelector(
+    (state) => state.createOrderTabs.patientDocsReferralCategory
+  );
+  const selectedCategory = useSelector(
+    (state) => state.createOrderTabs.selectedUploadCategory || null
+  );
+  const orderTypeList = useSelector(
+    (state) => state.allOrdersData.orderTypeList
+  );
 
-  const router = useRouter();
-  const { orderId } = router.query;
   const [submittable, setSubmittable] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [isUploadBtnDisabled, setIsUploadBtnDisabled] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -134,17 +150,38 @@ const PatientDocs = () => {
   const [isDraftModal, setIsDraftModal] = useState(false);
   const [isSubmitModal, setIsSubmitModal] = useState(false);
   const [isCancelModal, setIsCancelModal] = useState(false);
-  // Set this in redux-store
 
   const handleCategoryChange = (value) => {
-    setSelectedCategory(value);
+    dispatch(setSelectedUploadCategory(value));
+  };
+
+  const getPatientDocsCategories = (
+    writtenOrdersCategory,
+    mdNotesCategory,
+    referralCategory
+  ) => {
+    switch (orderType) {
+      case CHEMO_ORDER_TYPE:
+        return patientDocsCategoryForChemo(
+          writtenOrdersCategory,
+          mdNotesCategory
+        );
+      case OFFICE_VISIT_ORDER_TYPE:
+        // TODO For future Reference:
+        // When Referral category is available, update this to referralCategory
+        return patientDocsCategoryForOfficeVisit(mdNotesCategory);
+      case RADIATION_ORDER_TYPE:
+        return patientDocsCategoryForRadiation(mdNotesCategory);
+      default:
+        return [];
+    }
   };
 
   const customRequest = (file) => {
     setLoading(true);
     const { id = 1 } = patientDemographicsData;
     const matchingCategory = PATIENT_DOCUMENTS_FILE_UPLOAD_CATEGORIES.find(
-      (cat) => cat.value === selectedCategory
+      (cat) => cat?.value === selectedCategory
     );
     if (
       matchingCategory &&
@@ -170,13 +207,42 @@ const PatientDocs = () => {
 
   const handleAllFileUploaded = () => {
     const { writtenOrdersFiles, mdNotesFiles } = patientUploadedDocsData;
-    if (writtenOrdersFiles?.length < 1) {
-      return SELECT_AT_LIST_WRITTEN_ORDER_FILE;
+    switch (orderType) {
+      case CHEMO_ORDER_TYPE: {
+        if (writtenOrdersFiles?.length < 1) {
+          return SELECT_AT_LIST_WRITTEN_ORDER_FILE;
+        }
+        if (mdNotesFiles?.length < 1) {
+          return SELECT_AT_LIST_MD_NOTES_FILE;
+        }
+        return false;
+      }
+      case OFFICE_VISIT_ORDER_TYPE: {
+        if (mdNotesCategory?.length < 1) {
+          return SELECT_AT_LIST_WRITTEN_ORDER_FILE;
+        }
+        return false;
+      }
+      case RADIATION_ORDER_TYPE: {
+        if (mdNotesFiles?.length < 1) {
+          return SELECT_AT_LIST_MD_NOTES_FILE;
+        }
+        return false;
+      }
     }
-    if (mdNotesFiles?.length < 1) {
-      return SELECT_AT_LIST_MD_NOTES_FILE;
+  };
+
+  const handleAllTabCreated = () => {
+    switch (true) {
+      case !medicalHistoryOnly?.id:
+        return PLEASE_FILL_MEDICAL_HISTORY_AND_RECORD_TAB;
+      case !insuranceInfoData?.id:
+        return PLEASE_FILL_INSURANCE_INFO_TAB;
+      case !orderDetailsData?.id:
+        return PLEASE_FILL_ORDER_DETAILS_TAB;
+      default:
+        return false;
     }
-    return false;
   };
 
   const handleCreateFinalOrder = () => {
@@ -185,13 +251,21 @@ const PatientDocs = () => {
       message.error(isAllFileUploaded);
       return;
     }
+    const isAllTabCreated = handleAllTabCreated();
+    if (isAllTabCreated) {
+      message.error(isAllTabCreated);
+      return;
+    }
     let traceChanges;
     let traceChanges1 = false;
     let traceChanges2 = false;
+
     const { id: patientId } = patientDemographicsData;
     const { id: historyId } = medicalHistoryOnly;
     const { id: recordId } = medicalRecordOnly;
     const { id: insuranceId } = insuranceInfoData;
+    const { id: orderDetailsId } = orderDetailsData;
+
     const { organizationId } = userData;
     const currentStatus = ORDER_STATUS.submitted;
 
@@ -200,11 +274,13 @@ const PatientDocs = () => {
       historyId,
       recordId,
       insuranceId,
+      orderDetailsId,
       currentStatus,
       organizationId,
       caseId: CASE_ID,
       uploadFiles: medicalUploadedFilesById,
       orderAuthDocuments: patientDocsFilesById,
+      orderTypeId: filterOrderTypeId(),
     };
     // here we will identify that if the user has changed any value in the form
     if (searchResponse) {
@@ -219,27 +295,20 @@ const PatientDocs = () => {
       traceChanges = traceChanges1 || traceChanges2;
     }
     if (!orderId) {
-      if (isNewPatientCreated || traceChanges) {
-        dispatch(postFinalOrderCreateData(payload)).then((res) => {
-          if (res?.payload?.message) {
-            dispatch(resetCreateOrderDataBacktoInitialState());
-            dispatch(resetSearchPatientData());
-            dispatch(resetOrderStateToInitialState());
-            message.success(res?.payload?.message);
-            router.push('/order-management');
-          } else {
-            message.error(res?.payload?.message);
-          }
-        });
-      } else {
-        dispatch(resetCreateOrderDataBacktoInitialState());
-        dispatch(resetSearchPatientData());
-        dispatch(resetOrderStateToInitialState());
-        router.push('/order-management');
-      }
+      dispatch(postFinalOrderCreateData(payload)).then((res) => {
+        if (res?.payload?.status) {
+          dispatch(resetCreateOrderDataBacktoInitialState());
+          dispatch(resetSearchPatientData());
+          dispatch(resetOrderStateToInitialState());
+          message.success(res?.payload?.message);
+          router.push('/order-management');
+        } else {
+          message.error(res?.payload?.message);
+        }
+      });
     } else {
       dispatch(updateOrderData({ orderId, payload })).then((res) => {
-        if (res?.payload?.message) {
+        if (res?.payload?.status) {
           dispatch(resetCreateOrderDataBacktoInitialState());
           dispatch(resetSearchPatientData());
           dispatch(resetOrderStateToInitialState());
@@ -257,10 +326,16 @@ const PatientDocs = () => {
       message.error(isAllFileUploaded);
       return;
     }
+    const isAllTabCreated = handleAllTabCreated();
+    if (isAllTabCreated) {
+      message.error(isAllTabCreated);
+      return;
+    }
     const { id: patientId } = patientDemographicsData;
     const { id: historyId } = medicalHistoryOnly;
     const { id: recordId } = medicalRecordOnly;
     const { id: insuranceId } = insuranceInfoData;
+    const { id: orderDetailsId } = orderDetailsData;
 
     setLoading(true);
     const newValues = {
@@ -268,10 +343,12 @@ const PatientDocs = () => {
       historyId,
       recordId,
       insuranceId,
+      orderDetailsId,
       currentStatus: ORDER_STATUS.draft,
       caseId: CASE_ID,
       uploadFiles: medicalUploadedFilesById,
       orderAuthDocuments: patientDocsFilesById,
+      orderTypeId: filterOrderTypeId(),
     };
     let order;
     if (orderId) {
@@ -293,11 +370,22 @@ const PatientDocs = () => {
       setLoading(false);
     }
   };
+  const filterOrderTypeId = () => {
+    const orderTypeData = orderTypeList.find(
+      (item) => item?.label.toLowerCase() === orderType.toLowerCase()
+    );
+    return orderTypeData?.id;
+  };
   const shouldButtonDisabled = (category, dataObj) => {
+    const maxUploadLimit =
+      orderType === CHEMO_ORDER_TYPE
+        ? MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
+        : MAX_UPLOAD_DOCUMENTS_OV_RAD_ORDER_TYPE;
     if (!category || category?.trim() === '' || !dataObj) {
       setIsUploadBtnDisabled(true);
       return;
     } else if (
+      orderType === CHEMO_ORDER_TYPE &&
       selectedCategory === DOCUMENTS_UPLOAD_IN_WRITTEN_ORDERS_CATEGORY &&
       dataObj?.writtenOrdersFiles?.length === MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
     ) {
@@ -305,7 +393,7 @@ const PatientDocs = () => {
       return;
     } else if (
       selectedCategory === DOCUMENTS_UPLOAD_IN_MD_NOTES_CATEGORY &&
-      dataObj?.mdNotesFiles?.length === MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
+      dataObj?.mdNotesFiles?.length === maxUploadLimit
     ) {
       setIsUploadBtnDisabled(true);
       return;
@@ -323,25 +411,42 @@ const PatientDocs = () => {
     }
   };
 
+  const submittableBtnScenario = () => {
+    switch (orderType) {
+      case CHEMO_ORDER_TYPE: {
+        if (
+          patientUploadedDocsData?.writtenOrdersFiles?.length > 0 &&
+          patientUploadedDocsData?.mdNotesFiles?.length > 0
+        ) {
+          setSubmittable(true);
+        } else {
+          setSubmittable(false);
+        }
+        break;
+      }
+      case OFFICE_VISIT_ORDER_TYPE: {
+        if (patientUploadedDocsData?.mdNotesFiles?.length > 0) {
+          setSubmittable(true);
+        } else {
+          setSubmittable(false);
+        }
+        break;
+      }
+      case RADIATION_ORDER_TYPE: {
+        if (patientUploadedDocsData?.mdNotesFiles?.length > 0) {
+          setSubmittable(true);
+        } else {
+          setSubmittable(false);
+        }
+        break;
+      }
+    }
+  };
+
   useEffect(() => {
     shouldButtonDisabled(selectedCategory, patientUploadedDocsData);
+    submittableBtnScenario();
 
-    if (
-      searchResponse &&
-      patientUploadedDocsData?.mdNotesFiles?.length > 0 &&
-      patientUploadedDocsData?.writtenOrdersFiles?.length > 0
-    ) {
-      setSubmittable(true);
-    }
-
-    if (
-      patientUploadedDocsData?.mdNotesFiles?.length > 0 &&
-      patientUploadedDocsData?.writtenOrdersFiles?.length > 0
-    ) {
-      setSubmittable(true);
-    } else {
-      setSubmittable(false);
-    }
     if (
       patientUploadedDocsData?.writtenOrdersFiles?.length ===
       MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
@@ -353,6 +458,7 @@ const PatientDocs = () => {
       MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
     ) {
       dispatch(setPatientDocsMdNotesCategory(true));
+      dispatch(setPatientDocsReferralCategory(true));
     }
     if (
       patientUploadedDocsData?.writtenOrdersFiles?.length <
@@ -365,6 +471,7 @@ const PatientDocs = () => {
       MAX_UPLOAD_DOCUMENTS_PER_CATEGORY
     ) {
       dispatch(setPatientDocsMdNotesCategory(false));
+      dispatch(setPatientDocsReferralCategory(false));
     }
   }, [selectedCategory, patientUploadedDocsData]);
 
@@ -404,8 +511,8 @@ const PatientDocs = () => {
       dispatch(setTab1FormData({}));
       dispatch(resetSearchPatientData());
       dispatch(resetOrderStateToInitialState());
+      router.push('/order-management');
     }
-    router.push('/order-management');
   };
   const handleCancel = () => {
     setOpen(false);
@@ -416,7 +523,10 @@ const PatientDocs = () => {
 
   return (
     <div className='co-tab-4-patient-docs-container'>
-      {loading && <Spin fullscreen />}
+      {loading && <CustomSpinner />}
+      <Col>
+        <h3 className='co-patient-docs-info-order-type'>{orderType}</h3>
+      </Col>
       <Row span={24} gutter={24}>
         <Col
           xs={{ span: 24 }}
@@ -428,14 +538,16 @@ const PatientDocs = () => {
             Upload Patient Documents
           </label>
           <Select
-            options={patientDocumentsUploadCategoryOptions(
+            options={getPatientDocsCategories(
               writtenOrdersCategory,
-              mdNotesCategory
+              mdNotesCategory,
+              referralCategory
             )}
             size='large'
             className='co-tab-4-file-type-select-tag'
             placeholder='Select File Category'
             onChange={handleCategoryChange}
+            value={selectedCategory}
           />
           <DisplayFileSize className='co-tab-4-label-bottom-side' />
         </Col>
@@ -465,40 +577,43 @@ const PatientDocs = () => {
         </Col>
       </Row>
 
-      {patientUploadedDocsData?.writtenOrdersFiles?.length > 0 && (
-        <div>
-          <Col>
-            <label className='co-tab-4-label-top-side'>
-              Written Orders For Treatment
-            </label>
-          </Col>
-          <Row span={24} gutter={24}>
-            {patientUploadedDocsData?.writtenOrdersFiles?.map((elem) => (
-              <Col
-                xs={{ span: 24 }}
-                sm={{ span: 12 }}
-                md={{ span: 12 }}
-                lg={{ span: 8 }}
-                className='co-tab-4-parent-container-of-uploaded-file'
-                key={elem?.id}
-              >
-                <UploadedImageContainer
-                  data={{
-                    ...elem,
-                    isAuth: true,
-                    category: DOCUMENTS_UPLOAD_IN_WRITTEN_ORDERS_CATEGORY,
-                  }}
-                />
-              </Col>
-            ))}
-          </Row>
-        </div>
-      )}
+      {orderType === CHEMO_ORDER_TYPE &&
+        patientUploadedDocsData?.writtenOrdersFiles?.length > 0 && (
+          <div>
+            <Col>
+              <label className='co-tab-4-label-top-side'>
+                Written Orders For Treatment
+              </label>
+            </Col>
+            <Row span={24} gutter={24}>
+              {patientUploadedDocsData?.writtenOrdersFiles?.map((elem) => (
+                <Col
+                  xs={{ span: 24 }}
+                  sm={{ span: 12 }}
+                  md={{ span: 12 }}
+                  lg={{ span: 8 }}
+                  className='co-tab-4-parent-container-of-uploaded-file'
+                  key={elem?.id}
+                >
+                  <UploadedImageContainer
+                    data={{
+                      ...elem,
+                      isAuth: true,
+                      category: DOCUMENTS_UPLOAD_IN_WRITTEN_ORDERS_CATEGORY,
+                    }}
+                  />
+                </Col>
+              ))}
+            </Row>
+          </div>
+        )}
 
       {patientUploadedDocsData?.mdNotesFiles?.length > 0 && (
         <div>
           <Col>
-            <label className='co-tab-4-label-top-side'>MD Notes</label>
+            <label className='co-tab-4-label-top-side'>
+              {orderType === OFFICE_VISIT_ORDER_TYPE ? 'Referral' : 'MD Notes'}
+            </label>
           </Col>
           <Row span={24} gutter={24}>
             {patientUploadedDocsData?.mdNotesFiles?.map((elem) => (

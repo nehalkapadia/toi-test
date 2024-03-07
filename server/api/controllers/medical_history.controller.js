@@ -40,7 +40,7 @@ exports.create = async (req, res, next) => {
           .status(constantsUtil.SUCCESS)
           .json(
             successResponse(
-              constantsUtil.message('Medical History', 'Update'),
+              constantsUtil.message('Medical History', 'Updated'),
               isMedicalHistoryExist
             )
           );
@@ -61,7 +61,7 @@ exports.create = async (req, res, next) => {
       .status(constantsUtil.SUCCESS)
       .json(
         successResponse(
-          constantsUtil.message('Medical History', 'Create'),
+          constantsUtil.message('Medical History', 'Created'),
           medicalHistory
         )
       );

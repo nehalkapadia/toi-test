@@ -1,0 +1,58 @@
+.co-order-details-tab-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  padding: 27px 24px 0px;
+  background-color: #fff;
+  min-height: 50vh;
+}
+
+.co-order-details-order-type {
+  margin: 0;
+  text-transform: capitalize;
+  font-weight: 500;
+  font-size: 24px;
+  color: #4d5464;
+}
+
+.display-cpt-code-description-at-od {
+  margin: 0;
+  font-weight: 500;
+  font-weight: 14px;
+  color: #4d5464;
+  margin-bottom: 12px;
+  text-transform: capitalize;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.add-cpt-code-details-btn {
+  display: flex;
+  margin-top: 24px;
+  align-items: center;
+  border-radius: 50px !important;
+  background: rgba(13, 137, 79, 0.25);
+}
+
+.add-cpt-code-details-btn-icon {
+  font-size: 21px;
+  color: rgba(13, 137, 79, 1);
+}
+
+.order-details-cpt-code-table-cell-customization {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.display-cpt-code-max-length-warning {
+  margin: 0;
+  margin-top: 12px;
+  color: #4d5464;
+  font-size: 16px;
+}
+
+.warning-text-heading {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-weight: 18px;
+}

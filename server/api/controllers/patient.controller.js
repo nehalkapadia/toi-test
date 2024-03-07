@@ -1,14 +1,25 @@
 const { successResponse, errorResponse } = require('../utils/response.util');
 const constants = require('../utils/constants.util');
 const patientService = require('../services/patient.service');
+const hsService = require('../services/hs.service');
 const orderService = require('../services/order.service');
-const { getMedicalHistoryByPatientId } = require('../services/medical_history.service');
-const { getMedicalRecordByPatientId } = require('../services/medical_record.service');
-const { checkExistingInsurance } = require('../services/insurance_info.service');
-const { getOrderAuthDocumentByPatientId } = require('../services/order_auth_document.service');
+const {
+  getMedicalHistoryByPatientId,
+} = require('../services/medical_history.service');
+const {
+  getMedicalRecordByPatientId,
+} = require('../services/medical_record.service');
+const {
+  checkExistingInsurance,
+} = require('../services/insurance_info.service');
+const {
+  getOrderAuthDocumentByPatientId,
+} = require('../services/order_auth_document.service');
 const { createLog } = require('../services/audit_log.service');
 const { formatRequest } = require('../utils/common.util');
-
+const {
+  getExistingOrderDetailsByPatientId,
+} = require('../services/order_details.service');
 
 /**
  * Search for a patient
@@ -24,7 +35,7 @@ const { formatRequest } = require('../utils/common.util');
  *     - @property {Object} json - A JSON object containing either patient details or an error message.
  *     - @property {string} message - A message indicating the result of the search.
  *     - @property {Object|null} data - Patient details if found, null otherwise.
- * 
+ *
  * @url /api/patients/search
  * @method GET
  */
@@ -32,54 +43,121 @@ exports.searchPatient = async (req, res) => {
   try {
     await createLog(formatRequest(req), 'PatientDemos', 'Search');
     // Extracting query parameters from the request object
-    const { firstName, lastName, dob, gender, mrn } = req.query;
+    const { firstName, lastName, dob, gender, hsMemberID, orderTypeId } =
+      req.query;
+    // check hs member id exist or not
+    let hsPatient = await hsService.getDetailByMemberID(hsMemberID);
+    // if not exist with member id find with other details
+    if(!hsPatient) {
+      hsPatient = await hsService.searchPatient({
+        firstName,
+        lastName,
+        dob,
+        gender,
+        hsMemberID
+      })
+    }
 
-    // Use the service to search for a patient
-    const existingPatient = await patientService.searchPatient({
-      firstName,
-      lastName,
-      dob,
-      gender,
-      mrn
-    });
+    if (hsPatient) {
+      const UpdatePatientDemography = {
+        hsMemberID: hsPatient.HS_Member_ID,
+        firstName: hsPatient.First_Name,
+        lastName: hsPatient.Last_Name,
+        dob: hsPatient.DOB,
+        gender: hsPatient.Gender,
+        address:
+          hsPatient.Member_Address1 +
+          '\n' +
+          hsPatient.Member_Address2 +
+          '\n' +
+          hsPatient.Member_City +
+          '\n' +
+          hsPatient.Member_State +
+          '\n' +
+          hsPatient.Member_ZipCode,
+        email: hsPatient.Member_Email,
+        primaryPhoneNumber: hsPatient.Member_Cell_Phone,
+        secondaryPhoneNumber: hsPatient.Member_Home_Phone,
+        preferredLanguage: hsPatient.Preferred_Language,
+      };
 
-    if (existingPatient) {
-      const order = await orderService.getOrderByPatientId(existingPatient?.id);
-      if(order) {
-        return res.status(constants.SUCCESS).json(
-          successResponse(constants.SEARCH_SUCCESS, order)
-        );
-      }
-      const medicalHistoryData = await getMedicalHistoryByPatientId(existingPatient.id);
-      const medicalRecordData = await getMedicalRecordByPatientId(existingPatient.id);
-      const insuranceInfoData = await checkExistingInsurance(existingPatient.id);
-      const orderAuthDocumentData = await getOrderAuthDocumentByPatientId(existingPatient.id);
-      const patientDetails = {
-        patientDemography: existingPatient ? existingPatient : null,
-        medicalHistory: medicalHistoryData ? medicalHistoryData : null,
-        medicalRecord: medicalRecordData ? medicalRecordData : null,
-        insuranceInfo: insuranceInfoData ? insuranceInfoData : null,
-        orderAuthDocuments: orderAuthDocumentData ? orderAuthDocumentData : null
-      }
-      // Patient exists, return the details in the response
-      return res.status(constants.SUCCESS).json(
-        successResponse(constants.SEARCH_SUCCESS, patientDetails)
+      let existingPatient = await patientService.searchPatientByMemberID(
+        hsPatient.HS_Member_ID
       );
+      if (existingPatient) {
+        existingPatient = await patientService.updateHsPatient(
+          UpdatePatientDemography
+        );
+        const draftOrder = await orderService.getOrderByPatientId(
+          existingPatient?.id,
+          orderTypeId,
+          [constants.DRAFT]
+        );
+        if (draftOrder) {
+          return res
+            .status(constants.SUCCESS)
+            .json(successResponse(constants.SEARCH_SUCCESS, draftOrder));
+        }
+        const submittedOrCompletedOrder =
+          await orderService.getOrderByPatientId(
+            existingPatient?.id,
+            orderTypeId,
+            [constants.SUBMITTED, constants.COMPLETED]
+          );
+
+        if (submittedOrCompletedOrder) {
+          return res
+            .status(constants.SUCCESS)
+            .json(successResponse(constants.SEARCH_SUCCESS, submittedOrCompletedOrder));
+        }
+        // TODO will remove once QA is completed
+        // const medicalHistoryData = await getMedicalHistoryByPatientId(existingPatient.id);
+        // const medicalRecordData = await getMedicalRecordByPatientId(existingPatient.id);
+        // const insuranceInfoData = await checkExistingInsurance(existingPatient.id);
+        // const orderDetailsData = await getExistingOrderDetailsByPatientId(existingPatient.id);
+        // const orderAuthDocumentData = await getOrderAuthDocumentByPatientId(existingPatient.id);
+        const patientDetails = {
+          patientDemography: existingPatient ? existingPatient : null,
+          medicalHistory: null,
+          medicalRecord: null,
+          insuranceInfo: null,
+          orderDetails: null,
+          orderAuthDocuments: null,
+        };
+        // Patient exists, return the details in the response
+        return res
+          .status(constants.SUCCESS)
+          .json(successResponse(constants.SEARCH_SUCCESS, patientDetails));
+      } else {
+        const createdNewPatient = await patientService.createPatient(
+          UpdatePatientDemography
+        );
+        const patientDetails = {
+          patientDemography: createdNewPatient ? createdNewPatient : null,
+          medicalHistory: null,
+          medicalRecord: null,
+          insuranceInfo: null,
+          orderDetails: null,
+          orderAuthDocuments: null,
+        };
+        return res
+          .status(constants.SUCCESS)
+          .json(successResponse(constants.SEARCH_SUCCESS, patientDetails));
+      }
     } else {
       // Patient does not exist, throw an error
-      return res.status(constants.NOT_FOUND).json(
-        errorResponse(constants.PATIENT_NOT_FOUND, null)
-      );
+      return res
+        .status(constants.NOT_FOUND)
+        .json(errorResponse(constants.PATIENT_NOT_FOUND, null));
     }
   } catch (error) {
     await createLog(formatRequest(req), 'PatientDemos', 'Search', error);
     // Handle the error and return an error response
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(
-      errorResponse(constants.INTERNAL_SERVER_ERROR, error.message)
-    );
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(constants.INTERNAL_SERVER_ERROR, error.message));
   }
 };
-
 
 /**
  * Create a patient
@@ -104,14 +182,14 @@ exports.createPatient = async (req, res) => {
     const userId = req?.userData?.id;
 
     // Check if the patient already exists
-    const existingPatient = await patientService.searchOrUpdatePatient(reqData)
+    const existingPatient = await patientService.searchOrUpdatePatient(reqData);
 
     if (existingPatient) {
-      return res.status(constants.SUCCESS).json(
-        successResponse(constants.UPDATE_SUCCESS, existingPatient)
-      );
+      return res
+        .status(constants.SUCCESS)
+        .json(successResponse(constants.UPDATE_SUCCESS, existingPatient));
     }
-    if(userId) {
+    if (userId) {
       req.body.createdBy = userId;
       req.body.updatedBy = userId;
     }
@@ -170,21 +248,24 @@ exports.updatePatient = async (req, res) => {
 
     if (!existingPatient) {
       // Patient doesn't exist, return an error
-      return res.status(constants.NOT_FOUND).json(
-        errorResponse(constants.PATIENT_NOT_FOUND, null)
-      );
+      return res
+        .status(constants.NOT_FOUND)
+        .json(errorResponse(constants.PATIENT_NOT_FOUND, null));
     }
 
     // Check if the updated data conflicts with other existing patients
-    const conflictingPatient = await patientService.checkForDataConflict(id, req.body);
+    const conflictingPatient = await patientService.checkForDataConflict(
+      id,
+      req.body
+    );
 
     if (conflictingPatient) {
       // Data conflict with another patient, return an error
-      return res.status(constants.BAD_REQUEST).json(
-        errorResponse(constants.UPDATE_CONFLICT_ERROR, null)
-      );
+      return res
+        .status(constants.BAD_REQUEST)
+        .json(errorResponse(constants.UPDATE_CONFLICT_ERROR, null));
     }
-    if(userId) {
+    if (userId) {
       req.body.createdBy = userId;
       req.body.updatedBy = userId;
     }
@@ -192,15 +273,15 @@ exports.updatePatient = async (req, res) => {
     const updatedPatient = await patientService.updatePatient(id, req.body);
 
     // Return the updated patient information in the response
-    return res.status(constants.SUCCESS).json(
-      successResponse(constants.UPDATE_SUCCESS, updatedPatient)
-    );
+    return res
+      .status(constants.SUCCESS)
+      .json(successResponse(constants.UPDATE_SUCCESS, updatedPatient));
   } catch (error) {
     await createLog(formatRequest(req), 'PatientDemos', 'Update', error);
     // Handle the error and return an error response
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(
-      errorResponse(constants.INTERNAL_SERVER_ERROR, error)
-    );
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(constants.INTERNAL_SERVER_ERROR, error));
   }
 };
 
@@ -228,10 +309,14 @@ exports.getPatientById = async (req, res) => {
     }
 
     // Success response with the retrieved patient and the custom success message
-    return res.status(constants.SUCCESS).json(successResponse(constants.PATIENT_RETRIEVED_SUCCESSFULLY, patient));
+    return res
+      .status(constants.SUCCESS)
+      .json(successResponse(constants.PATIENT_RETRIEVED_SUCCESSFULLY, patient));
   } catch (error) {
     // Determine error message and send an appropriate response
     const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(errorMessage));
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(errorMessage));
   }
 };

@@ -95,6 +95,10 @@
   color: #396571;
 }
 
+.ant-segmented {
+  background-color: #fff;
+}
+
 .ant-segmented .ant-segmented-item-selected {
   background-color: rgba(57, 101, 113, 0.1);
 }

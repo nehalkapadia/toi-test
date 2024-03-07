@@ -6,10 +6,9 @@ const salesforceService = require("../services/salesforce.service");
 const constant = require("../utils/constants.util");
 const auditLogService = require("../services/audit_log.service");
 const npiService = require("../services/npi.service");
-const {
-    getLatestDocumentsByPatientAndOrderId,
-} = require("../services/pat_document.service");
-const axios = require("axios");
+const { getLatestDocumentsByPatientAndOrderId } = require("../services/pat_document.service");
+const { sendEmailForOrderTypes, sendWelcomeEmail } = require("./send_email");
+const { getCaMedListC, getAllJCodes } = require("../services/cpt_codes.service");
 
 /**
  * @param orderData jsonObject
@@ -40,17 +39,23 @@ eventEmitter.on("SubmitOrderToSalesForce", async (orderData) => {
         const token = tokenData.token; // set auth token
         const instanceUrl = tokenData.instance_url; // set instance url to be used in create order
 
-        // get npi details
-        const npiDetails = await npiService.checkIfNpiExists(
-            orderDetails.medicalHistory.orderingProvider
-        );
+        // get ordering physician npi details
+        orderDetails.orderingPhysician = await npiService.getNpiDetails(orderDetails.medicalHistory.orderingProvider);
+
+        // get first cpt code details for subject
+        orderDetails.subject = orderDetails?.orderDetails?.cptCodes?.[0]?.description ? orderDetails.orderDetails.cptCodes[0].description : '';
+
+        // construct ca med list parameter
+        orderDetails.ca_med_list_c = await getCaMedListC(orderDetails.orderDetails.cptCodes);
+
+        // construct ca med list parameter
+        orderDetails.all_j_codes_c = await getAllJCodes(orderDetails.orderDetails.cptCodes);
 
         // call create order api
         const createCaseResponse = await salesforceService.createCase(
             token,
             instanceUrl,
-            orderDetails,
-            npiDetails
+            orderDetails
         );
 
         // when we get  success response from salesforce update the status and case id
@@ -62,6 +67,7 @@ eventEmitter.on("SubmitOrderToSalesForce", async (orderData) => {
                 caseId: createCaseResponse.data.id,
                 instanceUrl: instanceUrl,
                 token: token,
+                orderTypeId: orderDetails.orderTypeId
             }); // fire event to upload files on salesforce
 
             await orderService.updateOrderInfo(orderId, {
@@ -108,11 +114,12 @@ eventEmitter.on("UploadOrderFilesToSalesForce", async (patientDetails) => {
         // get the list of the documents
         let documentList = await getLatestDocumentsByPatientAndOrderId(
             patientDetails.patientId,
-            patientDetails.orderId
+            patientDetails.orderId,
+            patientDetails.orderTypeId,
         );
         documentList = JSON.parse(JSON.stringify(documentList));
 
-        const uploadFileArray = await prepareDataToUploadFilesToSalesforce(
+        const uploadFileArray = await salesforceService.prepareDataToUploadFilesToSalesforce(
             documentList,
             patientDetails.caseId
         );
@@ -135,57 +142,19 @@ eventEmitter.on("UploadOrderFilesToSalesForce", async (patientDetails) => {
 });
 
 /**
- * @description This function will download and prepare the file upload request array
- * @param {*} documentList 
- * @param {*} caseId 
- * @returns 
+ * Event to send the emails
+ * @param {json} orderData
  */
-const prepareDataToUploadFilesToSalesforce = async (documentList, caseId) => {
-    const uploadFileArray = [];
-    for (let document in documentList) {
-        const patientDocuments = documentList[document].documents;
-
-        for (let singleDocument in patientDocuments) {
-            if (typeof patientDocuments[singleDocument].documentURL !== "undefined") {
-                // download file from the server
-                let fileData = await downloadFile(
-                    patientDocuments[singleDocument].documentURL
-                );
-
-                // prepare the upload file array to send it to salesforce api
-                uploadFileArray.push({
-                    attributes: {
-                        type: "ContentVersion",
-                        referenceId: patientDocuments[singleDocument].id.toString(),
-                    },
-                    Title: patientDocuments[singleDocument].documentName,
-                    PathOnClient: patientDocuments[singleDocument].documentName,
-                    VersionData: fileData,
-                    FirstPublishLocationId: caseId.toString()
-                });
-            }
-        }
-    }
-
-    return uploadFileArray;
-};
-
+eventEmitter.on("SendEmailForOrderTypes", (orderData) => {
+    sendEmailForOrderTypes(orderData);
+});
 
 /**
- * 
- * @description this function will download the file from the server
- * @param {*} remoteFileUrl 
- * @returns file data encoded in base64
+ * Event to send the emails
+ * @param {json} userData
  */
-const downloadFile = async (remoteFileUrl) => {
-    try {
-        const response = await axios.get(remoteFileUrl, { responseType: "arraybuffer" });
-
-        return response.data.toString('base64');
-    } catch (error) {
-        console.error("Error downloading file:", error.message);
-        throw error;
-    }
-};
+eventEmitter.on("SendUserRegistrationEmail", async (userData) => {
+    sendWelcomeEmail(userData);
+});
 
 module.exports = eventEmitter;

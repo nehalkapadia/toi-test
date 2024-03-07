@@ -1,5 +1,6 @@
 
 module.exports = (sequelize, Sequelize) => {
+  const NPI = require('./npi.model')(sequelize, Sequelize);
   const MedicalHistory = sequelize.define('MedicalHistory', {
     id: {
       type: Sequelize.INTEGER,
@@ -52,7 +53,17 @@ module.exports = (sequelize, Sequelize) => {
         key: 'id',
       },
     },
+    dateOfVisit: {
+      type: Sequelize.DATE,
+    },
+    chemotherapyOrdered: {
+      type: Sequelize.DATE,
+    },
   }, { timestamps: true });
+
+  MedicalHistory.belongsTo(NPI, { foreignKey: 'orderingProvider', targetKey: 'npiNumber', as: 'orderingProviderData' });
+  MedicalHistory.belongsTo(NPI, { foreignKey: 'referringProvider', targetKey: 'npiNumber', as: 'referringProviderData' });
+  MedicalHistory.belongsTo(NPI, { foreignKey: 'pcpName', targetKey: 'npiNumber', as: 'pcpNameData' });
   
   return MedicalHistory;
 };

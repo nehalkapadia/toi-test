@@ -3,7 +3,12 @@ const { successResponse, errorResponse } = require('../utils/response.util');
 const constants = require('../utils/constants.util');
 const { createLog } = require('../services/audit_log.service');
 const { formatRequest } = require('../utils/common.util');
-const eventEmitter = require("../handlers/event_emitter");
+const eventEmitter = require('../handlers/event_emitter');
+const orderStatusHistoryService = require('../services/order_status_history.service');
+const patDocumentService = require('../services/pat_document.service');
+const orderAuthDocumentService = require('../services/order_auth_document.service');
+const { APPROVED_STATUS, DENIED_STATUS } = require('../utils/order_status_mapping.util');
+
 /**
  * Controller function to create a new order.
  *
@@ -28,12 +33,24 @@ exports.createOrder = async (req, res) => {
     const createdOrder = await orderService.createOrderInfo(orderData);
 
     if (createdOrder) {
+      await orderStatusHistoryService.createOrderStatusHistory({
+        orderId: createdOrder.id,
+        intOrderStatus: createdOrder.currentStatus,
+      });
+
       await createOrUpdateOrderDocuments(createdOrder, orderData);
     }
 
     // send data to salesforce only if order is submitted
-    if (createdOrder.currentStatus === 'submitted') {
-      eventEmitter.emit("SubmitOrderToSalesForce", createdOrder);
+    if (createdOrder.currentStatus === constants.SUBMITTED) {
+
+      // send email for order creation for office visit and radiation
+      if (orderData.orderTypeId == constants.OFFICE_VISIT_ORDER_TYPE_ID || orderData.orderTypeId == constants.RADIATION_ORDER_TYPE_ID) {
+        eventEmitter.emit("SendEmailForOrderTypes", { orderId: createdOrder.id, orderTypeId: createdOrder.orderTypeId, userId: userId });
+      } else {
+        // push order to salesforce for chemo
+        eventEmitter.emit("SubmitOrderToSalesForce", createdOrder);
+      }
     }
 
     // Success response with the created order
@@ -158,12 +175,16 @@ exports.updateOrder = async (req, res) => {
       orderData
     );
     if (updatedOrder) {
+      await orderStatusHistoryService.createOrderStatusHistory({
+        orderId: updatedOrder.id,
+        intOrderStatus: updatedOrder.currentStatus,
+      });
       await createOrUpdateOrderDocuments(updatedOrder, orderData);
     }
 
     // send data to salesforce only if order is submitted
-    if (updatedOrder.currentStatus === 'submitted') {
-      eventEmitter.emit("SubmitOrderToSalesForce", updatedOrder);
+    if (updatedOrder.currentStatus === constants.SUBMITTED) {
+      eventEmitter.emit('SubmitOrderToSalesForce', updatedOrder);
     }
 
     // Success response with the created order
@@ -173,6 +194,7 @@ exports.updateOrder = async (req, res) => {
         successResponse(constants.ORDER_UPDATED_SUCCESSFULLY, { updatedOrder })
       );
   } catch (error) {
+
     await createLog(formatRequest(req), 'Orders', 'PUT', error);
     // Determine error message and send appropriate response
     const errorMessage = error.message || constants.INTERNAL_SERVER_ERROR;
@@ -230,7 +252,6 @@ exports.saveOrderAsDraft = async (req, res) => {
     const orderData = req.body;
     const userId = req?.userData?.id;
     const organizationId = req?.userData?.user?.organizationId;
-
     if (userId) {
       orderData.createdBy = userId;
       orderData.updatedBy = userId;
@@ -241,9 +262,15 @@ exports.saveOrderAsDraft = async (req, res) => {
       orderData.organizationId = organizationId;
     }
     // Save the order using the orderService
-    const order = await orderService.saveOrderAsDraft(orderData);
+    const order = await orderService.createOrderInfo(orderData);
 
     if (order) {
+      // Update OrderStatusHistories with the draft status
+      await orderStatusHistoryService.createOrderStatusHistory({
+        orderId: order.id,
+        intOrderStatus: order.currentStatus,
+      });
+
       await createOrUpdateOrderDocuments(order, orderData);
     }
 
@@ -336,7 +363,12 @@ exports.getAllOrderDocuments = async (req, res) => {
       );
   } catch (error) {
     // Handle errors and log them
-    await createLog(formatRequest(req), 'Orders', 'getAllOrderDocuments', error);
+    await createLog(
+      formatRequest(req),
+      'Orders',
+      'getAllOrderDocuments',
+      error
+    );
 
     // Determine the response status based on the error or use internal server status
     const status = error.status ?? constants.INTERNAL_SERVER_STATUS;
@@ -387,9 +419,7 @@ exports.deleteOrderById = async (req, res) => {
       .status(constants.INTERNAL_SERVER_STATUS)
       .json(errorResponse(errorMessage));
   }
-}
-
-
+};
 
 /**
  * Soft delete order
@@ -411,17 +441,117 @@ exports.softDeleteOrder = async (req, res) => {
     const order = await orderService.getOrderById(orderId);
 
     if (!order) {
-      return res.status(constants.NOT_FOUND).json(errorResponse(constants.ORDER_NOT_FOUND));
+      return res
+        .status(constants.NOT_FOUND)
+        .json(errorResponse(constants.ORDER_NOT_FOUND));
     }
 
     // Soft delete the order
-    const softDeletedOrder = await orderService.softDeleteOrder(orderId, userId);
+    await orderService.softDeleteOrder(orderId, userId);
 
     // Return success response
-    return res.status(constants.SUCCESS).json(successResponse(constants.ORDER_DELETED_SUCCESSFULLY));
+    return res
+      .status(constants.SUCCESS)
+      .json(successResponse(constants.ORDER_DELETED_SUCCESSFULLY));
   } catch (error) {
     // Log and return internal server error response
     await createLog(formatRequest(req), 'Orders', 'SoftDelete', error);
-    return res.status(constants.INTERNAL_SERVER_STATUS).json(errorResponse(constants.INTERNAL_SERVER_ERROR));
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(constants.INTERNAL_SERVER_ERROR));
+  }
+};
+
+/**
+ * @description This will update the order status from salesforce
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    // get case id and external status from request
+    const caseId = req.params.caseId;
+    const externalStatus = req.body?.status ? req.body?.status : '';
+    const patientAuthDocument = req.body.patientAuthDocument;
+
+    // get the order details by case id and return error if not found
+    let orderData = await orderService.getOrderByCaseId(caseId);
+    if (!orderData) {
+      return res
+        .status(constants.NOT_FOUND)
+        .json(errorResponse(constants.ORDER_NOT_FOUND));
+    }
+    let internalStatus;
+    if (externalStatus) {
+      // get internal status
+      internalStatus =
+        await orderStatusHistoryService.getInternalStatusBasedOnExternalStatus(
+          externalStatus
+        );
+
+    }
+
+    // update order Data with params to insert in order status history table
+    orderData.externalStatus = externalStatus;
+    orderData.internalStatus = internalStatus ? internalStatus : '';
+    orderData.comment = req.body.comment ? req.body.comment : '';
+
+    // get the insert data for order status history
+    const insertData = await orderStatusHistoryService.prepareInsertData(
+      orderData
+    );
+
+    // insert order status history
+    await orderStatusHistoryService.insertOrderHistory(insertData);
+
+    // insert document entry if document is sent
+    if (Object.keys(patientAuthDocument).length > 0) {
+      // Call the service method to handle upload document creation
+      const patDocumentId = await patDocumentService.handleDocumentUpload(
+        orderData,
+        patientAuthDocument
+      );
+
+      // Update the OrderAuthDocuments table with PatDocumentId
+      await orderAuthDocumentService.create({
+        patDocumentId: patDocumentId,
+        orderId: orderData.id,
+        patientId: orderData.patientId,
+        createdBy: orderData.updatedBy,
+        updatedBy: orderData.updatedBy,
+      });
+    }
+
+    // if internal status is completed then update the current status to completed else just update internal status
+    if (
+      internalStatus === APPROVED_STATUS ||
+      internalStatus === DENIED_STATUS
+    ) {
+      await orderService.updateOrderInfo(orderData.id, {
+        currentStatus: constants.COMPLETED,
+        toiStatus: internalStatus,
+      });
+    } else if (internalStatus) {
+      await orderService.updateOrderInfo(orderData.id, {
+        toiStatus: internalStatus,
+      });
+    }
+
+    return res
+      .status(constants.SUCCESS)
+      .json(successResponse(constants.ORDER_UPDATED_SUCCESSFULLY, {}));
+  } catch (error) {
+    // Log and return internal server error response
+    await createLog(
+      formatRequest(req),
+      'Orders',
+      'SalesforceWebhookOrderUpdate',
+      error
+    );
+
+    return res
+      .status(constants.INTERNAL_SERVER_STATUS)
+      .json(errorResponse(constants.INTERNAL_SERVER_ERROR));
   }
 };

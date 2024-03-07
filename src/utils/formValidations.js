@@ -3,7 +3,7 @@ import {
   isValidName,
   isValidOrgOrDomainName,
   isValidPhoneNumber,
-} from "./patterns";
+} from './patterns';
 
 export const validateOrgName = (_, value) => {
   const validation = isValidOrgOrDomainName(value);

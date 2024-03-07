@@ -1,25 +1,36 @@
-import { Spin, message } from 'antd';
+import CustomSpinner from '@/components/CustomSpinner';
+import { USER_CANT_ACCESS_OR_EXIST } from '@/utils/constant.util';
+import { message } from 'antd';
 import { useRouter } from 'next/router';
-import React, { useEffect, useState } from 'react';
+import React, { Fragment, useEffect } from 'react';
 
-const loginError = () => {
+const LoginError = () => {
   const router = useRouter();
   const { query } = router;
   const { errorMessage } = query;
   let errorResponse = false;
   useEffect(() => {
     if (errorMessage && !errorResponse) {
-      message.error(errorMessage);
+      message.error({
+        content: errorMessage ? errorMessage : USER_CANT_ACCESS_OR_EXIST,
+        duration: 3,
+        key: 'loginErrorMessage',
+      });
       errorResponse = true;
       router.push('/login');
       return;
     }
+    message.error({
+      content: errorMessage ? errorMessage : USER_CANT_ACCESS_OR_EXIST,
+      duration: 3,
+      key: 'loginErrorMessage',
+    });
   }, [errorMessage]);
   return (
-    <div>
-      <Spin size='large'></Spin>
-    </div>
+    <Fragment>
+      <CustomSpinner />
+    </Fragment>
   );
 };
 
-export default loginError;
+export default LoginError;

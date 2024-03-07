@@ -36,4 +36,7 @@ router.delete('/:orderId', verifyToken, orderController.deleteOrderById);
 // Route to Soft delete order
 router.post('/soft/delete/:orderId', verifyToken, orderController.softDeleteOrder);
 
+// webhook for salesForce order status updates
+router.post('/updateStatus/:caseId', verifyToken, orderController.updateOrderStatus);
+
 module.exports = router;

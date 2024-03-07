@@ -1,10 +1,17 @@
 import { message } from 'antd';
+import dayjs from 'dayjs';
 import {
   ALLOWED_FILE_TYPE_FOR_UPLOAD,
+  ALL_DATE_RELATED_FIELDS_FOR_CREATE_ORDER,
+  ALL_PROVIDERS_MAX_LENGTH_COUNT,
+  DATE_FORMAT_STARTING_FROM_YEAR,
   ERROR_MESSAGE_FOR_FILE_SIZE,
   ERROR_MESSAGE_FOR_UPLOADED_FILE_TYPE,
   MAX_FILE_SIZE_FOR_UPLOAD,
   MAX_UPLOAD_DOCUMENTS_PER_CATEGORY,
+  ORDER_TYPES_ARRAY,
+  PLEASE_LOGOUT_AND_LOGIN_BACK,
+  USER_CANT_ACCESS_OR_EXIST,
 } from './constant.util';
 
 export const formatPhoneNumberToUSFormat = (number) => {
@@ -15,8 +22,12 @@ export const formatPhoneNumberToUSFormat = (number) => {
 
   const countryCode = '1';
   const areaCode = numSting.slice(0, 3);
-  const middleNumber = numSting.slice(3, 6);
-  const lastNumber = numSting.slice(6);
+  const middleNumber = number.includes('-')
+    ? numSting.slice(4, 7)
+    : numSting.slice(3, 6);
+  const lastNumber = number.includes('-')
+    ? numSting.slice(8)
+    : numSting.slice(6);
 
   return `+${countryCode} (${areaCode})-${middleNumber}-${lastNumber}`;
 };
@@ -43,22 +54,24 @@ export const getRoleById = (id) => {
 
 export const formatPhoneNumberForInput = (value) => {
   if (!value || value?.toString()?.trim() === '') {
-    return;
+    return value;
   }
 
   value = value?.toString();
 
   const cleanNumber = value.replace(/\D/g, '');
 
-  if (cleanNumber.length === 3) {
-    return `(${cleanNumber.slice(0, 3)}) `;
-  } else if (cleanNumber.length === 6) {
-    return `(${cleanNumber.slice(0, 3)}) ${cleanNumber.slice(3, 6)}-`;
-  } else if (cleanNumber.length === 10) {
+  if (cleanNumber.length <= 3) {
+    return cleanNumber;
+  } else if (cleanNumber.length < 3 && cleanNumber.length < 6) {
+    return `(${cleanNumber.slice(0, 3)})`;
+  } else if (cleanNumber.length <= 6) {
+    return `(${cleanNumber.slice(0, 3)}) ${cleanNumber.slice(3)}`;
+  } else if (cleanNumber.length <= 10) {
     return `(${cleanNumber.slice(0, 3)}) ${cleanNumber.slice(
       3,
       6
-    )}-${cleanNumber.slice(6, 10)}`;
+    )}-${cleanNumber.slice(6)}`;
   }
 };
 
@@ -119,7 +132,8 @@ export const replaceNullWithEmptyString = (obj) => {
   return result;
 };
 
-export const filterObjectByKeys = (originalObject, keyArray) => {
+// to create a new object with specified keys
+export const filterObjectByKeys = (originalObject = {}, keyArray = []) => {
   const result = {};
   keyArray?.forEach((key) => {
     if (originalObject?.hasOwnProperty(key)) {
@@ -181,7 +195,176 @@ export const patientDemographicsDataComparison = (resData, inputValues) => {
 
 export const allowDigitsOnly = (event) => {
   const allowedKeys = ['Tab', 'Backspace', 'ArrowLeft', 'ArrowRight'];
-    if (!/[0-9]/.test(event.key) && !allowedKeys.includes(event.key)) {
-        event.preventDefault();
+  if (!/[0-9]/.test(event.key) && !allowedKeys.includes(event.key)) {
+    event.preventDefault();
+  }
+};
+export const compareTwoObjectsForMedicalTab = (obj1, obj2) => {
+  const allKeys = Object.keys(obj1);
+  return allKeys.some((key) => obj1[key] !== obj2[key]);
+};
+
+export const modifyDateAndTimeObjectToDateOnly = (data = {}) => {
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === 'Invalid Date') {
+      return '';
     }
-}
+
+    return dayjs(dateString).format(DATE_FORMAT_STARTING_FROM_YEAR);
+  };
+
+  const result = {};
+  for (const key in data) {
+    if (data?.hasOwnProperty(key)) {
+      result[key] = formatDate(data[key]);
+    }
+  }
+  return result;
+};
+
+export const validateNPINumberLength = (npiNumber) => {
+  return (
+    npiNumber?.toString()?.trim()?.length === ALL_PROVIDERS_MAX_LENGTH_COUNT
+  );
+};
+
+export const commonReferringAndPCPFunc = (
+  npiNumber,
+  otherProvider,
+  otherProviderData,
+  warning1,
+  warning2,
+  dispatch,
+  dispatchAction
+) => {
+  if (npiNumber == otherProvider) {
+    message.error(warning1);
+  } else if (
+    npiNumber == otherProviderData?.npiNumber &&
+    npiNumber != otherProvider
+  ) {
+    message.error(warning2);
+  } else {
+    dispatch(dispatchAction({ npiNumber, event: 'atCreate' })).then((res) => {
+      if (!res?.payload?.status) {
+        message.error(res?.payload?.message);
+      }
+    });
+  }
+};
+
+export const handleErrorResponse = (error) => {
+  const payload = {
+    status: false,
+    message: error?.response?.data?.errors
+      ? error?.response?.data?.errors[0]?.msg
+      : error?.response?.data?.message,
+  };
+  return payload;
+};
+
+export const customizedStringFunc = (string, maxLength) => {
+  if (!string || string?.length <= maxLength) {
+    return string;
+  } else {
+    return `${string?.substring(0, maxLength)}...`;
+  }
+};
+
+export const orderDetailsArrayComparisonFunc = (arr1 = [], arr2 = []) => {
+  if (arr1.length === 0 && arr2.length === 0) {
+    return false;
+  }
+
+  if (arr1.length !== arr2.length) {
+    return true;
+  }
+
+  const sortedArr1 = arr1.slice().sort((a, b) => a - b);
+  const sortedArr2 = arr2.slice().sort((a, b) => a - b);
+
+  for (let i = 0; i < sortedArr1?.length; i++) {
+    if (sortedArr1[i] !== sortedArr2[i]) {
+      return true;
+    }
+  }
+  return false;
+  // If it returns true means both array does not have same element or id
+  // If it return false means both array are either same or empty
+};
+
+export const isValidOrderType = (type, orderTypeArr = []) => {
+  const updatedOrderType =
+    orderTypeArr?.length > 0 ? orderTypeArr?.map((elem) => elem?.name) : [];
+  const validOrderType =
+    updatedOrderType?.length > 0 ? updatedOrderType : ORDER_TYPES_ARRAY;
+  return [...validOrderType]?.includes(type);
+};
+
+export const formatDatesByDateKeysArr = (
+  obj = {},
+  dateKeysArr = [],
+  shouldFormat
+) => {
+  if (shouldFormat === false) {
+    // When we have to put values in form as Date object.
+    dateKeysArr?.length > 0 &&
+      dateKeysArr?.forEach((key) => {
+        if (obj?.[key]) {
+          obj[key] = dayjs(obj?.[key]);
+        }
+      });
+  } else {
+    // When we have to convert Date Object to a Date String.
+    dateKeysArr?.length > 0 &&
+      dateKeysArr?.forEach((key) => {
+        if (obj?.[key]) {
+          obj[key] = dayjs(obj?.[key]).format(DATE_FORMAT_STARTING_FROM_YEAR);
+        }
+      });
+  }
+  return obj;
+};
+
+// To compare two objects from medical History and Insurance Info Tab
+export const commonFuncForTracingChanges = (payload) => {
+  const {
+    initialFormData = {},
+    originalResData = {},
+    customResData = {},
+  } = payload;
+
+  let traceChanges = false;
+  let commonResponseData = {};
+
+  if (originalResData && Object.keys(originalResData)?.length > 0) {
+    commonResponseData = { ...originalResData };
+  } else {
+    commonResponseData = { ...customResData };
+  }
+  const formattedDateResData = formatDatesByDateKeysArr(
+    { ...commonResponseData },
+    ALL_DATE_RELATED_FIELDS_FOR_CREATE_ORDER
+  );
+
+  const updatedResponseData = replaceNullWithEmptyString(formattedDateResData);
+  const updatedFormDataValues = replaceNullWithEmptyString(initialFormData);
+
+  const commonKeys =
+    updatedResponseData &&
+    Object.keys(updatedResponseData)?.filter((key) =>
+      updatedFormDataValues.hasOwnProperty(key)
+    );
+
+  // if atleast one key is changed it will return true.
+  traceChanges = commonKeys.some(
+    (key) => updatedResponseData[key] != updatedFormDataValues[key]
+  );
+
+  // If no common keys exist, consider it as a change
+  if (commonKeys?.length < 1) {
+    traceChanges = true;
+  }
+  // If any change is detected, it will return true
+  return traceChanges;
+};
